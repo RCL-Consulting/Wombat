@@ -40,7 +40,7 @@
   </div>
 </div>
 
-<p class="pv-cap">Loaded, a Trainee's Home (flow 05, T355, R1; Anele Dlamini, 2026-10-04): Your targets (spanning two, the emphasis stripe) with the training year, the two figures and "Furthest short", each row its own link to its EPA's page; Needs you; Recent decisions on her own requests (spanning two), each with one line by kind, and File it again on a declined one; My authorisations. Each card with an id is a section named by its title; no card is one link around other links. Then the Administrator's System health.</p>
+<p class="pv-cap">Loaded, a Trainee's Home (flow 05, T355, R1; Anele Dlamini, 2026-10-04): Your targets (spanning two, the emphasis stripe) with the training year, the two figures and "Furthest short", each row its own link to its EPA's page; Needs you; Recent decisions on the registrar's own requests (spanning two), each with one line by kind, and File it again on a declined one; My authorisations. Each card with an id is a section named by its title; no card is one link around other links. Then the Administrator's System health.</p>
 <div class="action-result" tabindex="-1">
   <div class="dashboard-grid">
     <section class="detail-card detail-card--emphasis dashboard-span-2" aria-labelledby="card-targets">
@@ -123,22 +123,17 @@
       </div>
     </section>
 
-    <div class="detail-card dashboard-span-2">
-      <h2 class="dashboard-card-title"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1" /> <circle cx="12" cy="12" r="4" /></svg><span>System health</span></h2>
+    <section class="detail-card dashboard-span-2" aria-labelledby="card-health">
+      <h2 class="dashboard-card-title" id="card-health"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1" /> <circle cx="12" cy="12" r="4" /></svg><span>System health</span></h2>
       <div class="dashboard-card-body">
-        <ul class="list-unstyled">
-          <li class="list-row">
-            <span><span class="status-dot ok"></span>Database connection</span>
-          </li>
-          <li class="list-row">
-            <span><span class="status-dot warn"></span>Email queue <span class="muted">(T012)</span></span>
-          </li>
-          <li class="list-row">
-            <span><span class="status-dot warn"></span>Last nightly job <span class="muted">(T024)</span></span>
-          </li>
+        <ul class="health-list">
+          <li class="health-line"><span class="health-line-name">Database<span class="visually-hidden">:</span><span class="badge badge-completed">OK</span></span><div class="health-line-text"><p>The database answers.</p></div></li>
+          <li class="health-line"><span class="health-line-name">Mail<span class="visually-hidden">:</span><span class="badge badge-completed">OK</span></span><div class="health-line-text"><p>Mail is sent. Last sent <span class="nowrap">2026-11-12 08:37 SAST</span>; none waiting; none dropped in the last 24 hours.</p></div></li>
+          <li class="health-line"><span class="health-line-name">Scheduled jobs<span class="visually-hidden">:</span><span class="badge badge-completed">OK</span></span><div class="health-line-text"><p>All 8 jobs last succeeded.</p></div></li>
         </ul>
+        <div class="dashboard-card-footer"><a class="btn btn-sm btn-outline" href="#">Scheduled jobs</a></div>
       </div>
-    </div>
+    </section>
   </div>
 </div>
 

@@ -1,0 +1,139 @@
+<!-- @dsCard group="Platform operations" height=3410 width=974 subtitle="An audit entry: the subtitle in one line; What happened (When to the millisecond with the stored UTC, Category, Action, Institution, Result with a failure's stored words), Who (the name now, the user id, the address and how much was kept), What it was done to, and the Administrator's Payload in its own focusable region with a ceiling; no Back, the trail returns to the rows; loading, the failure, Audit entry unavailable; 390" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AuditEntry</title>
+<style>
+  /* Drawn at 974px, the content column beside the sidebar at 1280. */
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-col { max-width: 974px; }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  /* The stacked list and the phone's rules (below 641px), repeated under .pv-narrow (a 358px column: 390 less the
+     phone's 16px gutters). */
+  .pv-narrow { max-width: 358px; }
+  .pv-narrow .header-container { flex-wrap: wrap; }
+  .pv-narrow .header-container .actions-cell { width: 100%; }
+  .pv-narrow .header-container .actions-cell .btn { flex: 1 1 auto; min-height: 2.75rem; }
+  .pv-narrow .clinic-table--stack-wide thead { border: 0; clip: rect(0, 0, 0, 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; white-space: nowrap; width: 1px; }
+  .pv-narrow .clinic-table--stack-wide tbody tr { border-bottom: 1px solid var(--border-color); display: grid; gap: var(--space-xs); padding: var(--space-sm) var(--space-md); }
+  .pv-narrow .clinic-table--stack-wide tbody tr:last-child { border-bottom: 0; }
+  .pv-narrow .clinic-table--stack-wide td, .pv-narrow .clinic-table--stack-wide tbody th { border: 0; padding: 0; width: auto; }
+  .pv-narrow .clinic-table--stack-wide th[scope="row"] { display: block; }
+  .pv-narrow .clinic-table--stack-wide td[data-label]::before { color: var(--muted-text); content: attr(data-label) ": "; content: attr(data-label) ": " / ""; font-weight: 600; }
+  .pv-narrow .clinic-table--stack-wide .btn, .pv-narrow .people-page .btn, .pv-narrow .people-page .form-control, .pv-narrow .people-page .form-select { min-height: 2.75rem; }
+  .pv-narrow .people-filter .filter-actions { align-self: stretch; }
+  .pv-narrow .filter-actions .btn { width: 100%; }
+  .pv-narrow .detail-list { grid-template-columns: 1fr; gap: var(--space-xs); }
+</style>
+</head>
+<body>
+<div class="pv-col">
+<p class="pv-cap">The Administrator opens a failed TransitionActivityCommand's Detail (R3-E02): four sections; the payload laid out one property a line, its region named once by its h2; the trail's Audit log returns to the rows it came from</p>
+<nav aria-label="Breadcrumb"><ol class="breadcrumbs"><li class="breadcrumb-ancestor"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Home</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li><li class="breadcrumb-parent"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Audit log</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li><li class="breadcrumb-current"><span aria-current="page">Audit entry</span></li></ol></nav>
+<div class="header-container">
+  <div>
+    <h1>Audit entry</h1>
+    <p class="page-subtitle">TransitionActivityCommand by Nomsa Mahlangu, 2026-11-10 20:21:44 SAST · Failed</p>
+  </div>
+</div>
+<div class="user-page"><section class="detail-card user-section" aria-labelledby="pv1-wh"><h2 id="pv1-wh">What happened</h2><dl class="detail-list"><dt>When</dt><dd>2026-11-10 20:21:44.861 SAST<br /><span class="muted text-sm">Stored as 2026-11-10 18:21:44.861 UTC</span></dd><dt>Category</dt><dd>Command</dd><dt>Action</dt><dd><code>TransitionActivityCommand</code></dd><dt>Institution</dt><dd>Kgosi Kgari Teaching Hospital</dd><dt>Result</dt><dd><span class="badge badge-declined">Failed</span><br /><span class="text-sm">Not submitted. It is still a draft.</span></dd></dl></section><section class="detail-card user-section" aria-labelledby="pv1-who"><h2 id="pv1-who">Who</h2><dl class="detail-list"><dt>Name</dt><dd>Nomsa Mahlangu</dd><dt>User id</dt><dd><code>3f1c2a9e-7b40-4d1e-9a52-6c8e0f4b2d17</code></dd><dt>Address</dt><dd>196.21.44.0/24<br /><span class="muted text-sm">Cut to its first 24 bits when stored.</span></dd></dl></section><section class="detail-card user-section" aria-labelledby="pv1-su"><h2 id="pv1-su">What it was done to</h2><p>No subject</p></section><section class="detail-card user-section"><h2 id="pv1-pl">Payload</h2><p class="muted text-sm">As stored, laid out one property a line: secrets read "[REDACTED]" and the signed-in person "[PRINCIPAL]".</p><pre class="code-block code-block--region" tabindex="0" role="region" aria-labelledby="pv1-pl">{
+  "ActivityId": 412,
+  "TransitionKey": "submit",
+  "Data": {
+    "encounter_date": "2026-11-09",
+    "setting": "Ward",
+    "case_summary": "A 4-year-old with bronchiolitis on high-flow oxygen; weaning plan discussed with the family.",
+    "assessor": "[REDACTED]"
+  },
+  "Principal": "[PRINCIPAL]"
+}</pre></section></div>
+
+<p class="pv-cap">A long payload (R3-E05): the region stops at its 28rem ceiling and scrolls inside itself; it is focusable, so a keyboard scrolls it</p>
+<div class="user-page"><section class="detail-card user-section" aria-labelledby="pv2-wh"><h2 id="pv2-wh">What happened</h2><dl class="detail-list"><dt>When</dt><dd>2026-11-10 20:21:44.861 SAST<br /><span class="muted text-sm">Stored as 2026-11-10 18:21:44.861 UTC</span></dd><dt>Category</dt><dd>Command</dd><dt>Action</dt><dd><code>TransitionActivityCommand</code></dd><dt>Institution</dt><dd>Kgosi Kgari Teaching Hospital</dd><dt>Result</dt><dd><span class="badge badge-declined">Failed</span><br /><span class="text-sm">Not submitted. It is still a draft.</span></dd></dl></section><section class="detail-card user-section" aria-labelledby="pv2-who"><h2 id="pv2-who">Who</h2><dl class="detail-list"><dt>Name</dt><dd>Nomsa Mahlangu</dd><dt>User id</dt><dd><code>3f1c2a9e-7b40-4d1e-9a52-6c8e0f4b2d17</code></dd><dt>Address</dt><dd>196.21.44.0/24<br /><span class="muted text-sm">Cut to its first 24 bits when stored.</span></dd></dl></section><section class="detail-card user-section" aria-labelledby="pv2-su"><h2 id="pv2-su">What it was done to</h2><p>No subject</p></section><section class="detail-card user-section"><h2 id="pv2-pl">Payload</h2><p class="muted text-sm">As stored, laid out one property a line: secrets read "[REDACTED]" and the signed-in person "[PRINCIPAL]".</p><pre class="code-block code-block--region" tabindex="0" role="region" aria-labelledby="pv2-pl">{
+  "ActivityId": 412,
+  "TransitionKey": "submit",
+  "Data": {
+    "encounter_date": "2026-11-09",
+    "setting": "Ward",
+    "case_summary": "A 4-year-old with bronchiolitis on high-flow oxygen; weaning plan discussed with the family.",
+    "assessor": "[REDACTED]"
+  },
+  "Note1": "A long stored value that shows the region keeping its ceiling and scrolling inside itself.",
+  "Note2": "A long stored value that shows the region keeping its ceiling and scrolling inside itself.",
+  "Note3": "A long stored value that shows the region keeping its ceiling and scrolling inside itself.",
+  "Note4": "A long stored value that shows the region keeping its ceiling and scrolling inside itself.",
+  "Note5": "A long stored value that shows the region keeping its ceiling and scrolling inside itself.",
+  "Note6": "A long stored value that shows the region keeping its ceiling and scrolling inside itself.",
+  "Note7": "A long stored value that shows the region keeping its ceiling and scrolling inside itself.",
+  "Note8": "A long stored value that shows the region keeping its ceiling and scrolling inside itself.",
+  "Note9": "A long stored value that shows the region keeping its ceiling and scrolling inside itself.",
+  "Note10": "A long stored value that shows the region keeping its ceiling and scrolling inside itself.",
+  "Note11": "A long stored value that shows the region keeping its ceiling and scrolling inside itself.",
+  "Note12": "A long stored value that shows the region keeping its ceiling and scrolling inside itself.",
+  "Note13": "A long stored value that shows the region keeping its ceiling and scrolling inside itself.",
+  "Note14": "A long stored value that shows the region keeping its ceiling and scrolling inside itself.",
+  "Note15": "A long stored value that shows the region keeping its ceiling and scrolling inside itself.",
+  "Note16": "A long stored value that shows the region keeping its ceiling and scrolling inside itself.",
+  "Note17": "A long stored value that shows the region keeping its ceiling and scrolling inside itself.",
+  "Note18": "A long stored value that shows the region keeping its ceiling and scrolling inside itself.",
+  "Note19": "A long stored value that shows the region keeping its ceiling and scrolling inside itself.",
+  "Note20": "A long stored value that shows the region keeping its ceiling and scrolling inside itself.",
+  "Note21": "A long stored value that shows the region keeping its ceiling and scrolling inside itself.",
+  "Note22": "A long stored value that shows the region keeping its ceiling and scrolling inside itself.",
+  "Note23": "A long stored value that shows the region keeping its ceiling and scrolling inside itself.",
+  "Note24": "A long stored value that shows the region keeping its ceiling and scrolling inside itself.",
+  "Note25": "A long stored value that shows the region keeping its ceiling and scrolling inside itself.",
+  "Note26": "A long stored value that shows the region keeping its ceiling and scrolling inside itself.",
+  "Note27": "A long stored value that shows the region keeping its ceiling and scrolling inside itself.",
+  "Note28": "A long stored value that shows the region keeping its ceiling and scrolling inside itself.",
+  "Note29": "A long stored value that shows the region keeping its ceiling and scrolling inside itself.",
+  "Note30": "A long stored value that shows the region keeping its ceiling and scrolling inside itself.",
+  "Principal": "[PRINCIPAL]"
+}</pre></section></div>
+
+<p class="pv-cap">An Institutional admin, with a subject (R3-E04, E07): no Payload section; What it was done to by name (the replay's audit-detail--subject, reachable only by a staged row)</p>
+<div class="user-page"><section class="detail-card user-section" aria-labelledby="pv3-wh"><h2 id="pv3-wh">What happened</h2><dl class="detail-list"><dt>When</dt><dd>2026-11-10 20:21:44.861 SAST<br /><span class="muted text-sm">Stored as 2026-11-10 18:21:44.861 UTC</span></dd><dt>Category</dt><dd>Command</dd><dt>Action</dt><dd><code>TransitionActivityCommand</code></dd><dt>Institution</dt><dd>Kgosi Kgari Teaching Hospital</dd><dt>Result</dt><dd><span class="badge badge-completed">Success</span></dd></dl></section><section class="detail-card user-section" aria-labelledby="pv3-who"><h2 id="pv3-who">Who</h2><dl class="detail-list"><dt>Name</dt><dd>Nomsa Mahlangu</dd><dt>User id</dt><dd><code>3f1c2a9e-7b40-4d1e-9a52-6c8e0f4b2d17</code></dd><dt>Address</dt><dd>196.21.44.0/24<br /><span class="muted text-sm">Cut to its first 24 bits when stored.</span></dd></dl></section><section class="detail-card user-section" aria-labelledby="pv3-su"><h2 id="pv3-su">What it was done to</h2><dl class="detail-list"><dt>Type</dt><dd>Activity</dd><dt>Id</dt><dd><code>412</code></dd><dt>Institution</dt><dd>Kgosi Kgari Teaching Hospital</dd><dt>Speciality</dt><dd>Paediatrics</dd></dl></section></div>
+
+<p class="pv-cap">Loading, and a read that failed (R2-E10, E11): "Audit entry" in the h1, the house sentence with Try again</p>
+<div class="user-page">
+<p class="loading-line" role="status">Loading this audit entry.</p>
+<div class="detail-card" aria-hidden="true"><div class="skeleton skel-title"></div><div class="skeleton skel-line"></div><div class="skeleton skel-line"></div><div class="skeleton skel-line skel-short"></div></div>
+<div class="action-result" tabindex="-1"><div class="alert alert-danger" role="alert"><div class="alert-row"><span class="alert-row-text">Could not load this audit entry. Nothing has changed. Try again, or come back in a few minutes.</span><button type="button" class="btn btn-outline btn-sm"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M8 16H3v5" /></svg>Try again</button></div></div></div>
+</div>
+
+<p class="pv-cap">Audit entry unavailable (R2-E08): an unknown id or a row out of scope, never which; Go to Audit log returns to the rows</p>
+<nav aria-label="Breadcrumb"><ol class="breadcrumbs"><li class="breadcrumb-ancestor"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Home</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li><li class="breadcrumb-parent"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Audit log</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li><li class="breadcrumb-current"><span aria-current="page">Audit entry unavailable</span></li></ol></nav>
+<div class="header-container">
+  <div>
+    <h1>Audit entry unavailable</h1>
+  </div>
+</div>
+<div class="user-page">
+  <div class="detail-card detail-card--empty"><div class="state-panel-copy">This audit entry does not exist, or you cannot open it.</div><div class="form-actions"><a class="btn btn-primary" href="#">Go to Audit log</a></div></div>
+</div>
+</div>
+
+<p class="pv-cap">At 390: each value under its term; the payload keeps its ceiling and wraps, never scrolling sideways</p>
+<div class="pv-narrow">
+<div class="header-container">
+  <div>
+    <h1>Audit entry</h1>
+    <p class="page-subtitle">TransitionActivityCommand by Nomsa Mahlangu, 2026-11-10 20:21:44 SAST · Failed</p>
+  </div>
+</div>
+<div class="user-page"><section class="detail-card user-section" aria-labelledby="pv4-wh"><h2 id="pv4-wh">What happened</h2><dl class="detail-list"><dt>When</dt><dd>2026-11-10 20:21:44.861 SAST<br /><span class="muted text-sm">Stored as 2026-11-10 18:21:44.861 UTC</span></dd><dt>Category</dt><dd>Command</dd><dt>Action</dt><dd><code>TransitionActivityCommand</code></dd><dt>Institution</dt><dd>Kgosi Kgari Teaching Hospital</dd><dt>Result</dt><dd><span class="badge badge-declined">Failed</span><br /><span class="text-sm">Not submitted. It is still a draft.</span></dd></dl></section><section class="detail-card user-section" aria-labelledby="pv4-who"><h2 id="pv4-who">Who</h2><dl class="detail-list"><dt>Name</dt><dd>Nomsa Mahlangu</dd><dt>User id</dt><dd><code>3f1c2a9e-7b40-4d1e-9a52-6c8e0f4b2d17</code></dd><dt>Address</dt><dd>196.21.44.0/24<br /><span class="muted text-sm">Cut to its first 24 bits when stored.</span></dd></dl></section><section class="detail-card user-section" aria-labelledby="pv4-su"><h2 id="pv4-su">What it was done to</h2><p>No subject</p></section><section class="detail-card user-section"><h2 id="pv4-pl">Payload</h2><p class="muted text-sm">As stored, laid out one property a line: secrets read "[REDACTED]" and the signed-in person "[PRINCIPAL]".</p><pre class="code-block code-block--region" tabindex="0" role="region" aria-labelledby="pv4-pl">{
+  "ActivityId": 412,
+  "TransitionKey": "submit",
+  "Data": {
+    "encounter_date": "2026-11-09",
+    "setting": "Ward",
+    "case_summary": "A 4-year-old with bronchiolitis on high-flow oxygen; weaning plan discussed with the family.",
+    "assessor": "[REDACTED]"
+  },
+  "Principal": "[PRINCIPAL]"
+}</pre></section></div>
+</div>
+</body>
+</html>

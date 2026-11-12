@@ -1,0 +1,93 @@
+<!-- @dsCard group="Platform operations" height=1020 width=1180 subtitle="Institutions: by name, no pager; the name the row header, Short code, Contact email (None muted), Status a badge (Active green, Inactive neutral), Created the South African day, Edit named for its row; Create institution once read; loading and the fixed-words failure; stacked to 1150px; 390" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Institutions</title>
+<style>
+  /* The card is 1180px wide so that app.css's 1150px query (the list stacks to 1150px) does not fire on the wide
+     renditions; each is drawn in a 974px column, the content column beside the sidebar at 1280. */
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-col { max-width: 974px; }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  /* The stacked list (at 1150px and below in the app) and the phone's rules (below 641px), repeated under .pv-narrow
+     (a 358px column: 390 less the phone's 16px gutters). */
+  .pv-narrow { max-width: 358px; }
+  .pv-narrow .header-container { flex-wrap: wrap; }
+  .pv-narrow .header-container .actions-cell { width: 100%; }
+  .pv-narrow .header-container .actions-cell .btn { flex: 1 1 auto; min-height: 2.75rem; }
+  .pv-narrow .clinic-table--stack-wide thead { border: 0; clip: rect(0, 0, 0, 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; white-space: nowrap; width: 1px; }
+  .pv-narrow .clinic-table--stack-wide tbody tr { border-bottom: 1px solid var(--border-color); display: grid; gap: var(--space-xs); padding: var(--space-sm) var(--space-md); }
+  .pv-narrow .clinic-table--stack-wide tbody tr:last-child { border-bottom: 0; }
+  .pv-narrow .clinic-table--stack-wide td, .pv-narrow .clinic-table--stack-wide tbody th { border: 0; padding: 0; width: auto; }
+  .pv-narrow .clinic-table--stack-wide th[scope="row"] { display: block; }
+  .pv-narrow .clinic-table--stack-wide td[data-label]::before { color: var(--muted-text); content: attr(data-label) ": "; content: attr(data-label) ": " / ""; font-weight: 600; }
+  .pv-narrow .clinic-table--stack-wide .btn { min-height: 2.75rem; }
+</style>
+</head>
+<body>
+<div class="pv-col">
+<p class="pv-cap">The Administrator opens Institutions (R2-I01): two rows by name, one inactive with no contact email</p>
+<div class="header-container">
+  <div>
+    <h1>Institutions</h1>
+    <p class="page-subtitle">The institutions that hold Wombat's people and records.</p>
+  </div>
+  <div class="actions-cell"><a class="btn btn-primary" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>Create institution</a></div>
+</div>
+<div class="people-page institutions-page">
+  <div class="table-container shadow"><table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table"><caption>Institutions</caption>
+    <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader" class="col-wrap">Name</th><th scope="col" role="columnheader" class="col-fit--wide">Short code</th><th scope="col" role="columnheader" class="col-wrap">Contact email</th><th scope="col" role="columnheader" class="col-fit--wide">Status</th><th scope="col" role="columnheader" class="col-fit--wide">Created</th><th scope="col" role="columnheader" class="col-fit--wide"><span class="visually-hidden">Actions</span></th></tr></thead>
+    <tbody role="rowgroup">
+      <tr role="row"><th scope="row" role="rowheader" class="col-wrap">Demo Institution</th><td role="cell" data-label="Short code" class="col-fit--wide">DEMO</td><td role="cell" data-label="Contact email" class="col-wrap"><span class="muted">None</span></td><td role="cell" data-label="Status" class="col-fit--wide"><span class="badge badge-withdrawn">Inactive</span></td><td role="cell" data-label="Created" class="col-fit--wide">2026-09-16</td><td role="cell" class="col-fit--wide"><a class="btn btn-sm btn-outline" href="#" aria-label="Edit Demo Institution">Edit</a></td></tr>
+      <tr role="row"><th scope="row" role="rowheader" class="col-wrap">Kgosi Kgari Teaching Hospital</th><td role="cell" data-label="Short code" class="col-fit--wide">KGK</td><td role="cell" data-label="Contact email" class="col-wrap">hod.paediatrics@<wbr>kgk.wombat.local</td><td role="cell" data-label="Status" class="col-fit--wide"><span class="badge badge-completed">Active</span></td><td role="cell" data-label="Created" class="col-fit--wide">2026-09-16</td><td role="cell" class="col-fit--wide"><a class="btn btn-sm btn-outline" href="#" aria-label="Edit Kgosi Kgari Teaching Hospital">Edit</a></td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+<p class="pv-cap">Loading (R2-I03): the loading line over a skeleton card; no Create institution until the rows are in</p>
+<div class="header-container">
+  <div>
+    <h1>Institutions</h1>
+    <p class="page-subtitle">The institutions that hold Wombat's people and records.</p>
+  </div>
+</div>
+<div class="people-page institutions-page">
+  <p class="loading-line" role="status">Loading the institutions.</p>
+  <div class="detail-card" aria-hidden="true"><div class="skeleton skel-title"></div><div class="skeleton skel-line"></div><div class="skeleton skel-line"></div><div class="skeleton skel-line skel-short"></div></div>
+</div>
+
+<p class="pv-cap">The read failed (R2-I05): the house sentence with Try again, which focuses the h1 once it reads; no Create institution</p>
+<div class="header-container">
+  <div>
+    <h1>Institutions</h1>
+    <p class="page-subtitle">The institutions that hold Wombat's people and records.</p>
+  </div>
+</div>
+<div class="people-page institutions-page">
+  <div class="action-result" tabindex="-1"><div class="alert alert-danger" role="alert"><div class="alert-row"><span class="alert-row-text">Could not load the institutions. Nothing has changed. Try again, or come back in a few minutes.</span><button type="button" class="btn btn-outline btn-sm"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M8 16H3v5" /></svg>Try again</button></div></div></div>
+</div>
+</div>
+
+<p class="pv-cap">At 390 (stacked from 1150px): each institution a block, its name first, the labels muted, Edit 44px; Create institution takes the row</p>
+<div class="pv-narrow">
+<div class="header-container">
+  <div>
+    <h1>Institutions</h1>
+    <p class="page-subtitle">The institutions that hold Wombat's people and records.</p>
+  </div>
+  <div class="actions-cell"><a class="btn btn-primary" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>Create institution</a></div>
+</div>
+<div class="people-page institutions-page">
+  <div class="table-container shadow"><table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table"><caption>Institutions</caption>
+    <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader" class="col-wrap">Name</th><th scope="col" role="columnheader" class="col-fit--wide">Short code</th><th scope="col" role="columnheader" class="col-wrap">Contact email</th><th scope="col" role="columnheader" class="col-fit--wide">Status</th><th scope="col" role="columnheader" class="col-fit--wide">Created</th><th scope="col" role="columnheader" class="col-fit--wide"><span class="visually-hidden">Actions</span></th></tr></thead>
+    <tbody role="rowgroup">
+      <tr role="row"><th scope="row" role="rowheader" class="col-wrap">Demo Institution</th><td role="cell" data-label="Short code" class="col-fit--wide">DEMO</td><td role="cell" data-label="Contact email" class="col-wrap"><span class="muted">None</span></td><td role="cell" data-label="Status" class="col-fit--wide"><span class="badge badge-withdrawn">Inactive</span></td><td role="cell" data-label="Created" class="col-fit--wide">2026-09-16</td><td role="cell" class="col-fit--wide"><a class="btn btn-sm btn-outline" href="#" aria-label="Edit Demo Institution">Edit</a></td></tr>
+      <tr role="row"><th scope="row" role="rowheader" class="col-wrap">Kgosi Kgari Teaching Hospital</th><td role="cell" data-label="Short code" class="col-fit--wide">KGK</td><td role="cell" data-label="Contact email" class="col-wrap">hod.paediatrics@<wbr>kgk.wombat.local</td><td role="cell" data-label="Status" class="col-fit--wide"><span class="badge badge-completed">Active</span></td><td role="cell" data-label="Created" class="col-fit--wide">2026-09-16</td><td role="cell" class="col-fit--wide"><a class="btn btn-sm btn-outline" href="#" aria-label="Edit Kgosi Kgari Teaching Hospital">Edit</a></td></tr>
+    </tbody>
+  </table></div>
+</div>
+</div>
+</body>
+</html>

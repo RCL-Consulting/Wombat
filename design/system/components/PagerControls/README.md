@@ -31,6 +31,8 @@ Flow 14's queue (DataRightsRequests) passes `Label` "Requests, pages" and `PageS
 
 Flow 15's EPA list (Epas; T392, P5) passes `Label` "Pages of EPAs" and `PageSizeLabel` "EPAs per page", drawn while the list runs past the chosen size (`list.Epas.Count > _pageSize`). Its rows are read once and paged on the page, so a turn reads nothing; a page turn focuses the h1.
 
+Flow 18's Run history and audit log (RunHistory, AuditLog; T400, M2, N1) draw it **whenever the list has a row** ("Showing 1–21 of 21"), 50 a page, in its own order, its default words ("Per page:"), with no `Label`. The page and a size other than 50 ride in the page's own address (`page=`, `size=`), so a page turn reads that address; a turn focuses the list's `h2.list-section-title` ("Runs", "Actions"), and a page past the last (a hand-made address) reads the last.
+
 ## Known gaps
 
 T280's pager half closed with flow 08 (T364): the select is named by its label on every list.

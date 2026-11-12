@@ -1,0 +1,161 @@
+<!-- @dsCard group="Platform operations" height=2300 width=974 subtitle="Create institution and the Administrator's record: three fields with their help, aria-required and never required; refusals under their fields; created and saved results by name; the Status section with the one trigger the state allows; Deactivate and Reactivate questions in the action mode; the fixed-words failure; Institution unavailable; 390" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AdminInstitutionRecord</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  /* The app opens a question with showModal(); a static preview cannot, so the stage paints its backdrop. */
+  .pv-stage { background: var(--scrim); padding: var(--space-2xl) 0; }
+  .pv-stage dialog { position: static; margin: 0 auto; }
+  /* Below 641px (.record-page's phone rules): controls 44px, the actions stacked primary-first, the form's width;
+     repeated under .pv-narrow (a 358px column: 390 less the phone's 16px gutters). */
+  .pv-narrow { max-width: 358px; }
+  .pv-narrow .record-page .btn, .pv-narrow .record-page .form-control { min-height: 2.75rem; }
+  .pv-narrow .record-page .form-actions { align-items: stretch; flex-direction: column-reverse; }
+  .pv-narrow .record-page .form-actions .btn { width: 100%; }
+</style>
+</head>
+<body>
+<p class="pv-cap">Create institution (R3-I08): the mark line, Name * and Short code * (aria-required, never required, no maxlength), Contact email; each help under its field; no Back, the trail and Cancel</p>
+<nav aria-label="Breadcrumb"><ol class="breadcrumbs"><li class="breadcrumb-ancestor"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Home</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li><li class="breadcrumb-parent"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Institutions</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li><li class="breadcrumb-current"><span aria-current="page">Create institution</span></li></ol></nav>
+<div class="header-container">
+  <div>
+    <h1>Create institution</h1>
+    <p class="page-subtitle">A new institution is active from the moment it is saved, so its people can be invited.</p>
+  </div>
+</div>
+<div class="record-page"><form class="form-container" novalidate>
+  <p class="field-help">* marks a field you must fill in.</p>
+  <div class="form-grid">
+    <div class="form-group"><label for="pv1-n">Name<span class="required-mark" aria-hidden="true"> *</span><span class="visually-hidden"> required</span></label><input id="pv1-n" type="text" class="form-control" aria-required="true" autocomplete="off" aria-describedby="pv1-n-help" value=""><p class="field-help" id="pv1-n-help">Up to 200 characters.</p></div>
+    <div class="form-group"><label for="pv1-s">Short code<span class="required-mark" aria-hidden="true"> *</span><span class="visually-hidden"> required</span></label><input id="pv1-s" type="text" class="form-control" aria-required="true" autocomplete="off" aria-describedby="pv1-s-help" value=""><p class="field-help" id="pv1-s-help">Up to 32 characters.</p></div>
+    <div class="form-group"><label for="pv1-e">Contact email</label><input id="pv1-e" type="email" class="form-control" autocomplete="off" spellcheck="false" aria-describedby="pv1-e-help" value=""><p class="field-help" id="pv1-e-help">Optional.</p></div>
+  </div>
+  <div class="form-actions"><a class="btn btn-outline" href="#">Cancel</a><button type="submit" class="btn btn-primary">Save</button></div>
+</form></div>
+
+<p class="pv-cap">Refused (R3-I09, I10): the duplicate under Short code, naming no institution, first in its aria-describedby before the help; the address's refusal under Contact email, what was typed kept; the first refused field focused</p>
+<div class="record-page"><form class="form-container" novalidate>
+  <p class="field-help">* marks a field you must fill in.</p>
+  <div class="form-grid">
+    <div class="form-group"><label for="pv2-n">Name<span class="required-mark" aria-hidden="true"> *</span><span class="visually-hidden"> required</span></label><input id="pv2-n" type="text" class="form-control" aria-required="true" autocomplete="off" aria-describedby="pv2-n-help" value="Kosmos Children's Hospital"><p class="field-help" id="pv2-n-help">Up to 200 characters.</p></div>
+    <div class="form-group"><label for="pv2-s">Short code<span class="required-mark" aria-hidden="true"> *</span><span class="visually-hidden"> required</span></label><input id="pv2-s" type="text" class="form-control input-validation-error" aria-required="true" aria-invalid="true" autocomplete="off" aria-describedby="pv2-s-msg pv2-s-help" value="KGK"><p class="validation-message" id="pv2-s-msg">An institution with the same name or short code already exists.</p><p class="field-help" id="pv2-s-help">Up to 32 characters.</p></div>
+    <div class="form-group"><label for="pv2-e">Contact email</label><input id="pv2-e" type="email" class="form-control input-validation-error" aria-invalid="true" autocomplete="off" spellcheck="false" aria-describedby="pv2-e-msg pv2-e-help" value="registrar.kosmos"><p class="validation-message" id="pv2-e-msg">Enter a valid email address, for example name@example.org.</p><p class="field-help" id="pv2-e-help">Optional.</p></div>
+  </div>
+  <div class="form-actions"><a class="btn btn-outline" href="#">Cancel</a><button type="submit" class="btn btn-primary">Save</button></div>
+</form></div>
+
+<p class="pv-cap">Created (R3-I11): the record, its address without the token, the result focused; the subtitle the short code and the state; then Status, its own section, with Deactivate…</p>
+<nav aria-label="Breadcrumb"><ol class="breadcrumbs"><li class="breadcrumb-ancestor"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Home</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li><li class="breadcrumb-parent"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Institutions</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li><li class="breadcrumb-current"><span aria-current="page">Kosmos Children's Hospital</span></li></ol></nav>
+<div class="header-container">
+  <div>
+    <h1>Kosmos Children's Hospital</h1>
+    <p class="page-subtitle">KCH · Active</p>
+  </div>
+</div>
+<div class="record-page">
+  <div class="action-result" tabindex="-1" id="institution-result"><div class="alert alert-success" role="status">Kosmos Children's Hospital created.</div></div>
+  <form class="form-container" novalidate>
+    <p class="field-help">* marks a field you must fill in.</p>
+    <div class="form-grid">
+      <div class="form-group"><label for="pv3-n">Name<span class="required-mark" aria-hidden="true"> *</span><span class="visually-hidden"> required</span></label><input id="pv3-n" type="text" class="form-control" aria-required="true" autocomplete="off" aria-describedby="pv3-n-help" value="Kosmos Children's Hospital"><p class="field-help" id="pv3-n-help">Up to 200 characters.</p></div>
+      <div class="form-group"><label for="pv3-s">Short code<span class="required-mark" aria-hidden="true"> *</span><span class="visually-hidden"> required</span></label><input id="pv3-s" type="text" class="form-control" aria-required="true" autocomplete="off" aria-describedby="pv3-s-help" value="KCH"><p class="field-help" id="pv3-s-help">Up to 32 characters.</p></div>
+      <div class="form-group"><label for="pv3-e">Contact email</label><input id="pv3-e" type="email" class="form-control" autocomplete="off" spellcheck="false" aria-describedby="pv3-e-help" value=""><p class="field-help" id="pv3-e-help">Optional.</p></div>
+    </div>
+    <div class="form-actions"><a class="btn btn-outline" href="#">Cancel</a><button type="submit" class="btn btn-primary">Save</button></div>
+  </form>
+  <section class="user-section" aria-labelledby="pv3-status">
+    <h2 id="pv3-status">Status</h2>
+    <p><span class="badge badge-completed">Active</span> A new invitation can name it.</p>
+    <div class="actions-cell"><button type="button" class="btn btn-outline" aria-haspopup="dialog">Deactivate…</button></div>
+  </section>
+</div>
+
+<p class="pv-cap">Deactivate… (R3-I12): the action mode, opening on Cancel; the danger Deactivate; Cancel and Escape return to the trigger</p>
+<div class="pv-stage">
+  <dialog open class="dialog-scrim dialog-card" aria-labelledby="pv4-title" aria-describedby="pv4-body">
+    <div class="form-container">
+      <h2 id="pv4-title">Deactivate Kgosi Kgari Teaching Hospital?</h2>
+      <p id="pv4-body">No new invitation can be issued for it until it is reactivated. Its people, their records and the invitations already sent are kept. You can reactivate it on this page.</p>
+      <div class="form-actions"><button type="button" class="btn btn-outline">Cancel</button><button type="button" class="btn btn-danger">Deactivate</button></div>
+    </div>
+  </dialog>
+</div>
+
+<p class="pv-cap">Deactivated (R3-I13): the result by name, focused; the subtitle and the section read Inactive, and the one trigger is now Reactivate…</p>
+<div class="header-container">
+  <div>
+    <h1>Kgosi Kgari Teaching Hospital</h1>
+    <p class="page-subtitle">KGK · Inactive</p>
+  </div>
+</div>
+<div class="record-page">
+  <div class="action-result" tabindex="-1"><div class="alert alert-success" role="status">Kgosi Kgari Teaching Hospital deactivated. A new invitation can no longer name it.</div></div>
+  <section class="user-section" aria-labelledby="pv5-status">
+    <h2 id="pv5-status">Status</h2>
+    <p><span class="badge badge-withdrawn">Inactive</span> No new invitation can name it. Its people, their records and the invitations already sent are kept.</p>
+    <div class="actions-cell"><button type="button" class="btn btn-outline" aria-haspopup="dialog">Reactivate…</button></div>
+  </section>
+</div>
+
+<p class="pv-cap">Reactivate… (R3-I14): the primary Reactivate, since reactivating destroys nothing</p>
+<div class="pv-stage">
+  <dialog open class="dialog-scrim dialog-card" aria-labelledby="pv6-title" aria-describedby="pv6-body">
+    <div class="form-container">
+      <h2 id="pv6-title">Reactivate Kgosi Kgari Teaching Hospital?</h2>
+      <p id="pv6-body">A new invitation can name it again. Its people and their records are as they were.</p>
+      <div class="form-actions"><button type="button" class="btn btn-outline">Cancel</button><button type="button" class="btn btn-primary">Reactivate</button></div>
+    </div>
+  </dialog>
+</div>
+
+<p class="pv-cap">A save that failed (R3-I22): T23's fixed sentence, its first sentence bold, the cause to the log; what was typed kept</p>
+<div class="record-page">
+  <div class="action-result" tabindex="-1"><div class="alert alert-danger" role="alert"><strong>Could not save the institution.</strong> Nothing has changed. Try again, or come back in a few minutes.</div></div>
+</div>
+
+<p class="pv-cap">Institution unavailable (R2-I19, Q17): an unknown or out-of-scope id, never which; Go to Institutions for the Administrator (Go to Home for an Institutional admin, whose trail has no Institutions crumb)</p>
+<nav aria-label="Breadcrumb"><ol class="breadcrumbs"><li class="breadcrumb-ancestor"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Home</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li><li class="breadcrumb-parent"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Institutions</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li><li class="breadcrumb-current"><span aria-current="page">Institution unavailable</span></li></ol></nav>
+<div class="header-container">
+  <div>
+    <h1>Institution unavailable</h1>
+  </div>
+</div>
+<div class="record-page">
+  <div class="detail-card detail-card--empty">
+    <div class="state-panel-copy">This institution does not exist, or you cannot open it.</div>
+    <div class="form-actions"><a class="btn btn-primary" href="#">Go to Institutions</a></div>
+  </div>
+</div>
+
+<p class="pv-cap">At 390: every control 44px, Save on top of Cancel, both the form's width; the Status trigger 44px</p>
+<div class="pv-narrow">
+<div class="header-container">
+  <div>
+    <h1>Kgosi Kgari Teaching Hospital</h1>
+    <p class="page-subtitle">KGK · Active</p>
+  </div>
+</div>
+<div class="record-page">
+  <form class="form-container" novalidate>
+    <p class="field-help">* marks a field you must fill in.</p>
+    <div class="form-grid">
+      <div class="form-group"><label for="pv7-n">Name<span class="required-mark" aria-hidden="true"> *</span><span class="visually-hidden"> required</span></label><input id="pv7-n" type="text" class="form-control" aria-required="true" autocomplete="off" aria-describedby="pv7-n-help" value="Kgosi Kgari Teaching Hospital"><p class="field-help" id="pv7-n-help">Up to 200 characters.</p></div>
+      <div class="form-group"><label for="pv7-s">Short code<span class="required-mark" aria-hidden="true"> *</span><span class="visually-hidden"> required</span></label><input id="pv7-s" type="text" class="form-control" aria-required="true" autocomplete="off" aria-describedby="pv7-s-help" value="KGK"><p class="field-help" id="pv7-s-help">Up to 32 characters.</p></div>
+      <div class="form-group"><label for="pv7-e">Contact email</label><input id="pv7-e" type="email" class="form-control" autocomplete="off" spellcheck="false" aria-describedby="pv7-e-help" value="hod.paediatrics@kgk.wombat.local"><p class="field-help" id="pv7-e-help">Optional.</p></div>
+    </div>
+    <div class="form-actions"><a class="btn btn-outline" href="#">Cancel</a><button type="submit" class="btn btn-primary">Save</button></div>
+  </form>
+  <section class="user-section" aria-labelledby="pv7-status">
+    <h2 id="pv7-status">Status</h2>
+    <p><span class="badge badge-completed">Active</span> A new invitation can name it.</p>
+    <div class="actions-cell"><button type="button" class="btn btn-outline" aria-haspopup="dialog">Deactivate…</button></div>
+  </section>
+</div>
+</div>
+</body>
+</html>

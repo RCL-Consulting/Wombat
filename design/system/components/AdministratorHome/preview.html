@@ -1,0 +1,139 @@
+<!-- @dsCard group="Platform operations" height=1570 width=1180 subtitle="The Administrator's Home: System health (Database, Mail, Scheduled jobs, each its name and a word on a badge beside its sentences, every time one unit; Its runs and Scheduled jobs in the footer) and Accounts (the count, who is locked, Users); one job failing; several needing the Administrator; the database down, every part that needs it Not read; 390" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AdministratorHome</title>
+<style>
+  /* The card is 1180px wide so that the grid's three tracks hold (app.css: from 1100px); each Home is drawn in a 974px
+     column, the content column beside the sidebar at 1280, where System health's list is past 30rem. */
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-col { max-width: 974px; }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  /* At 900px and below the grid is one column, and below 641px a footer's buttons are 44px and the footer wraps;
+     repeated under .pv-narrow (a 358px column: 390 less the phone's 16px gutters). The health list's own container
+     query fires by itself there. */
+  .pv-narrow { max-width: 358px; }
+  .pv-narrow .dashboard-grid { grid-template-columns: 1fr; }
+  .pv-narrow .dashboard-grid > * { grid-column: auto; }
+  .pv-narrow .dashboard-card-footer { flex-wrap: wrap; }
+  .pv-narrow .dashboard-card-footer .btn { min-height: 2.75rem; }
+</style>
+</head>
+<body>
+<div class="pv-col">
+<p class="pv-cap">Every part holds (R3-H01): the three lines on OK, each time one unit; Accounts with none locked</p>
+<div class="header-container">
+  <div>
+    <h1>Home</h1>
+    <p class="page-subtitle">Administrator · Semester 2, 2026</p>
+  </div>
+</div>
+<div class="dashboard-grid">
+  <section class="detail-card dashboard-span-2" aria-labelledby="pv1-health"><h2 class="dashboard-card-title" id="pv1-health"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1" /><circle cx="12" cy="12" r="4" /></svg><span>System health</span></h2>
+    <div class="dashboard-card-body">
+      <ul class="health-list">
+        <li class="health-line"><span class="health-line-name">Database<span class="visually-hidden">:</span><span class="badge badge-completed">OK</span></span><div class="health-line-text"><p>The database answers.</p></div></li>
+        <li class="health-line"><span class="health-line-name">Mail<span class="visually-hidden">:</span><span class="badge badge-completed">OK</span></span><div class="health-line-text"><p>Mail is sent. Last sent <span class="nowrap">2026-11-12 08:37 SAST</span>; none waiting; none dropped in the last 24 hours.</p></div></li>
+        <li class="health-line"><span class="health-line-name">Scheduled jobs<span class="visually-hidden">:</span><span class="badge badge-completed">OK</span></span><div class="health-line-text"><p>All 8 jobs last succeeded.</p></div></li>
+      </ul>
+      <div class="dashboard-card-footer"><a class="btn btn-sm btn-outline" href="#">Scheduled jobs</a></div>
+    </div>
+  </section>
+  <section class="detail-card detail-card--emphasis" aria-labelledby="pv1-accounts"><h2 class="dashboard-card-title" id="pv1-accounts"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 20a4 4 0 0 0-8 0M19 20a4 4 0 0 0-3-3.9M5 20a4 4 0 0 1 3-3.9" /><circle cx="12" cy="9" r="3" /></svg><span>Accounts</span></h2>
+    <div class="dashboard-card-body">
+      <div class="dashboard-metric"><span class="dashboard-metric-value">24</span><span class="dashboard-metric-label">accounts</span></div>
+      <p class="muted text-sm">Every account Wombat holds but an erased one.</p>
+      <p>None is locked.</p>
+      <div class="dashboard-card-footer"><a class="btn btn-sm btn-outline" href="#">Users</a></div>
+    </div>
+  </section>
+</div>
+
+<p class="pv-cap">One job failed, one mail dropped, one account locked (R3-H04, H05, H10): Failing on two lines; Its runs before Scheduled jobs, named for the job</p>
+<div class="dashboard-grid">
+  <section class="detail-card dashboard-span-2" aria-labelledby="pv2-health"><h2 class="dashboard-card-title" id="pv2-health"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1" /><circle cx="12" cy="12" r="4" /></svg><span>System health</span></h2>
+    <div class="dashboard-card-body">
+      <ul class="health-list">
+        <li class="health-line"><span class="health-line-name">Database<span class="visually-hidden">:</span><span class="badge badge-completed">OK</span></span><div class="health-line-text"><p>The database answers.</p></div></li>
+        <li class="health-line"><span class="health-line-name">Mail<span class="visually-hidden">:</span><span class="badge badge-declined">Failing</span></span><div class="health-line-text"><p>1 mail was dropped in the last 24 hours, the last at <span class="nowrap">2026-11-12 07:12 SAST</span>: 550 5.1.1 The email account that you tried to reach does not exist. The application log names each one.</p></div></li>
+        <li class="health-line"><span class="health-line-name">Scheduled jobs<span class="visually-hidden">:</span><span class="badge badge-declined">Failing</span></span><div class="health-line-text"><p>entrustment-decision-expiry failed at <span class="nowrap">2026-11-12 05:30 SAST</span>: The connection was reset while the expiry reminders were sent.</p></div></li>
+      </ul>
+      <div class="dashboard-card-footer"><a class="btn btn-sm btn-outline" href="#">Its runs<span class="visually-hidden">: entrustment-decision-expiry, failed</span></a><a class="btn btn-sm btn-outline" href="#">Scheduled jobs</a></div>
+    </div>
+  </section>
+  <section class="detail-card detail-card--emphasis" aria-labelledby="pv2-accounts"><h2 class="dashboard-card-title" id="pv2-accounts"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 20a4 4 0 0 0-8 0M19 20a4 4 0 0 0-3-3.9M5 20a4 4 0 0 1 3-3.9" /><circle cx="12" cy="9" r="3" /></svg><span>Accounts</span></h2>
+    <div class="dashboard-card-body">
+      <div class="dashboard-metric"><span class="dashboard-metric-value">24</span><span class="dashboard-metric-label">accounts</span></div>
+      <p class="muted text-sm">Every account Wombat holds but an erased one.</p>
+      <p>1 is locked and cannot sign in now.</p>
+      <div class="dashboard-card-footer"><a class="btn btn-sm btn-outline" href="#">Users</a></div>
+    </div>
+  </section>
+</div>
+
+<p class="pv-cap">Three jobs need the Administrator (R3-H09): the worst word on the badge, the count in words over one sentence each; no mail server set (Not configured, two sentences); one of the three failed, so Its runs opens its runs</p>
+<div class="dashboard-grid">
+  <section class="detail-card dashboard-span-2" aria-labelledby="pv3-health"><h2 class="dashboard-card-title" id="pv3-health"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1" /><circle cx="12" cy="12" r="4" /></svg><span>System health</span></h2>
+    <div class="dashboard-card-body">
+      <ul class="health-list">
+        <li class="health-line"><span class="health-line-name">Database<span class="visually-hidden">:</span><span class="badge badge-completed">OK</span></span><div class="health-line-text"><p>The database answers.</p></div></li>
+        <li class="health-line"><span class="health-line-name">Mail<span class="visually-hidden">:</span><span class="badge badge-accepted">Not configured</span></span><div class="health-line-text"><p>Mail is written to the log, not sent.</p><p>To send mail, set Email__SmtpHost on the server and restart Wombat.</p></div></li>
+        <li class="health-line"><span class="health-line-name">Scheduled jobs<span class="visually-hidden">:</span><span class="badge badge-declined">Failing</span></span><div class="health-line-text"><p>Three jobs need you:</p><ul><li>audit-log-retention failed at <span class="nowrap">2026-11-12 05:00 SAST</span>.</li><li>msf-campaign-auto-close has not run since it was due at <span class="nowrap">2026-11-12 08:00 SAST</span>: the scheduler did not start it. The application log says why; Run now runs it.</li><li>weekly-coordinator-digest is disabled, so the scheduler does not run it.</li></ul></div></li>
+      </ul>
+      <div class="dashboard-card-footer"><a class="btn btn-sm btn-outline" href="#">Its runs<span class="visually-hidden">: audit-log-retention, failed</span></a><a class="btn btn-sm btn-outline" href="#">Scheduled jobs</a></div>
+    </div>
+  </section>
+  <section class="detail-card detail-card--emphasis" aria-labelledby="pv3-accounts"><h2 class="dashboard-card-title" id="pv3-accounts"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 20a4 4 0 0 0-8 0M19 20a4 4 0 0 0-3-3.9M5 20a4 4 0 0 1 3-3.9" /><circle cx="12" cy="9" r="3" /></svg><span>Accounts</span></h2>
+    <div class="dashboard-card-body">
+      <div class="dashboard-metric"><span class="dashboard-metric-value">24</span><span class="dashboard-metric-label">accounts</span></div>
+      <p class="muted text-sm">Every account Wombat holds but an erased one.</p>
+      <p>None is locked.</p>
+      <div class="dashboard-card-footer"><a class="btn btn-sm btn-outline" href="#">Users</a></div>
+    </div>
+  </section>
+</div>
+
+<p class="pv-cap">The database does not answer (R3-H08): Unreachable with the moment; the parts that need it Not read, with no footer; the mail line with no server set is configuration and still answers</p>
+<div class="dashboard-grid">
+  <section class="detail-card dashboard-span-2" aria-labelledby="pv4-health"><h2 class="dashboard-card-title" id="pv4-health"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1" /><circle cx="12" cy="12" r="4" /></svg><span>System health</span></h2>
+    <div class="dashboard-card-body">
+      <ul class="health-list">
+        <li class="health-line"><span class="health-line-name">Database<span class="visually-hidden">:</span><span class="badge badge-declined">Unreachable</span></span><div class="health-line-text"><p>The database did not answer at <span class="nowrap">21:39 SAST</span>, so Wombat can read and save nothing, and /health says Unhealthy.</p></div></li>
+        <li class="health-line"><span class="health-line-name">Mail<span class="visually-hidden">:</span><span class="badge badge-accepted">Not configured</span></span><div class="health-line-text"><p>Mail is written to the log, not sent.</p><p>To send mail, set Email__SmtpHost on the server and restart Wombat.</p></div></li>
+        <li class="health-line"><span class="health-line-name">Scheduled jobs<span class="visually-hidden">:</span><span class="badge badge-draft">Not read</span></span><div class="health-line-text"><p>Not read: the database did not answer.</p></div></li>
+      </ul>
+    </div>
+  </section>
+  <section class="detail-card detail-card--emphasis" aria-labelledby="pv4-accounts"><h2 class="dashboard-card-title" id="pv4-accounts"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 20a4 4 0 0 0-8 0M19 20a4 4 0 0 0-3-3.9M5 20a4 4 0 0 1 3-3.9" /><circle cx="12" cy="9" r="3" /></svg><span>Accounts</span></h2>
+    <div class="dashboard-card-body"><p>Not read: the database did not answer.</p></div>
+  </section>
+</div>
+</div>
+
+<p class="pv-cap">At 390: one column; the list under 30rem, so each name and badge on one row over its sentences; the footer's buttons 44px, wrapping</p>
+<div class="pv-narrow">
+<div class="dashboard-grid">
+  <section class="detail-card dashboard-span-2" aria-labelledby="pv5-health"><h2 class="dashboard-card-title" id="pv5-health"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1" /><circle cx="12" cy="12" r="4" /></svg><span>System health</span></h2>
+    <div class="dashboard-card-body">
+      <ul class="health-list">
+        <li class="health-line"><span class="health-line-name">Database<span class="visually-hidden">:</span><span class="badge badge-completed">OK</span></span><div class="health-line-text"><p>The database answers.</p></div></li>
+        <li class="health-line"><span class="health-line-name">Mail<span class="visually-hidden">:</span><span class="badge badge-completed">OK</span></span><div class="health-line-text"><p>Mail is sent. Last sent <span class="nowrap">2026-11-12 08:37 SAST</span>; none waiting; none dropped in the last 24 hours.</p></div></li>
+        <li class="health-line"><span class="health-line-name">Scheduled jobs<span class="visually-hidden">:</span><span class="badge badge-declined">Failing</span></span><div class="health-line-text"><p>entrustment-decision-expiry failed at <span class="nowrap">2026-11-12 05:30 SAST</span>: The connection was reset while the expiry reminders were sent.</p></div></li>
+      </ul>
+      <div class="dashboard-card-footer"><a class="btn btn-sm btn-outline" href="#">Its runs<span class="visually-hidden">: entrustment-decision-expiry, failed</span></a><a class="btn btn-sm btn-outline" href="#">Scheduled jobs</a></div>
+    </div>
+  </section>
+  <section class="detail-card detail-card--emphasis" aria-labelledby="pv5-accounts"><h2 class="dashboard-card-title" id="pv5-accounts"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 20a4 4 0 0 0-8 0M19 20a4 4 0 0 0-3-3.9M5 20a4 4 0 0 1 3-3.9" /><circle cx="12" cy="9" r="3" /></svg><span>Accounts</span></h2>
+    <div class="dashboard-card-body">
+      <div class="dashboard-metric"><span class="dashboard-metric-value">24</span><span class="dashboard-metric-label">accounts</span></div>
+      <p class="muted text-sm">Every account Wombat holds but an erased one.</p>
+      <p>None is locked.</p>
+      <div class="dashboard-card-footer"><a class="btn btn-sm btn-outline" href="#">Users</a></div>
+    </div>
+  </section>
+</div>
+</div>
+</body>
+</html>

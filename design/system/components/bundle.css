@@ -2025,28 +2025,6 @@ textarea[aria-invalid="true"] {
   border-color: var(--input-border);
 }
 
-/* ── Status dots ──────────────────────────────────── */
-.status-dot {
-  border-radius: 50%;
-  display: inline-block;
-  height: 0.6rem;
-  margin-right: var(--space-sm);
-  vertical-align: middle;
-  width: 0.6rem;
-}
-
-.status-dot.ok {
-  background: var(--success-color);
-}
-
-.status-dot.warn {
-  background: var(--warning-color);
-}
-
-.status-dot.err {
-  background: var(--danger-color);
-}
-
 /* ── Builder ───────────────────────────────────────── */
 /* C1 (T398, flow 17; Q1, T3, S2, S24): the builder's own tab bar as the tabs pattern. role="tablist" on the bar,
    role="tab" with aria-selected on each button; the selected tab is told by a 3px underline in the action blue and by
@@ -7547,12 +7525,16 @@ a.dashboard-metric:hover .dashboard-metric-label {
    replay): the items' six compact columns need 691 to 744px, and a 1025px viewport leaves 717; the build's sweep found
    the Administrator's Curricula 756px wide in a 717px container at 1025px and 742px at 1050px, so it moved from the
    1024px stack to that one. A stacked row never scrolls; its row actions are 44px. The build's sweep (900 to
-   1100px, 25px steps, each table's scrollWidth against its container's clientWidth) confirms the edges. */
+   1100px, 25px steps, each table's scrollWidth against its container's clientWidth) confirms the edges. Run history
+   (.job-runs-page, T400, flow 18, C1) joins this stack as a readability choice, not an overflow fix (S8, R3-0-spec-3
+   § 10): its table needs 573 to 579px, which a container has from 887px, so from there to 1024px the stack is chosen
+   for reading, not needed for room. */
 @media (max-width: 1024px) {
   .epas-page .clinic-table--stack-wide thead,
   .colleges-page .clinic-table--stack-wide thead,
   .college-tree-page .clinic-table--stack-wide thead,
-  .workflow-readout .clinic-table--stack-wide thead {
+  .workflow-readout .clinic-table--stack-wide thead,
+  .job-runs-page .clinic-table--stack-wide thead {
     border: 0;
     clip: rect(0, 0, 0, 0);
     height: 1px;
@@ -7567,7 +7549,8 @@ a.dashboard-metric:hover .dashboard-metric-label {
   .epas-page .clinic-table--stack-wide tbody tr,
   .colleges-page .clinic-table--stack-wide tbody tr,
   .college-tree-page .clinic-table--stack-wide tbody tr,
-  .workflow-readout .clinic-table--stack-wide tbody tr {
+  .workflow-readout .clinic-table--stack-wide tbody tr,
+  .job-runs-page .clinic-table--stack-wide tbody tr {
     border-bottom: 1px solid var(--border-color);
     display: grid;
     gap: var(--space-xs);
@@ -7577,7 +7560,8 @@ a.dashboard-metric:hover .dashboard-metric-label {
   .epas-page .clinic-table--stack-wide tbody tr:last-child,
   .colleges-page .clinic-table--stack-wide tbody tr:last-child,
   .college-tree-page .clinic-table--stack-wide tbody tr:last-child,
-  .workflow-readout .clinic-table--stack-wide tbody tr:last-child {
+  .workflow-readout .clinic-table--stack-wide tbody tr:last-child,
+  .job-runs-page .clinic-table--stack-wide tbody tr:last-child {
     border-bottom: 0;
   }
 
@@ -7588,7 +7572,9 @@ a.dashboard-metric:hover .dashboard-metric-label {
   .college-tree-page .clinic-table--stack-wide td,
   .college-tree-page .clinic-table--stack-wide tbody th,
   .workflow-readout .clinic-table--stack-wide td,
-  .workflow-readout .clinic-table--stack-wide tbody th {
+  .workflow-readout .clinic-table--stack-wide tbody th,
+  .job-runs-page .clinic-table--stack-wide td,
+  .job-runs-page .clinic-table--stack-wide tbody th {
     border: 0;
     padding: 0;
     width: auto;
@@ -7597,14 +7583,16 @@ a.dashboard-metric:hover .dashboard-metric-label {
   .epas-page .clinic-table--stack-wide th[scope="row"],
   .colleges-page .clinic-table--stack-wide th[scope="row"],
   .college-tree-page .clinic-table--stack-wide th[scope="row"],
-  .workflow-readout .clinic-table--stack-wide th[scope="row"] {
+  .workflow-readout .clinic-table--stack-wide th[scope="row"],
+  .job-runs-page .clinic-table--stack-wide th[scope="row"] {
     display: block;
   }
 
   .epas-page .clinic-table--stack-wide td[data-label]::before,
   .colleges-page .clinic-table--stack-wide td[data-label]::before,
   .college-tree-page .clinic-table--stack-wide td[data-label]::before,
-  .workflow-readout .clinic-table--stack-wide td[data-label]::before {
+  .workflow-readout .clinic-table--stack-wide td[data-label]::before,
+  .job-runs-page .clinic-table--stack-wide td[data-label]::before {
     color: var(--muted-text);
     content: attr(data-label) ": ";
     content: attr(data-label) ": " / "";
@@ -7614,7 +7602,8 @@ a.dashboard-metric:hover .dashboard-metric-label {
   .epas-page .clinic-table--stack-wide .btn,
   .colleges-page .clinic-table--stack-wide .btn,
   .college-tree-page .clinic-table--stack-wide .btn,
-  .workflow-readout .clinic-table--stack-wide .btn {
+  .workflow-readout .clinic-table--stack-wide .btn,
+  .job-runs-page .clinic-table--stack-wide .btn {
     min-height: 2.75rem;
   }
 }
@@ -7622,11 +7611,18 @@ a.dashboard-metric:hover .dashboard-metric-label {
 /* Curricula and the items stack to 1150px (T394 replay, after the states: at the appendix's end an institution's "Curricula
    you train against", with an adoption and a superseded version, ran 17px past its container at 1101px and 8px at 1110),
    and the activity types list (.activity-types-page, T398 replay, states pass 1: its Published, Draft and Status keep their
-   one word, .col-fit--wide, so as a table it needs 779px, 62px past its container at 1025px and 12px at 1075). */
+   one word, .col-fit--wide, so as a table it needs 779px, 62px past its container at 1025px and 12px at 1075).
+   Institutions (.institutions-page), Scheduled jobs (.jobs-page) and the audit log (.audit-page) join it (T400, flow 18,
+   C1) as a readability choice, not an overflow fix (S8, R3-0-spec-3 § 10): above 945px none of their natural tables
+   overflows, but at 1151px Institutions' Contact email runs over three lines and a job's description over four beside
+   short cells; below 945px the stack also keeps the audit log and the job lists in their containers. */
 @media (max-width: 1150px) {
   .curricula-page .clinic-table--stack-wide thead,
   .activity-types-page .clinic-table--stack-wide thead,
-  .curriculum-items-page .clinic-table--stack-wide thead {
+  .curriculum-items-page .clinic-table--stack-wide thead,
+  .institutions-page .clinic-table--stack-wide thead,
+  .jobs-page .clinic-table--stack-wide thead,
+  .audit-page .clinic-table--stack-wide thead {
     border: 0;
     clip: rect(0, 0, 0, 0);
     height: 1px;
@@ -7640,7 +7636,10 @@ a.dashboard-metric:hover .dashboard-metric-label {
 
   .curricula-page .clinic-table--stack-wide tbody tr,
   .activity-types-page .clinic-table--stack-wide tbody tr,
-  .curriculum-items-page .clinic-table--stack-wide tbody tr {
+  .curriculum-items-page .clinic-table--stack-wide tbody tr,
+  .institutions-page .clinic-table--stack-wide tbody tr,
+  .jobs-page .clinic-table--stack-wide tbody tr,
+  .audit-page .clinic-table--stack-wide tbody tr {
     border-bottom: 1px solid var(--border-color);
     display: grid;
     gap: var(--space-xs);
@@ -7649,7 +7648,10 @@ a.dashboard-metric:hover .dashboard-metric-label {
 
   .curricula-page .clinic-table--stack-wide tbody tr:last-child,
   .activity-types-page .clinic-table--stack-wide tbody tr:last-child,
-  .curriculum-items-page .clinic-table--stack-wide tbody tr:last-child {
+  .curriculum-items-page .clinic-table--stack-wide tbody tr:last-child,
+  .institutions-page .clinic-table--stack-wide tbody tr:last-child,
+  .jobs-page .clinic-table--stack-wide tbody tr:last-child,
+  .audit-page .clinic-table--stack-wide tbody tr:last-child {
     border-bottom: 0;
   }
 
@@ -7658,7 +7660,13 @@ a.dashboard-metric:hover .dashboard-metric-label {
   .curriculum-items-page .clinic-table--stack-wide td,
   .curricula-page .clinic-table--stack-wide tbody th,
   .activity-types-page .clinic-table--stack-wide tbody th,
-  .curriculum-items-page .clinic-table--stack-wide tbody th {
+  .curriculum-items-page .clinic-table--stack-wide tbody th,
+  .institutions-page .clinic-table--stack-wide td,
+  .jobs-page .clinic-table--stack-wide td,
+  .audit-page .clinic-table--stack-wide td,
+  .institutions-page .clinic-table--stack-wide tbody th,
+  .jobs-page .clinic-table--stack-wide tbody th,
+  .audit-page .clinic-table--stack-wide tbody th {
     border: 0;
     padding: 0;
     width: auto;
@@ -7666,13 +7674,19 @@ a.dashboard-metric:hover .dashboard-metric-label {
 
   .curricula-page .clinic-table--stack-wide th[scope="row"],
   .activity-types-page .clinic-table--stack-wide th[scope="row"],
-  .curriculum-items-page .clinic-table--stack-wide th[scope="row"] {
+  .curriculum-items-page .clinic-table--stack-wide th[scope="row"],
+  .institutions-page .clinic-table--stack-wide th[scope="row"],
+  .jobs-page .clinic-table--stack-wide th[scope="row"],
+  .audit-page .clinic-table--stack-wide th[scope="row"] {
     display: block;
   }
 
   .curricula-page .clinic-table--stack-wide td[data-label]::before,
   .activity-types-page .clinic-table--stack-wide td[data-label]::before,
-  .curriculum-items-page .clinic-table--stack-wide td[data-label]::before {
+  .curriculum-items-page .clinic-table--stack-wide td[data-label]::before,
+  .institutions-page .clinic-table--stack-wide td[data-label]::before,
+  .jobs-page .clinic-table--stack-wide td[data-label]::before,
+  .audit-page .clinic-table--stack-wide td[data-label]::before {
     color: var(--muted-text);
     content: attr(data-label) ": ";
     content: attr(data-label) ": " / "";
@@ -7681,7 +7695,10 @@ a.dashboard-metric:hover .dashboard-metric-label {
 
   .curricula-page .clinic-table--stack-wide .btn,
   .activity-types-page .clinic-table--stack-wide .btn,
-  .curriculum-items-page .clinic-table--stack-wide .btn {
+  .curriculum-items-page .clinic-table--stack-wide .btn,
+  .institutions-page .clinic-table--stack-wide .btn,
+  .jobs-page .clinic-table--stack-wide .btn,
+  .audit-page .clinic-table--stack-wide .btn {
     min-height: 2.75rem;
   }
 }
@@ -8029,6 +8046,147 @@ a.dashboard-metric:hover .dashboard-metric-label {
   }
 }
 /* end Flow 17: the builder */
+
+/* ── Platform operations ────────────────────────────── */
+/* Flow 18's three lane sections (T400): each lane writes only between its own heading and its end line. The four lists'
+   stacks are C1's selector-list additions to the catalogue's 1024px and 1150px stacks above (§ 0). */
+
+/* Flow 18: Home and the institutions (T400). Lane A. */
+/* R1 (T8, R3-0-spec-2 § 9): System health's lines on the Administrator's Home, Database, Mail and Scheduled jobs. Each is
+   its name over its badge in a 10rem column beside its sentences; under a 30rem list (the container query) the name and
+   badge sit on one row over the sentences. The list is under 30rem from 1100 to 1112px, where Home has three tracks and
+   the card spans two, and wide again from 1113px (S2, measured); to 900px the grid is one column. A state is a word on a
+   badge, never a dot (S5: the status dots are retired). */
+.health-list {
+  container: health / inline-size;
+  display: flex;
+  flex-direction: column;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.health-line {
+  border-top: 1px solid var(--border-color);
+  display: grid;
+  gap: var(--space-xs) var(--space-md);
+  grid-template-columns: 10rem minmax(0, 1fr);
+  padding: var(--space-md) 0;
+}
+
+.health-line:first-child {
+  border-top: 0;
+  padding-top: var(--space-xs);
+}
+
+.health-line:last-child {
+  padding-bottom: 0;
+}
+
+.health-line-name {
+  align-items: flex-start;
+  display: flex;
+  flex-direction: column;
+  font-weight: 600;
+  gap: var(--space-xs);
+}
+
+.health-line-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.health-line-text p,
+.health-line-text ul {
+  margin: 0;
+}
+
+.health-line-text ul {
+  padding-left: var(--space-lg);
+}
+
+@container health (width < 30rem) {
+  .health-line {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .health-line-name {
+    align-items: center;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+  }
+}
+/* end Flow 18: Home and the institutions */
+
+/* Flow 18: the jobs and run history (T400). Lane B. A run's error under its badge, on Scheduled jobs' Last run and Run
+   history's Status, is drawn whole (T1; R3-R07: up to its 2,000 characters), so a long unbroken token in it (a path, an
+   address, a stack frame) breaks anywhere rather than widening the table past its container. The row headers (S7) need
+   no rule: .people-page's .person-cell rules paint the key over its description. */
+.jobs-page td[data-label="Last run"] .text-sm,
+.job-runs-page td[data-label="Status"] .text-sm {
+  overflow-wrap: anywhere;
+}
+/* The build's sweep (T400): a run's error, drawn whole, has a max-content as long as its text, so as a table the auto
+   layout gave its column most of the row (Last run 407px and Status 463px at 1280 with a 330-character error) and broke
+   every other row's keys, descriptions and cron lines over three to seven lines beside that column's empty band. While a
+   row shows an error, its column asks for a share of the table, as round 3 drew it (R3-J08's Last run 241px, R3-R07's
+   Status 440px of 972): the error wraps inside the share, the other columns take their content, and the narrowest table is
+   unchanged (a share is not a floor), so the stacks' edges stand. With no error on the page the columns are as built. */
+.jobs-page .clinic-table:has(td[data-label="Last run"] .text-sm) thead th:nth-child(3) {
+  width: 25%;
+}
+
+.job-runs-page .clinic-table:has(td[data-label="Status"] .text-sm) thead th:nth-child(4) {
+  width: 30%;
+}
+/* T400's replay (Run history at 1280 with a failed run's error): beside Status's share the keys broke at their hyphens
+   ("entrustment-decision-" over "expiry"), every Started over two lines and "Demo Administrator" over two. Started is one
+   .nowrap in the markup (202px at its widest), at every width. A key never breaks where its table has room for it: from
+   1151px, where the narrowest table (the longest key, "msf-invitation-expiry-reminder", 246px; Started 202; Duration 92;
+   Status's badge 110; Ran by's longest word) needs 774px of the container's 828. From 1200px Ran by holds 9rem, so a
+   two-word name stays on one line and the error wraps in what is left (241px at 1280); from 1200 the narrowest table
+   with it is 826px of 877, the 51px left for a longer word in a name. From 1025 to 1150px a key breaks at its hyphens again, which
+   keeps the table inside its 702-827px container (measured with a 200-character error). */
+@media (min-width: 1151px) {
+  .job-runs-page .clinic-table tbody th[scope="row"] {
+    white-space: nowrap;
+  }
+}
+
+@media (min-width: 1200px) {
+  .job-runs-page .clinic-table thead th:nth-child(5) {
+    min-width: 9rem;
+  }
+}
+/* end Flow 18: the jobs and run history */
+
+/* Flow 18: the audit log and an entry (T400). Lane C. */
+/* R2 (Q9, S3, S4; T114 item 1): an audit entry's payload in its own region. .code-block (monospace, pre-wrap, wrapping
+   anywhere) with a ceiling, scrolling inside itself, so a payload of several kilobytes never lengthens the page past it.
+   The region is focusable (tabindex 0, role region, named once by its h2), so a keyboard can scroll it; its ring is the
+   page's global :focus-visible, so none is declared here. The list's 1150px stack is C1's; its two column rules follow. */
+.code-block--region {
+  max-height: 28rem;
+  overflow: auto;
+}
+/* The build's sweep (T400): Action is .col-wrap, so a command's name may break inside itself when the table is short of
+   room, down to .people-page's 7rem floor; but its header's 14% share held it at 144px at 1280, where every longer name
+   ("UpdateCurrentUserProfileCommand") broke over three lines beside When's and Person's empty bands. Here the header asks
+   for no share: the column takes its names' width as the others take theirs, keeping the floor and the break for a narrow
+   table. A failure's stored words under its badge ask for a fifth of the table while a row shows them, as a job's error
+   does: without that the words' max-content took Result to 326px and broke the other columns. */
+.audit-page .clinic-table th.col-wrap {
+  width: auto;
+}
+
+.audit-page .clinic-table:has(td[data-label="Result"] .text-sm) thead th:nth-child(5) {
+  width: 20%;
+}
+/* end Flow 18: the audit log and an entry */
 
 /* ══ MainLayout.razor.css ═══════════════════════════════════════════════════════════════════════════════════════════
    Scoped to MainLayout.razor in the app; written unscoped here (see the header). */

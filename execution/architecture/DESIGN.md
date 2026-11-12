@@ -282,7 +282,7 @@ and a system colour under `@media (forced-colors: active)`. `Design/StylesheetRu
   `MainLayout.razor.css`) only.
 - `--hover-bg` equals `--background-color`, so a row's hover shows only on a surface (N3).
 - The invalid-field stripe is not a token: `inset 4px 0 0 var(--danger-color)` (§ Form system).
-- Radii are the five tokens, and a status dot's 50%. Shadows are the three tokens, except `.detail-card--interactive`'s
+- Radii are the five tokens, and the trajectory chart's round key swatches' 50% (the status dots' too, until T400 retired them). Shadows are the three tokens, except `.detail-card--interactive`'s
   lift under the pointer, `0 4px 12px var(--shadow-color)`, which the sheet does not name.
 - If the palette changes, only `:root` changes, and the tables below are recomputed.
 - Not tokens, never shipped: the sheet's canvas-only colours (#5B6068 and #E6E8EB behind the reconnect boards, the
@@ -4509,9 +4509,9 @@ changes". **There is no `ValidationSummary`** (S22): the page's own checks and t
 what was typed kept), and the built "An institution with the same name or short code already exists." under Short code or
 Name (I08). Saved, the result above the form takes the focus: "**‹name› saved.** Its contact email is now ‹address›."
 (`<wbr>` after the @) or "… It has no contact email now." (I07). A failed read is `StatePanel`'s Alert, "Could not load the
-institution. Nothing has changed. …", with Try again; an id outside her scope is Institution unavailable with Go to Home (T400, Q17; until then Page not found). The
+institution. Nothing has changed. …", with Try again; an id outside their scope is Institution unavailable with Go to Home (T400, Q17; until then Page not found). The
 Administrator's view of the same route is below. **`/admin/institutions/new` is the Administrator's alone** (S12):
-`InstitutionCreate`, a page of its own under the `Administrator` policy, so hers is Access denied.
+`InstitutionCreate`, a page of its own under the `Administrator` policy, so an Institutional admin's is Access denied.
 
 #### The institutions (`/admin/institutions`, `/new`, `/{Id}`, the Administrator's; T400, flow 18, Q5, R2-I01–I06, R3-I07–I16, I22)
 

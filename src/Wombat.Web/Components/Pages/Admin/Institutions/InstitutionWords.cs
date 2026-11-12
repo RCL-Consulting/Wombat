@@ -59,7 +59,7 @@ public static class InstitutionWords
 
     public const string Save = "Save";
 
-    public const string Saving = "Saving...";
+    public const string Saving = "Saving…";
 
     // ─── The Administrator's record (R3-I11–I16, I22; R2-I17–I20) ───────────
 

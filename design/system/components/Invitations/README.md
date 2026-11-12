@@ -47,4 +47,4 @@ On a row not delivered. Its result is the OneTimeLink: "**A new invitation link 
 
 ## Contrast
 
-No new colour token. The Delivery words: body text 12.63:1 and Being sent `muted-text` 5.09:1 on the surface; Sent's icon `success-color` 5.88:1 and the warning icon `warning-color` 5.77:1 on the surface (Status dots' pairs). The note row's words 11.89:1 on `warning-bg`, its stripe 5.43:1. The section's count, `muted-text` on the page's `background-color`, 4.83:1.
+No new colour token. The Delivery words: body text 12.63:1 and Being sent `muted-text` 5.09:1 on the surface; Sent's icon `success-color` 5.88:1 and the warning icon `warning-color` 5.77:1 on the surface (the pairs DESIGN.md's Status dots row carried until flow 18 retired the dots). The note row's words 11.89:1 on `warning-bg`, its stripe 5.43:1. The section's count, `muted-text` on the page's `background-color`, 4.83:1.
