@@ -4936,7 +4936,10 @@ S2, S5): two cards in `DashboardCard`'s markup, each a section named by its `h2`
 - **System health** (`Span="2"`): `ul.health-list` of three `li.health-line` in fixed order, Database, Mail, Scheduled
   jobs (T8). Each is `span.health-line-name` (the name, a visually hidden ":" so it reads "Database: OK", N7, then its
   badge) beside `div.health-line-text` (its sentences as paragraphs; the jobs that need the Administrator as a list under
-  "Three jobs need you:"). The state is a word on a badge, never a dot (S5): OK green; Failing and Unreachable red; Not
+  "Three jobs need you:"). **A time in a sentence never breaks** (T400's replay found "2026-11-" over "12 08:37 SAST" on
+  Mail and "2026-" over "11-12 06:00" on the jobs line): each one, "2026-11-12 08:37 SAST" or the database's "21:39 SAST",
+  is a `span.nowrap` inside its sentence's paragraph (`AdministratorHomeWords.Runs`), so the paragraph still reads as one
+  sentence. The state is a word on a badge, never a dot (S5): OK green; Failing and Unreachable red; Not
   configured and Disabled amber (N3); Overdue `.badge-overdue`; Not read grey. The jobs' badge takes the worst word,
   Failing, then Overdue, then Disabled. No line is a live region, and no sentence holds a link: the card's links are
   outline buttons in its `.dashboard-card-footer` (S1), "Its runs" (to Run history filtered to the one failed job,

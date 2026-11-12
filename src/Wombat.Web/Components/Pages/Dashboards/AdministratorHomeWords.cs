@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text.RegularExpressions;
 using Wombat.Application.Features.Dashboards.Administrator;
 using Wombat.Web.Components.Shared;
 
@@ -14,7 +15,7 @@ namespace Wombat.Web.Components.Pages.Dashboards;
 /// <see cref="BadgeFor" />'s (R3-0-spec-3 § 11): OK green; Failing and Unreachable red; Not configured and Disabled amber
 /// (N3); Overdue its own; Not read grey.
 /// </remarks>
-public static class AdministratorHomeWords
+public static partial class AdministratorHomeWords
 {
     public const string HealthTitle = "System health";
 
@@ -199,6 +200,40 @@ public static class AdministratorHomeWords
         1 => "1 is locked and cannot sign in now.",
         _ => Invariant($"{locked} are locked and cannot sign in now.")
     };
+
+    // ─── A sentence's times (T400's replay) ─────────────────────────────────
+
+    /// <summary>
+    /// A sentence cut into its runs, each time apart (<c>IsTime</c>): "2026-11-12 08:37 SAST", "06:00 SAST". Home draws
+    /// each time as one <c>.nowrap</c> inside the sentence's paragraph, so it never breaks at its hyphen or its spaces (the
+    /// replay found "2026-11-" over "12 08:37 SAST") and the paragraph is still read as one sentence.
+    /// </summary>
+    public static IReadOnlyList<(string Text, bool IsTime)> Runs(string sentence)
+    {
+        var runs = new List<(string Text, bool IsTime)>();
+        var at = 0;
+        foreach (Match time in TimePattern().Matches(sentence))
+        {
+            if (time.Index > at)
+            {
+                runs.Add((sentence[at..time.Index], false));
+            }
+
+            runs.Add((time.Value, true));
+            at = time.Index + time.Length;
+        }
+
+        if (at < sentence.Length)
+        {
+            runs.Add((sentence[at..], false));
+        }
+
+        return runs;
+    }
+
+    /// <summary><see cref="SastTime.Minute(DateTime)" />'s words, or <see cref="SastTime.Clock" />'s with " SAST".</summary>
+    [GeneratedRegex(@"(?:\d{4}-\d{2}-\d{2} )?\d{2}:\d{2} SAST", RegexOptions.CultureInvariant)]
+    private static partial Regex TimePattern();
 
     // ─── Helpers ────────────────────────────────────────────────────────────
 

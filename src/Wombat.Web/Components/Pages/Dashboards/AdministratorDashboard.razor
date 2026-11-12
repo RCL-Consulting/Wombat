@@ -10,8 +10,9 @@
   section named by its h2, in DashboardCard's markup:
   - System health (span 2): three lines in fixed order, Database, Mail, Scheduled jobs (T8), each its name, a visually
     hidden ":" (N7: "Database: OK"), its state as a word on a badge, and its sentences in words (Q2, Q3, Q13, Q18). No
-    status dot (S5) and no link in a sentence: the links are the footer's buttons (S1), "Its runs" only when one job has
-    failed, and no footer while the jobs line reads Not read (R3-H08).
+    status dot (S5), each time in a sentence one .nowrap (T400's replay), and no link in a sentence: the links are the
+    footer's buttons (S1), "Its runs" only when one job has failed, and no footer while the jobs line reads Not read
+    (R3-H08).
   - Accounts: every account but an erased one, and how many cannot sign in now (Q4, Q14, T14), with Users in its footer;
     Not read, with no footer, when the directory did not answer.
   Each part is read on its own (K11, T9): a database that does not answer leaves the Database line and, with no mail server
@@ -30,14 +31,14 @@
             <div class="health-line-text">
               @foreach (var paragraph in line.Paragraphs)
               {
-                <p>@paragraph</p>
+                <p>@Sentence(paragraph)</p>
               }
               @if (line.Items.Count > 0)
               {
                 <ul>
                   @foreach (var item in line.Items)
                   {
-                    <li>@item</li>
+                    <li>@Sentence(item)</li>
                   }
                 </ul>
               }
@@ -87,6 +88,25 @@
 
   /// <summary>Run history filtered to the one failed job's failed runs (T18, R3-H05): the jobs page's own builder.</summary>
   private static string ItsRunsHref(string key) => Wombat.Web.Components.Pages.Admin.Jobs.JobWords.FailedRunsOf(key);
+
+  /// <summary>
+  /// A sentence with each time in it one unit that never breaks (T400's replay: "2026-11-" over "12 08:37 SAST"). The spans
+  /// carry no meaning, so the paragraph is still read as one sentence.
+  /// </summary>
+  private static RenderFragment Sentence(string sentence) => __builder =>
+  {
+    foreach (var (text, isTime) in AdministratorHomeWords.Runs(sentence))
+    {
+      if (isTime)
+      {
+        <span class="nowrap">@text</span>
+      }
+      else
+      {
+        @text
+      }
+    }
+  };
 
   private static IEnumerable<AdministratorHomeWords.HealthLine> Lines(AdministratorDashboardSummaryDto summary)
   {

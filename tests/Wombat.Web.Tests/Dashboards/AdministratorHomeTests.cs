@@ -112,6 +112,54 @@ public sealed class AdministratorHomeTests : TestContext
         var mail = cut.FindAll("li.health-line").ToList()[1];
         Text(mail.QuerySelector(".health-line-name")!).Should().Be("Mail:OK");
         Paragraphs(mail).Should().Equal("Mail is sent. Last sent 2026-11-10 21:09 SAST; none waiting; none dropped in the last 24 hours.");
+        Times(mail).Should().Equal(new[] { "2026-11-10 21:09 SAST" }, "a time in a sentence never breaks (T400's replay)");
+    }
+
+    // ─── T400's replay: a time in a health sentence never breaks ────────────
+
+    [Fact]
+    public void EveryTimeInASentence_IsOneUnbreakableUnit_InsideItsOneParagraph()
+    {
+        var jobs = EightSucceeded();
+        jobs[^1] = Job("weekly-coordinator-digest", AdministratorJobState.NeverRun, new DateTime(2026, 11, 16, 8, 0, 0, DateTimeKind.Utc));
+        var cut = Render(Healthy() with
+        {
+            Mail = new AdministratorMailDto(true, 0, new AdministratorMailOutcomesDto(Now.AddDays(-90), 0, null, null, null)),
+            Jobs = new AdministratorJobsDto(jobs)
+        });
+
+        var lines = cut.FindAll("li.health-line").ToList();
+        Times(lines[1]).Should().Equal("2026-08-12 21:39 SAST");
+        Times(lines[2]).Should().Equal("2026-11-16 10:00 SAST");
+        lines[2].QuerySelectorAll(".health-line-text > p").Should().ContainSingle("the time is a span inside its sentence, not a paragraph of its own");
+        Paragraphs(lines[2]).Should().Equal(
+            "7 jobs last succeeded. weekly-coordinator-digest has not run yet: its first run is 2026-11-16 10:00 SAST.");
+    }
+
+    [Fact]
+    public void ATimeInAListedJobsSentence_AndTheDatabasesClock_AreEachOneUnit()
+    {
+        var jobs = EightSucceeded();
+        jobs[2] = Job("audit-log-retention", AdministratorJobState.Overdue, new DateTime(2026, 11, 10, 1, 0, 0, DateTimeKind.Utc));
+        jobs[3] = Job("entrustment-decision-expiry", AdministratorJobState.Failed) with { LastErrorFirstLine = "Timeout expired." };
+        var cut = Render(Healthy() with { DatabaseFailedAt = Now, Jobs = new AdministratorJobsDto(jobs) });
+
+        var lines = cut.FindAll("li.health-line").ToList();
+        Times(lines[0]).Should().Equal("21:39 SAST");
+        lines[2].QuerySelectorAll(".health-line-text li .nowrap").Select(Text)
+            .Should().Equal("2026-11-10 07:00 SAST", "2026-11-10 03:00 SAST");
+    }
+
+    [Fact]
+    public void Runs_CutsASentenceAtItsTimes_AndPutsItBackWhole()
+    {
+        const string sentence = "Nothing sent since 2026-08-12 21:39 SAST; none waiting. The database did not answer at 21:39 SAST.";
+
+        var runs = AdministratorHomeWords.Runs(sentence);
+
+        runs.Where(run => run.IsTime).Select(run => run.Text).Should().Equal("2026-08-12 21:39 SAST", "21:39 SAST");
+        string.Concat(runs.Select(run => run.Text)).Should().Be(sentence);
+        AdministratorHomeWords.Runs("The database answers.").Should().Equal(new[] { ("The database answers.", false) });
     }
 
     [Fact]
@@ -346,6 +394,9 @@ public sealed class AdministratorHomeTests : TestContext
 
     private static IReadOnlyList<string> Paragraphs(IElement line)
         => line.QuerySelectorAll(".health-line-text > p").Select(Text).ToList();
+
+    private static IReadOnlyList<string> Times(IElement line)
+        => line.QuerySelectorAll(".health-line-text .nowrap").Select(Text).ToList();
 
     private static IElement Badge(IElement line) => line.QuerySelector(".health-line-name .badge")!;
 
