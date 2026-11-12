@@ -96,8 +96,8 @@
               <td role="cell" data-label="Last run">
                 @if (job.LastRunAt is { } lastRun)
                 {
-                  @* A time breaks only between its day and its hour (DESIGN.md § Table system). *@
-                  <span class="nowrap">@JobWords.Day(lastRun)</span>@(" ")<span class="nowrap">@JobWords.ClockToMinute(lastRun)</span><br /><span class="badge @BadgeFor.JobRun(job.LastRunStatus)">@JobWords.Status(job.LastRunStatus)</span>
+                  @* A time here never breaks: the day and the hour are one unit (T400's replay, A.2.1; DESIGN.md § Table system). *@
+                  <span class="nowrap">@JobWords.Day(lastRun) @JobWords.ClockToMinute(lastRun)</span><br /><span class="badge @BadgeFor.JobRun(job.LastRunStatus)">@JobWords.Status(job.LastRunStatus)</span>
                   @if (job.LastRunError is { } error)
                   {
                     <br /><span class="text-sm">@error</span>
@@ -123,7 +123,7 @@
                 }
                 else if (job.NextRunAt is { } next)
                 {
-                  <span class="nowrap">@JobWords.Day(next)</span>@(" ")<span class="nowrap">@JobWords.ClockToMinute(next)</span>
+                  <span class="nowrap">@JobWords.Day(next) @JobWords.ClockToMinute(next)</span>
                 }
               </td>
               <td role="cell">

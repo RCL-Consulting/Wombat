@@ -68,9 +68,9 @@ public sealed class ScheduledJobsPageTests : TestContext
         Text(rowHeader.QuerySelector("span")!).Should().Be("Reminds trainees about draft activities older than 14 days.");
         Text(nudge.QuerySelector("td[data-label=Schedule]")!).Should().Be("Daily at 09:00 SASTcron 0 7 * * *, UTC");
         Text(nudge.QuerySelector("td[data-label=Schedule] code")!).Should().Be("cron 0 7 * * *, UTC");
-        nudge.QuerySelectorAll("td[data-label='Last run'] .nowrap").Select(Text).Should().Equal("2026-11-10", "17:00 SAST");
+        nudge.QuerySelectorAll("td[data-label='Last run'] .nowrap").Select(Text).Should().Equal("2026-11-10 17:00 SAST");
         Text(nudge.QuerySelector("td[data-label='Last run'] .badge")!).Should().Be("Succeeded");
-        nudge.QuerySelectorAll("td[data-label='Next run'] .nowrap").Select(Text).Should().Equal("2026-11-11", "09:00 SAST");
+        nudge.QuerySelectorAll("td[data-label='Next run'] .nowrap").Select(Text).Should().Equal("2026-11-11 09:00 SAST");
 
         var digest = RowOf(cut, "weekly-coordinator-digest");
         Text(digest.QuerySelector("td[data-label='Last run']")!).Should().Be("Not run yet");

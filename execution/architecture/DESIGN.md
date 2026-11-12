@@ -1183,7 +1183,8 @@ cells; below 945px the stack also keeps the audit log and the job lists in their
 On the job lists Job is the row's header (`th scope="row"`, S7): on Scheduled jobs the key over its description in
 `.person-cell`, on Run history the key alone; `.people-page`'s row-header rules paint both, so no rule is new. A time in a
 cell breaks only between its day and its hour (`<span class="nowrap">2026-11-10</span> <span class="nowrap">21:41:44
-SAST</span>`), and a run's error under its badge is drawn whole and breaks anywhere rather than widen the table (T1).
+SAST</span>`); on Scheduled jobs a time never breaks (one `.nowrap`: the replay's A.2.1 found every Last run and
+Next run over two lines at 1280 beside a band, while the description beside them had room to wrap), and a run's error under its badge is drawn whole and breaks anywhere rather than widen the table (T1).
 **While a row shows an error or a failure's words, that column asks for a share of the table** (2026-11-11, T400's
 build sweep): Scheduled jobs' Last run 25%, Run history's Status 30%, the audit log's Result 20% (`:has()` on the table,
 the header by its place), as round 3 drew them (R3-J08, R3-R07). A share is not a floor, so the narrowest table and the
