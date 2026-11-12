@@ -8225,6 +8225,25 @@ a.dashboard-metric:hover .dashboard-metric-label {
 .job-runs-page .clinic-table:has(td[data-label="Status"] .text-sm) thead th:nth-child(4) {
   width: 30%;
 }
+/* T400's replay (Run history at 1280 with a failed run's error): beside Status's share the keys broke at their hyphens
+   ("entrustment-decision-" over "expiry"), every Started over two lines and "Demo Administrator" over two. Started is one
+   .nowrap in the markup (202px at its widest), at every width. A key never breaks where its table has room for it: from
+   1151px, where the narrowest table (the longest key, "msf-invitation-expiry-reminder", 246px; Started 202; Duration 92;
+   Status's badge 110; Ran by's longest word) needs 774px of the container's 828. From 1200px Ran by holds 9rem, so a
+   two-word name stays on one line and the error wraps in what is left (241px at 1280); from 1200 the narrowest table
+   with it is 826px of 877, the 51px left for a longer word in a name. From 1025 to 1150px a key breaks at its hyphens again, which
+   keeps the table inside its 702-827px container (measured with a 200-character error). */
+@media (min-width: 1151px) {
+  .job-runs-page .clinic-table tbody th[scope="row"] {
+    white-space: nowrap;
+  }
+}
+
+@media (min-width: 1200px) {
+  .job-runs-page .clinic-table thead th:nth-child(5) {
+    min-width: 9rem;
+  }
+}
 /* end Flow 18: the jobs and run history */
 
 /* Flow 18: the audit log and an entry (T400). Lane C. */

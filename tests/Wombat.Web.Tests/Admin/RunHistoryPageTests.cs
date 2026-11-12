@@ -1,9 +1,11 @@
+using System.Reflection;
 using System.Security.Claims;
 using AngleSharp.Dom;
 using Bunit;
 using Bunit.TestDoubles;
 using FluentAssertions;
 using MediatR;
+using Microsoft.AspNetCore.Components.RenderTree;
 using Microsoft.Extensions.DependencyInjection;
 using Wombat.Application.Features.Scheduling;
 using Wombat.Application.Features.Scheduling.Queries.GetScheduledJobRuns;
@@ -83,7 +85,8 @@ public sealed class RunHistoryPageTests : TestContext
         cut.FindAll("thead th").Select(Text).Should().Equal("Job", "Started", "Duration", "Status", "Ran by");
         var first = cut.FindAll("tbody tr").ToList()[0];
         Text(first.QuerySelector("th[scope=row]")!).Should().Be("scheduled-job-run-retention");
-        first.QuerySelectorAll("td[data-label=Started] .nowrap").Select(Text).Should().Equal("2026-11-10", "21:41:44 SAST");
+        first.QuerySelectorAll("td[data-label=Started] .nowrap").Select(Text).Should().Equal(
+            new[] { "2026-11-10 21:41:44 SAST" }, "a time never breaks: the day and the hour are one unit (T400's replay)");
         Text(first.QuerySelector("td[data-label=Duration]")!).Should().Be("7 ms");
         Text(first.QuerySelector("td[data-label=Status] .badge")!).Should().Be("Succeeded");
         Text(first.QuerySelector("td[data-label='Ran by']")!).Should().Be("Demo Administrator");
@@ -133,6 +136,39 @@ public sealed class RunHistoryPageTests : TestContext
         cut.Find("#runs-from").GetAttribute("value").Should().Be("2026-11-01");
         cut.Find("#runs-to").GetAttribute("value").Should().Be("2026-11-10");
         cut.FindAll(".filter-actions button").Select(Text).Should().Equal("Show", "Clear filters");
+    }
+
+    /// <summary>
+    /// T400's replay: on a full load and through Home's "Its runs", the list was the address's job's while the select showed
+    /// activity-draft-nudge. Before the read the options are "All jobs" and the address's job, which the browser selects;
+    /// the read puts the stored keys before it. bUnit re-renders the markup whole, so it shows the job selected either way:
+    /// what decides the browser is whether the diff keeps that option element. Unkeyed, it rewrote the second option's
+    /// value to the first stored key, and the browser kept that element selected. This holds the option to its key.
+    /// </summary>
+    [Fact]
+    public void TheAddressesJob_IsTheSameOption_AfterTheStoredKeysArrive_SoTheSelectStillShowsIt()
+    {
+        var pending = new TaskCompletionSource<ScheduledJobRunsPageDto>();
+        _sender.Pending = pending.Task;
+        Services.GetRequiredService<FakeNavigationManager>().NavigateTo(JobLinks.RunsOf("entrustment-decision-expiry", "Failed"));
+        var cut = RenderComponent<ScheduledJobRunsList>();
+
+        var before = JobOptions(cut);
+        before.Select(option => option.Value).Should().Equal("", "entrustment-decision-expiry");
+
+        cut.InvokeAsync(() => pending.SetResult(Page([Run(1, "entrustment-decision-expiry", Started, 29, "Failed", error: "x")])));
+        cut.WaitForState(() => cut.FindAll("p.loading-line").Count == 0);
+
+        var after = JobOptions(cut);
+        after.Select(option => option.Value).Should().Equal(new[] { "" }.Concat(Keys));
+        cut.Find("#runs-job").GetAttribute("value").Should().Be("entrustment-decision-expiry");
+
+        // The element the browser selected before the read is, after it, the one carrying the same key and value.
+        var chosen = before.Single(option => option.Value == "entrustment-decision-expiry");
+        chosen.Key.Should().Be("entrustment-decision-expiry", "an unkeyed option is matched by its place, and its value rewritten");
+        after.Where(option => Equals(option.Key, chosen.Key)).Select(option => option.Value)
+            .Should().Equal(new[] { "entrustment-decision-expiry" }, "the diff keeps the chosen element, still holding its job");
+        after.Skip(1).Should().OnlyContain(option => Equals(option.Key, option.Value), "every job's option is keyed by its job");
     }
 
     [Fact]
@@ -311,6 +347,60 @@ public sealed class RunHistoryPageTests : TestContext
         cut.WaitForState(() => cut.FindAll("p.loading-line").Count == 0);
         return cut;
     }
+
+    /// <summary>
+    /// The Job select's options as the renderer holds them, each its <c>@key</c> and value: what the browser's diff matches
+    /// elements by, which the markup does not show.
+    /// </summary>
+    /// <remarks>The render tree's types are the framework's own (BL0006), read here on purpose, as MainLayoutTests does.</remarks>
+#pragma warning disable BL0006
+    private List<(object? Key, string Value)> JobOptions(IRenderedComponent<ScheduledJobRunsList> cut)
+    {
+        var method = typeof(Microsoft.AspNetCore.Components.RenderTree.Renderer)
+            .GetMethod("GetCurrentRenderTreeFrames", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)!;
+        var frames = (ArrayRange<RenderTreeFrame>)method.Invoke(Renderer, [cut.ComponentId])!;
+        var options = new List<(object? Key, string Value)>();
+        var inSelect = false;
+        var selectEnd = 0;
+        for (var i = 0; i < frames.Count; i++)
+        {
+            var frame = frames.Array[i];
+            if (frame.FrameType != RenderTreeFrameType.Element)
+            {
+                continue;
+            }
+
+            if (frame.ElementName == "select" && !inSelect && HasAttribute(frames, i, "id", "runs-job"))
+            {
+                inSelect = true;
+                selectEnd = i + frame.ElementSubtreeLength;
+            }
+            else if (inSelect && i < selectEnd && frame.ElementName == "option")
+            {
+                options.Add((frame.ElementKey, AttributeOf(frames, i, "value") ?? string.Empty));
+            }
+        }
+
+        return options;
+    }
+
+    private static bool HasAttribute(ArrayRange<RenderTreeFrame> frames, int element, string name, string value)
+        => AttributeOf(frames, element, name) == value;
+
+    private static string? AttributeOf(ArrayRange<RenderTreeFrame> frames, int element, string name)
+    {
+        for (var i = element + 1; i < frames.Count && frames.Array[i].FrameType == RenderTreeFrameType.Attribute; i++)
+        {
+            if (frames.Array[i].AttributeName == name)
+            {
+                // An empty value is compiled as a bare attribute: true.
+                return frames.Array[i].AttributeValue is true ? string.Empty : frames.Array[i].AttributeValue?.ToString();
+            }
+        }
+
+        return null;
+    }
+#pragma warning restore BL0006
 
     private string? FocusedId()
         => JSInterop.Invocations.LastOrDefault(call => call.Identifier == PageFocus.FocusByIdIdentifier).Arguments?.FirstOrDefault() as string;

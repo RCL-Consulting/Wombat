@@ -1183,8 +1183,17 @@ cells; below 945px the stack also keeps the audit log and the job lists in their
 On the job lists Job is the row's header (`th scope="row"`, S7): on Scheduled jobs the key over its description in
 `.person-cell`, on Run history the key alone; `.people-page`'s row-header rules paint both, so no rule is new. A time in a
 cell breaks only between its day and its hour (`<span class="nowrap">2026-11-10</span> <span class="nowrap">21:41:44
-SAST</span>`); on Scheduled jobs a time never breaks (one `.nowrap`: the replay's A.2.1 found every Last run and
-Next run over two lines at 1280 beside a band, while the description beside them had room to wrap), and a run's error under its badge is drawn whole and breaks anywhere rather than widen the table (T1).
+SAST</span>`); **on Scheduled jobs, Run history and Home's health sentences a time never breaks** (one `.nowrap`,
+`<span class="nowrap">2026-11-10 21:41:44 SAST</span>`: the replay's A.2.1 found every Last run and Next run over two
+lines at 1280 beside a band, while the description beside them had room to wrap, and Run history's Started split so
+beside a failed run's error), and a run's error under its badge is drawn whole and breaks anywhere rather than widen the table (T1).
+On Run history a key does not break at its hyphens from 1151px (`white-space: nowrap` on the row header), where the
+narrowest table, the longest key (246px) beside Started's 202px, Duration, Status's badge and Ran by's longest word, needs
+774px of the container's 828; from 1025 to 1150px (702-827px) it breaks at its hyphens again, so the table stays in its
+container with a 200-character error. From 1200px Ran by's header holds `min-width: 9rem`, so a two-word name ("Demo
+Administrator", 135px) stays on one line and the error wraps in what Status keeps (241px at 1280; the narrowest table
+826px of 877 at 1200). The replay had found, at 1280 with an error, "entrustment-decision-" over "expiry", every Started
+over two lines and "Demo Administrator" over two.
 **While a row shows an error or a failure's words, that column asks for a share of the table** (2026-11-11, T400's
 build sweep): Scheduled jobs' Last run 25%, Run history's Status 30%, the audit log's Result 20% (`:has()` on the table,
 the header by its place), as round 3 drew them (R3-J08, R3-R07). A share is not a floor, so the narrowest table and the
@@ -3871,7 +3880,9 @@ it." beside them on a disabled job.
 S4): `.people-page.job-runs-page` under "Every run of the eight jobs, newest first, kept for 90 days.", no Back (the
 trail). Its filter is the audit log's form (`form.search-container.people-filter`, `role="search"`, "Filter the runs"):
 Job a select of the stored jobs' keys with "All jobs" first, so it cannot miss (a key the address names but no job
-stores is added, shown selected); Status (All, Running, Succeeded, Failed); From and To as South African days (`type="date"`,
+stores is added, shown selected; each option is `@key`ed by its job, so the option the address chose before the first
+read is the same element after it and stays selected: unkeyed, the diff rewrote its value to activity-draft-nudge, T400's
+replay); Status (All, Running, Succeeded, Failed); From and To as South African days (`type="date"`,
 labelled "From (a South African day)", "To (a South African day)": a day runs from its 00:00 SAST, 22:00 UTC the day
 before, K7); then `.filter-actions`: Show, `aria-disabled` until the first read is in, and Clear filters only while a
 filter is applied. **Nothing filters until Show**, and Show writes the page's own address, which is the page's state:
@@ -3882,8 +3893,8 @@ whenever it changes, and a value it cannot read (a status that is none of the th
 (`tabindex="-1"`), then **the count line** (`p[tabindex=-1]`, "21 runs.", "1 run.", "2,800 runs.", "No runs match these
 filters."), no live region, which takes the focus after Show; a page turn focuses "Runs", Clear filters and "Clear the
 filters" focus Job, a change of page size leaves the focus on its select. The table is `StackWide` in the 1024px stack
-(C1), captioned "Runs, newest first": Job the row header (the key alone), Started (the day and the hour to the second,
-each `.nowrap`), Duration (`.col-fit--wide`: "7 ms", "1.2 s", "2 min 5 s", "—" while it runs), Status (the badge, a
+(C1), captioned "Runs, newest first": Job the row header (the key alone, unbroken from 1151px), Started (the day and
+the hour to the second, one `.nowrap`), Duration (`.col-fit--wide`: "7 ms", "1.2 s", "2 min 5 s", "—" while it runs), Status (the badge, a
 failed run's error whole under it, T1) and Ran by (the person's name now, an erased person's pseudonym, or "Scheduler").
 `PagerControls` follows at 50 a page in its own order; a page past the last (a hand-made address) reads the last. No match
 is the card "No runs match" / "The filters are kept above. Clear them to see all 21." with "Clear the filters"; no run
@@ -5652,7 +5663,7 @@ fieldset, fieldset legend, fieldset.form-group > legend, fieldset.form-group fie
 /* ── Platform operations ────────────────────────── */
 C1 (T400, § 0): no rule of its own; .institutions-page, .jobs-page and .audit-page join the seven selector lists of flow 16's shared ≤1150px stack, .job-runs-page those of its ≤1024px stack, a readability choice (S8)
 "Flow 18: Home and the institutions (T400). Lane A.": R1, System health's lines (.health-list, a 30rem `health` container; .health-line, the name and badge in a 10rem column beside the sentences; .health-line-name; .health-line-text with its p and ul; under 30rem the name and badge on one row over the sentences, which is so from 1100 to 1112px, S2); the institutions need no rule of their own (the list's 1150px stack is C1's, the record and the create page are .record-page)
-"Flow 18: the jobs and run history (T400). Lane B.": .jobs-page td[data-label="Last run"] .text-sm, .job-runs-page td[data-label="Status"] .text-sm (a run's error, drawn whole, breaks anywhere rather than widen the table, T1); the error's column asks for a share while a row shows one (Last run 25%, Status 30%, the build sweep) (the row headers are .people-page's .person-cell rules, S7; the stacks are C1's)
+"Flow 18: the jobs and run history (T400). Lane B.": .jobs-page td[data-label="Last run"] .text-sm, .job-runs-page td[data-label="Status"] .text-sm (a run's error, drawn whole, breaks anywhere rather than widen the table, T1); the error's column asks for a share while a row shows one (Last run 25%, Status 30%, the build sweep); Run history's key unbroken from 1151px and Ran by's 9rem floor from 1200px (T400's replay) (the row headers are .people-page's .person-cell rules, S7; the stacks are C1's)
 "Flow 18: the audit log and an entry (T400). Lane C.": R2, `.code-block--region` (an entry's payload: a 28rem ceiling and its own scroll, its ring the page's); the build sweep's two: Action's `.col-wrap` header asks for no share, and Result asks for 20% while a row shows a failure's words (the rest of the log is `.people-filter`, the 1150px stack (C1) and `.col-fit--wide`)
 ```
 

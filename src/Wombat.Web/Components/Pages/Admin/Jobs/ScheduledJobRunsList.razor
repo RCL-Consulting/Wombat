@@ -21,7 +21,7 @@
     error; Show waits for the first read (R2-R10).
   - h2 "Runs" (N1), which a page turn focuses; the count line, which Show focuses and which is no live region (N2).
   - The table: StackWide, in the 1024px stack through .job-runs-page (§ 0, C1); Job the row header (S7); Started in SAST
-    to the second, breaking only between its day and its hour; Duration, "—" while it runs; Status, a failed run's
+    to the second, never breaking (one .nowrap, T400's replay); Duration, "—" while it runs; Status, a failed run's
     error whole under its badge (T1); Ran by the person's name, or "Scheduler" (M3).
   - PagerControls at 50 (M2), in its own order. No match: what was asked, and "Clear the filters", which focuses Job; no
     runs at all: "No job has run yet", with no count line and no pager (R2-R08).
@@ -36,9 +36,13 @@
         <label for="@JobFieldId">@JobWords.JobLabel</label>
         <select id="@JobFieldId" class="form-select" @bind="_formJob">
           <option value="">@JobWords.AllJobs</option>
+          @* Each option keyed by its job (T400's replay): before the first read the list is "All jobs" and the address's job;
+             the read then puts the stored keys before it. Unkeyed, the diff rewrote the selected second option's value to
+             the first stored key, and the browser kept that option selected: the select showed activity-draft-nudge while
+             the list was the address's job's. Keyed, the address's option is the same element after the read, still chosen. *@
           @foreach (var key in JobKeys)
           {
-            <option value="@key">@key</option>
+            <option @key="key" value="@key">@key</option>
           }
         </select>
       </div>
@@ -123,7 +127,8 @@
               <Row Context="run">
                 <tr role="row" @key="run.Id">
                   <th scope="row" role="rowheader">@run.Key</th>
-                  <td role="cell" data-label="Started"><span class="nowrap">@JobWords.Day(run.StartedAt)</span>@(" ")<span class="nowrap">@JobWords.ClockToSecond(run.StartedAt)</span></td>
+                  @* A time here never breaks: the day and the hour are one unit (T400's replay; DESIGN.md § Table system). *@
+                  <td role="cell" data-label="Started"><span class="nowrap">@JobWords.Day(run.StartedAt) @JobWords.ClockToSecond(run.StartedAt)</span></td>
                   <td role="cell" data-label="Duration" class="col-fit--wide">@JobWords.Duration(run.StartedAt, run.FinishedAt)</td>
                   <td role="cell" data-label="Status">
                     <span class="badge @BadgeFor.JobRun(run.Status)">@JobWords.Status(run.Status)</span>
