@@ -2,29 +2,27 @@
 
 Cap: 80 lines. The most recent session only; `harness.py trim` archives the rest into `log/`.
 
-## Session 2026-11-11 (Opus): T400, flow 18, designed, built and reviewed; waiting on F1
+## Session 2026-11-11 to 12 (Opus): T400, flow 18, designed, built, replayed and synced; T400 done
 
-The machine restarted at 22:31, seven minutes after the last commit (`05b1a0de`, 22:23). Checked 2026-11-12: master and
-the five `t400*` worktrees are clean, nothing was in flight, no app is running. This block was written after the restart
-from T400's notes, which are complete.
-- **Design:** canvases "Wombat 18" https://claude.ai/artifact/FE7WSRNTmSp88bvS4dZRGV (rounds 1–2) and "Wombat 18 · Round 3";
-  Q1–Q18, T1–T24 and P1 taken as recommended; no round 4. Records in `design/flows/18-platform-operations/`.
-- **Built on branch `t400`** (`f26cd81c`, 16 commits ahead of master, not squashed): § 0 with migration
-  `20261111182215_T400_EmailOutcomes`, lanes A–C, the sweep, lane W, two Sonnet reviews (`build-review.md`). Suites
-  907/4553/1039/52/4950/541, 0 warnings.
-- **2026-11-12:** F1 taken as recommended; the fix pass done; **squashed onto master `34b5077e`** (suites
-  907/4560/1039/52/4952/542, 0 warnings; DESIGN.md's banner lists flow 18).
-- **Step 7 done** (brief `b331c64e`; acts `d5e676ff`…`3fbdd3b0`; states `559c9cee`, `c6d0642b`): acts 1–6 and A
-  clean but known-task Gaps (T365, T320, T382, T286, T385); four flow 18 faults found and fixed on master (`4454e915`
-  the jobs' times, `565b978a` Run history's select and widths, `a7d14b19` Home's times), re-taken and measured; flows
-  01–07's step pointers re-synced (`1c06aa31`). Baseline missing 0. T402 proposed.
-- **For review:** Institutions' 200-character name over 7 lines (not fixed: any share suits one email length); the audit
-  log's "TransitionActivityCommand" over two lines with failures; `audit-detail--subject` reachable only by a staged row.
-- **Next:** steps 8 (design system re-sync and republish) and 9 (lessons) on the operator's word.
+The machine restarted at 22:31 on 11-11 while the session waited on F1; nothing was lost. The operator then said
+"F1 - accepted recommendation" and "proceed" (twice: the fix pass and replay; then steps 8 and 9).
+- **Design:** canvases "Wombat 18" https://claude.ai/artifact/FE7WSRNTmSp88bvS4dZRGV (rounds 1–2) and "Wombat 18 · Round 3"
+  https://claude.ai/artifact/CWTWqELyB63LfwvP7cgyJV; Q1–Q18, T1–T24, P1, F1 taken as recommended; no round 4.
+- **Built and squashed onto master `34b5077e`** (§ 0 with migration `20261111182215_T400_EmailOutcomes`, lanes A–C, the
+  sweep, lane W, two Sonnet reviews, one fix pass): suites 907/4560/1039/52/4952/542, 0 warnings.
+- **Step 7 done:** acts 1–6, A and both states passes on `wombat_scenario_t400`; four flow 18 faults fixed on master
+  (`4454e915`, `565b978a`, `a7d14b19`); flows 01–07's pointers re-synced (`1c06aa31`); baseline missing 0. T402 proposed.
+- **Steps 8 and 9 done:** the live system matched `edb4e5e2` but for CRLF; re-synced (`4e9862fb`, `66befdcc`: a
+  "Platform operations" group of seven records, StatusDot retired); review `design/flows/18-platform-operations/
+  resync-review.md` 0 must, 2 should, 7 nits, fixed but two (`24b6e812`, `65b72a7a`); published as **version 55**
+  (1794474962-9c47; 53 was the type's). BRIEF § 11 "Flow 18", six lessons (`782c145f`). **T400 done.**
+- **For review:** T402 (a failed registration's audit row stores Identity's code); not filed, in the system README's
+  flow 18 known gaps: Institutions' 200-character name over 7 lines at 1280, the audit log's
+  "TransitionActivityCommand" over two lines with failures, `audit-detail--subject` reachable only by a staged row
+  (keep the states row?); app.css's older gendered comments and DESIGN.md's "Her institution's record" heading.
+- **Next:** flow 19 (emails) on the operator's word, or a P2 (T320 the largest).
 - **Environment:** the replay app on :5180 (`wombat_scenario_t400`, master `1c06aa31`) left running; scratch DBs
   `wombat_scenario_t400_{sweep,s10,s11,s20,s21,s22,s23,s515}` kept; dumps `recovery/scenario-t400-post-act{1..6,A}`.
-- **Lane and sweep notes** in the earlier session's scratchpad
-  (`…\5ae5486c-8726-4e89-ae35-c60429e28267\scratchpad\b400`), which survived.
 - **Not pushed:** `337a6675` onward. Ask before pushing.
 
 ## Session 2026-11-09 to 11 (Opus): T398, flow 17, designed, built, replayed and synced; T398 done

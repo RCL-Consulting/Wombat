@@ -1,12 +1,13 @@
 ---
 id: T400
 title: Flow 18, the operator keeps the platform running, has not been through the redesign loop
-status: in_progress
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-11-11
 started: 2026-11-11
+completed: 2026-11-12
 ---
 
 # T400 — Flow 18, the operator keeps the platform running, has not been through the redesign loop
@@ -62,13 +63,13 @@ Run the loop as flow 17 ran it (`design/flows/17-activity-type-builder/`, BRIEF 
 
 ## Verification
 
-- [ ] The brief is restated, and `check_flow_completeness.py` exits 0 — its commit.
-- [ ] The canvas is created, with `tokens.css` and the mark copied in before round 1 — its link.
-- [ ] A chosen design with its states, reviewed, and the decisions recorded — `design/flows/18-platform-operations/`.
-- [ ] Built, with all six suites green and DESIGN.md amended (its banner lists flow 18) — the squash commit and counts.
-- [ ] The whole runbook replays on a fresh database with no regression from flow 18, the baseline is re-captured, and
+- [x] The brief is restated, and `check_flow_completeness.py` exits 0 — its commit.
+- [x] The canvas is created, with `tokens.css` and the mark copied in before round 1 — its link.
+- [x] A chosen design with its states, reviewed, and the decisions recorded — `design/flows/18-platform-operations/`.
+- [x] Built, with all six suites green and DESIGN.md amended (its banner lists flow 18) — the squash commit and counts.
+- [x] The whole runbook replays on a fresh database with no regression from flow 18, the baseline is re-captured, and
   flow 18's states are re-taken, with `check_baseline_paths.py` at `missing 0` — the Actual lines.
-- [ ] The design system is re-synced and republished — its version number.
+- [x] The design system is re-synced and republished — its version number.
 
 ## Related
 
@@ -220,3 +221,13 @@ T398 (flow 17), T394 (flow 16); T157, T302, T327; BRIEF § 4, § 6–8, § 11; I
 - **For review (not filed):** the audit log's "TransitionActivityCommand" over two lines beside a 33 px band in a window
   with failures; `audit-detail--subject` reachable only by a staged row (no command stores a subject); Institutions' long
   name above.
+- **2026-11-12, steps 8 and 9** (the operator: "proceed"). Step 8 (one Opus agent, one Sonnet review): the live
+  system (1794472989-3916, version 53, the type's release) matched `edb4e5e2` and HEAD in all 265 text files but for
+  CRLF; re-synced (`4e9862fb`, `66befdcc`: a new "Platform operations" group of seven records, AdministratorHome,
+  Institutions, AdminInstitutionRecord, ScheduledJobs, RunHistory, AuditLog, AuditEntry; StatusDot retired; 13 records
+  and the README revised; no token or icon added; the bundle byte for byte; small faults fixed: `InstitutionWords.Saving`,
+  AuditList's Clear the filters `btn-primary`, DESIGN.md's dot radius and two gendered lines). Review `resync-review.md`
+  (`36317d7c`): 0 must, 2 should, 7 nits, fixed but nits 7 and 9 (`24b6e812`, `65b72a7a`). Published: files as version 54,
+  the index alone as **version 55** (1794474962-9c47). Step 9: BRIEF § 11 "Flow 18", six lessons (`782c145f`).
+  Verification: brief `337a6675`; canvas FE7WSRNTmSp88bvS4dZRGV; decisions in `design/flows/18-platform-operations/`;
+  squash `34b5077e` (907/4560/1039/52/4952/542); replay Actuals `d5e676ff`…`c6d0642b`, baseline missing 0; v55. **Done.**
