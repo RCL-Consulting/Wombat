@@ -181,3 +181,7 @@ T398 (flow 17), T394 (flow 16); T157, T302, T327; BRIEF § 4, § 6–8, § 11; I
   UnauthorizedAccessException's text kept (latent), 8 nits; Integration 541/541, the flaky test passing; pages M1 A.2.9's
   log line, S1 states.md:145's count, S2 DESIGN.md's jobs pages paragraph, 13 nits, NEW words 26 groups. Waiting: the
   operator's F1 (S-2), then one fix pass.
+- **2026-11-12, F1 taken as recommended ("F1 - accepted recommendation"),** after the machine restarted at 22:31 with
+  nothing in flight: an `UnauthorizedAccessException`'s words are kept in a failed audit row only when Wombat's own code
+  threw it, as for `InvalidOperationException`; a framework one stores "The action failed.", its full text to the log.
+  Next: the fix pass (one Opus agent on `t400`).

@@ -2,16 +2,23 @@
 
 Cap: 80 lines. The most recent session only; `harness.py trim` archives the rest into `log/`.
 
-## Session 2026-11-11 (Opus): T400, flow 18, started
+## Session 2026-11-11 (Opus): T400, flow 18, designed, built and reviewed; waiting on F1
 
-The operator said "yes, flow 18 next" (master pushed, `70657d6c`), then "Stop the app and drop the db's".
-- **Cleanup:** the replay app (:5180) stopped by id; scratch DBs `wombat_scenario_t398_{sweep,s10,s11,s20,s515}` dropped;
-  `wombat_scenario_t398` kept (the replay's end state, as T394's); dumps kept.
-- **T400 filed and started.** Canvas "Wombat 18" https://claude.ai/artifact/FE7WSRNTmSp88bvS4dZRGV on design system v52, the
-  mark `/_blob/b3b9ce265597292edc272896bd70a693`, the 30 staged captures as `project/ref/baseline/…`. Brief restated
-  (`337a6675`), `round-1-ask.txt` ready.
-- **Next:** the operator's Q1–Q5 (before round 1), then they send the ask; Q6–Q12 after.
-- **Not pushed:** `337a6675` onward.
+The machine restarted at 22:31, seven minutes after the last commit (`05b1a0de`, 22:23). Checked 2026-11-12: master and
+the five `t400*` worktrees are clean, nothing was in flight, no app is running. This block was written after the restart
+from T400's notes, which are complete.
+- **Design:** canvases "Wombat 18" https://claude.ai/artifact/FE7WSRNTmSp88bvS4dZRGV (rounds 1–2) and "Wombat 18 · Round 3";
+  Q1–Q18, T1–T24 and P1 taken as recommended; no round 4. Records in `design/flows/18-platform-operations/`.
+- **Built on branch `t400`** (`f26cd81c`, 16 commits ahead of master, not squashed): § 0 with migration
+  `20261111182215_T400_EmailOutcomes`, lanes A–C, the sweep, lane W, two Sonnet reviews (`build-review.md`). Suites
+  907/4553/1039/52/4950/541, 0 warnings.
+- **Waiting:** the operator's **F1**: keep an `UnauthorizedAccessException`'s words in a failed audit row only when
+  Wombat's code threw it (recommended), or P1 as written. Then one fix pass (code S-1, S-2; pages M1, S1, S2; the nits;
+  26 NEW word groups into `build-contracts.md` § 5), the squash onto master, and DESIGN.md's banner.
+- **After that:** step 7 the replay, step 8 the design system re-sync, step 9 the lessons.
+- **Environment:** scratch DB `wombat_scenario_t400_sweep` kept; lane and sweep notes in the earlier session's scratchpad
+  (`…\5ae5486c-8726-4e89-ae35-c60429e28267\scratchpad\b400`), which survived.
+- **Not pushed:** `337a6675` onward (31 commits on master). Ask before pushing.
 
 ## Session 2026-11-09 to 11 (Opus): T398, flow 17, designed, built, replayed and synced; T398 done
 
