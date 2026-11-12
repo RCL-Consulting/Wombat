@@ -203,3 +203,15 @@ T398 (flow 17), T394 (flow 16); T157, T302, T327; BRIEF § 4, § 6–8, § 11; I
   (`4454e915`: one `.nowrap` per time; DESIGN.md amended; Web 4952/4952), republished, measured by states pass 1.
   Seen, not a fault: EmailOutcomes 0 rows on a stub-mail host (by design). Proposed T402 (a failed registration's audit
   row stores Identity's code). Not seen: 1.7's result and Copy link (a script fault; not flow 18's page).
+- **2026-11-12, the states** (two Opus agents; `559c9cee` pass 1, 42 rows, 7 marks removed, 10 corrected; `c6d0642b`
+  pass 2, 25 rows on scratch `_s20`–`_s23`, 21 marks removed, 7 corrected; every staged condition held but the full hold
+  for already-running, replaced by a one-table lock). The jobs fix measured: no time breaks, smallest spare 158 at 1151
+  (was 307), Job 343 px with descriptions to three lines. Pass 2 found four faults on flow 18's pages, fixed on master by
+  one Opus agent: Run history's Job select showing the first job (unkeyed options; `<option @key>`), Run history's
+  Started, keys and Ran by breaking beside an error (`565b978a`), Home's times breaking at a hyphen (`a7d14b19`); Web
+  4956, Application 4560, 0 warnings. Not fixed: Institutions' 200-character name over 7 lines beside Contact email at
+  1280 (any share suits one email length). Flows 01–07's step pointers re-synced after the replay (`1c06aa31`; verbatim
+  425/0). Republished; one Opus agent re-takes and re-measures what the fixes changed.
+- **For review (not filed):** the audit log's "TransitionActivityCommand" over two lines beside a 33 px band in a window
+  with failures; `audit-detail--subject` reachable only by a staged row (no command stores a subject); Institutions' long
+  name above.
