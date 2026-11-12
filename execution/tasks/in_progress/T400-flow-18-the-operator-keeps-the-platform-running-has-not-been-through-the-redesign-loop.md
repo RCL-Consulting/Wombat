@@ -212,6 +212,11 @@ T398 (flow 17), T394 (flow 16); T157, T302, T327; BRIEF § 4, § 6–8, § 11; I
   4956, Application 4560, 0 warnings. Not fixed: Institutions' 200-character name over 7 lines beside Contact email at
   1280 (any share suits one email length). Flows 01–07's step pointers re-synced after the replay (`1c06aa31`; verbatim
   425/0). Republished; one Opus agent re-takes and re-measures what the fixes changed.
+- **2026-11-12, step 7 done.** The re-take (one Opus agent): all three fixes pass. The Job select holds on a full load
+  and through Its runs; Run history's tables equal their containers at 1025–1440, Started one line everywhere, keys one
+  line from 1151, Ran by from 1200; Home's times never break (1280, 1100–1113, 390) in every staged state. 13 captures
+  re-taken, 7 Home states; `check_baseline_paths.py` missing 0; scratch apps and the sink stopped. No regression left.
+  Next: steps 8 and 9 on the operator's word.
 - **For review (not filed):** the audit log's "TransitionActivityCommand" over two lines beside a 33 px band in a window
   with failures; `audit-detail--subject` reachable only by a staged row (no command stores a subject); Institutions' long
   name above.

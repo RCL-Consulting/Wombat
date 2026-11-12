@@ -14,12 +14,18 @@ from T400's notes, which are complete.
   907/4553/1039/52/4950/541, 0 warnings.
 - **2026-11-12:** F1 taken as recommended; the fix pass done; **squashed onto master `34b5077e`** (suites
   907/4560/1039/52/4952/542, 0 warnings; DESIGN.md's banner lists flow 18).
-- **Step 7, the replay, in progress:** brief `b331c64e`; prompts in this session's scratchpad `g400\`; app detached on
-  :5180 against `wombat_scenario_t400`. An interrupted act resumes from its act file's "T400 replay" Actuals (the
-  prompt says how). Then steps 8 and 9.
+- **Step 7 done** (brief `b331c64e`; acts `d5e676ff`…`3fbdd3b0`; states `559c9cee`, `c6d0642b`): acts 1–6 and A
+  clean but known-task Gaps (T365, T320, T382, T286, T385); four flow 18 faults found and fixed on master (`4454e915`
+  the jobs' times, `565b978a` Run history's select and widths, `a7d14b19` Home's times), re-taken and measured; flows
+  01–07's step pointers re-synced (`1c06aa31`). Baseline missing 0. T402 proposed.
+- **For review:** Institutions' 200-character name over 7 lines (not fixed: any share suits one email length); the audit
+  log's "TransitionActivityCommand" over two lines with failures; `audit-detail--subject` reachable only by a staged row.
+- **Next:** steps 8 (design system re-sync and republish) and 9 (lessons) on the operator's word.
+- **Environment:** the replay app on :5180 (`wombat_scenario_t400`, master `1c06aa31`) left running; scratch DBs
+  `wombat_scenario_t400_{sweep,s10,s11,s20,s21,s22,s23,s515}` kept; dumps `recovery/scenario-t400-post-act{1..6,A}`.
 - **Environment:** scratch DB `wombat_scenario_t400_sweep` kept; lane and sweep notes in the earlier session's scratchpad
   (`…\5ae5486c-8726-4e89-ae35-c60429e28267\scratchpad\b400`), which survived.
-- **Not pushed:** `337a6675` onward (31 commits on master). Ask before pushing.
+- **Not pushed:** `337a6675` onward. Ask before pushing.
 
 ## Session 2026-11-09 to 11 (Opus): T398, flow 17, designed, built, replayed and synced; T398 done
 
