@@ -1,6 +1,6 @@
 # AuditEntry
 
-An audit entry (`/admin/audit/{Id:guid}`, `Pages/Admin/Audit/AuditDetail.razor`; its words `AuditWords.cs`; its trail `AuditLinks.cs` (`ReturnFrom`, `SafeLogReturn`); the read `GetAuditEntryByIdQuery`, `AuditEntryDto`): **one action in four sections, what happened, who, what it was done to, and, for the Administrator, its payload.** Flow 18 (T400, 2026-11-11, `34b5077e`; boards R3-E02 to E09, R2-E01 to E11; Q7, Q9, Q15, T4, T101, T114, T277, K8, K9, K10, M3, R2 (the region), S3, S4) rebuilt it. Until then it was one list of fields with times in local time, a user id for the person, the payload as one unbroken line that lengthened the page, a Back to log that lost the filters, Page not found for an entry out of scope, and its read's exception text.
+An audit entry (`/admin/audit/{Id:guid}`, `Pages/Admin/Audit/AuditDetail.razor`; its words `AuditWords.cs`; its trail `AuditLinks.cs` (`ReturnFrom`, `SafeLogReturn`); the read `GetAuditEntryByIdQuery`, `AuditEntryDetailDto`): **one action in four sections, what happened, who, what it was done to, and, for the Administrator, its payload.** Flow 18 (T400, 2026-11-12, `34b5077e`; boards R3-E02 to E09, R2-E01 to E11; Q7, Q9, Q15, T4, T101, T114, T277, K8, K9, K10, M3, R2 (the region), S3, S4) rebuilt it. Until then it was one list of fields with times in local time, a user id for the person, the payload as one unbroken line that lengthened the page, a Back to log that lost the filters, Page not found for an entry out of scope, and its read's exception text.
 
 ## Who reads it
 

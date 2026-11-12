@@ -282,7 +282,8 @@ and a system colour under `@media (forced-colors: active)`. `Design/StylesheetRu
   `MainLayout.razor.css`) only.
 - `--hover-bg` equals `--background-color`, so a row's hover shows only on a surface (N3).
 - The invalid-field stripe is not a token: `inset 4px 0 0 var(--danger-color)` (§ Form system).
-- Radii are the five tokens, and the trajectory chart's round key swatches' 50% (the status dots' too, until T400 retired them). Shadows are the three tokens, except `.detail-card--interactive`'s
+- Radii are the five tokens, and the trajectory chart's round key swatches' 50% (the status dots' too, until T400
+  retired them). Shadows are the three tokens, except `.detail-card--interactive`'s
   lift under the pointer, `0 4px 12px var(--shadow-color)`, which the sheet does not name.
 - If the palette changes, only `:root` changes, and the tables below are recomputed.
 - Not tokens, never shipped: the sheet's canvas-only colours (#5B6068 and #E6E8EB behind the reconnect boards, the
@@ -3868,7 +3869,7 @@ or read every run in Run history.", Run history the header action (it needs no d
 (C1), captioned "Scheduled jobs", no pager: Job the row header, the key over its description in `.person-cell` (S7);
 Schedule in words in South African time (`ScheduleWords`: "Daily at 09:00 SAST", "Hourly, on the hour", "Tuesdays at
 01:00 SAST", a UTC hour of 22 or 23 moving the day) over its cron as the scheduler reads it, "cron 0 7 * * *, UTC", any
-other cron that line alone; Last run the South African day and the hour (`ClockToMinute`, "21:39 SAST"), each `.nowrap`,
+other cron that line alone; Last run the South African day and the hour (`ClockToMinute`, "21:39 SAST"), one `.nowrap`,
 its status badge under it (Running, Succeeded, Failed, never an enum's name read through; "Unknown" otherwise) and a
 failed run's first error line under that, or "Not run yet" muted; Next run by the host's own rule (`JobSchedule`, K5):
 "None while disabled" muted, "None: the schedule cannot be read" muted for a cron that does not parse, "At the next check,
@@ -4509,7 +4510,8 @@ changes". **There is no `ValidationSummary`** (S22): the page's own checks and t
 what was typed kept), and the built "An institution with the same name or short code already exists." under Short code or
 Name (I08). Saved, the result above the form takes the focus: "**‹name› saved.** Its contact email is now ‹address›."
 (`<wbr>` after the @) or "… It has no contact email now." (I07). A failed read is `StatePanel`'s Alert, "Could not load the
-institution. Nothing has changed. …", with Try again; an id outside their scope is Institution unavailable with Go to Home (T400, Q17; until then Page not found). The
+institution. Nothing has changed. …", with Try again; an id outside their scope is Institution unavailable with Go to
+Home (T400, Q17; until then Page not found). The
 Administrator's view of the same route is below. **`/admin/institutions/new` is the Administrator's alone** (S12):
 `InstitutionCreate`, a page of its own under the `Administrator` policy, so an Institutional admin's is Access denied.
 

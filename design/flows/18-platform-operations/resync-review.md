@@ -47,3 +47,11 @@ Result: bundle exact, previews clean, source map and usages sound, words true. N
 **5. DESIGN.md and the source edits**: the banner (lines 92-100) lists flow 18's sections, all of which exist; the Administrator's Home (`:4944-4968`), the institutions (`:4515-`), Scheduled jobs, Run history and the audit log (`:3864-3932`) agree with the records on words, classes, widths (900/1099/1100 grid; 1112/1113px list break; 1150px and 1024px stacks) and focus, except finding 2. `4e9862fb`'s three source edits are correct and complete: `InstitutionWords.Saving` now "Saving…" like every other `Saving` constant (no test or page pins the three-dot form; the only remaining "Saving..." is `InFlight.cs`'s doc comment); `AuditList.razor:150` is the no-match card's button as `btn-primary`, as `RunHistory` has it (`AuditListPageTests.L11_...` finds `.detail-card--empty button` and asserts its text and the navigation, not a class); DESIGN.md's pronoun edits ("their scope", "an Institutional admin's") are right.
 
 **6. They/them**: every person in the seven new records, the revised notes and the DESIGN.md edits is "they/their" (the InstitutionRecord record was brought over from "her"); the leftovers are finding 5.
+
+## Fixed (main session, T400 step 8)
+
+Should 1 (the bundle's header names flow 18 and its commits) and 2 (DESIGN.md's Last run: one `.nowrap`); nits 3
+(`AuditEntryDetailDto` in `AuditLogRowDto.cs`), 4 (the previews' repeated ids numbered), 5 ("her" to "their" in the
+three lines), 6 (DESIGN.md's two long lines wrapped) and 8 (the seven records date flow 18 2026-11-12). Nit 7 kept: the
+"Status dots" section is the retirement's record, and Invitations' sentence says the row was retired. Nit 9 is older
+than this sync and is left.
