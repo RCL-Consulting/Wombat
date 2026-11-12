@@ -23,7 +23,7 @@ The machine restarted at 22:31 on 11-11 while the session waited on F1; nothing 
 - **Next:** flow 19 (emails) on the operator's word, or a P2 (T320 the largest).
 - **Environment:** the replay app on :5180 (`wombat_scenario_t400`, master `1c06aa31`) left running; scratch DBs
   `wombat_scenario_t400_{sweep,s10,s11,s20,s21,s22,s23,s515}` kept; dumps `recovery/scenario-t400-post-act{1..6,A}`.
-- **Not pushed:** `337a6675` onward. Ask before pushing.
+- **Pushed** 2026-11-12 (`bdfd07f6`), the operator's "yes, push".
 
 ## Session 2026-11-09 to 11 (Opus): T398, flow 17, designed, built, replayed and synced; T398 done
 
