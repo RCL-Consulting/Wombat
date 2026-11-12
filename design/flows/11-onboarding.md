@@ -779,8 +779,9 @@ Step 1.11 — Both invitations are spent
 Role: Administrator — the platform operator
 Route: /admin/invitations → /
 Do: Reload the invitations list, then go Home.
-Expect: Active invitations reads "No active invitations", because a used invitation leaves the list. The dashboard's
-  count of registered users is two higher than in Step 1.1.
+Expect: Active invitations reads "No active invitations", because a used invitation leaves the list. Home's Accounts
+  reads two higher than in Step 1.1: 11 where Step 1.1 read 9, Dr Kruger's and Prof Mbatha's accounts added (Steps 1.8,
+  1.10).
 
 Step 2.1 — Prof Mbatha opens the invitations page
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha

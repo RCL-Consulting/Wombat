@@ -704,9 +704,15 @@ Route: /account/login → /
 Do: Sign in with `devadmin@wombat.local` and the dev password that `DevUserSeeder` gives it.
 Expect: Home is headed "Home", with "Administrator · Semester N, YYYY" under it, naming the current semester, and its
   header offers no action. No switch is offered, in the sidebar or on Home, since devadmin holds one role. The dashboard
-  has two cards:
-  - System health, which shows the database connection as healthy;
-  - Users across institutions, which counts the seeded accounts (8, or 9 where the bootstrap Administrator exists).
+  has two cards (T400, R3-H02):
+  - System health, three lines in this order, each its name and its state as a word on a badge, with no coloured dot
+    and no task id: Database OK, "The database answers."; Mail Not configured, "Mail is written to the log, not sent."
+    and "To send mail, set Email__SmtpHost on the server and restart Wombat."; Scheduled jobs OK, "7 jobs last
+    succeeded. weekly-coordinator-digest has not run yet: its first run is ‹next Monday› 10:00 SAST." Scheduled jobs
+    is a button in the card's footer;
+  - Accounts, which counts every account but an erased one: the seeded accounts, 8, or 9 where the bootstrap
+    Administrator exists, over "Every account Wombat holds but an erased one." and "None is locked.", with Users a
+    button in the card's footer.
   There is no Maintenance card: Curriculum progress is linked from the Curricula page's header (T335).
   The sidebar reads "Acting as Administrator", with no switch, over his menu, grouped: Home; Platform: Scheduled jobs,
   Audit log, SSO mappings, Data rights requests; Organisations: Institutions, Colleges; People: Users, Invitations;
@@ -722,19 +728,25 @@ Do: Open Institutions and read the list. Then press Create institution and enter
   - Short code `KGK`;
   - Contact email `paeds-admin@kgk.wombat.local`.
   Save. Record KGK's id as `{InstitutionId}`.
-Expect: The list holds one row, the `Demo Institution` (`DEMO`), Active, offering Edit only. The create form asks for
-  Name, Short code and Contact email, and has no Status field. Save lands on KGK's own record, headed "Edit
-  institution", with the browser tab reading "Edit institution · Wombat" (T190). There, Active is ticked and
-  Deactivate is offered. Back on the list, KGK is a second row: Active, and created today. An empty Save reads "Type the
-  institution's name. The record was not saved." under Name and "Type a short code. The record was not saved." under
-  Short code.
+Expect: The list, subtitled "The institutions that hold Wombat's people and records.", holds one row, the `Demo
+  Institution` (`DEMO`), Active, offering Edit only. The create form, subtitled "A new institution is active from the
+  moment it is saved, so its people can be invited.", reads "* marks a field you must fill in." and asks for Name *
+  ("Up to 200 characters."), Short code * ("Up to 32 characters.") and Contact email ("Optional."); it has no Status
+  field. An empty Save reads "Type the institution's name. The record was not saved." under Name and "Type a short
+  code. The record was not saved." under Short code, each field marked and described by its refusal, and Name takes the
+  focus. Save lands on KGK's own record, headed "Kgosi Kgari Teaching Hospital", with the browser tab reading "Kgosi
+  Kgari Teaching Hospital · Wombat" and "KGK · Active" under the heading; "Kgosi Kgari Teaching Hospital created." above
+  the form takes the focus (T400, R3-I11). There, Status reads Active, "A new invitation can name it.", with
+  Deactivate… offered in a section of its own. Back on the list (the trail's Institutions), KGK is a second row: Active,
+  and created today, a day with no time.
 
 Step 1.11 — Both invitations are spent (act-1-setup.md)
 Role: Administrator — the platform operator
 Route: /admin/invitations → /
 Do: Reload the invitations list, then go Home.
-Expect: Active invitations reads "No active invitations", because a used invitation leaves the list. The dashboard's
-  count of registered users is two higher than in Step 1.1.
+Expect: Active invitations reads "No active invitations", because a used invitation leaves the list. Home's Accounts
+  reads two higher than in Step 1.1: 11 where Step 1.1 read 9, Dr Kruger's and Prof Mbatha's accounts added (Steps 1.8,
+  1.10).
 
 Step 3.32 — The daily nudge reminds the assessors (act-3-operations.md)
 Role: Administrator — devadmin@wombat.local
@@ -752,51 +764,66 @@ Expect: The job's last run updates. The application log then holds three stub em
 Step 3.55 — Prof Mbatha reads KGK's audit log (act-3-operations.md)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/audit
-Do: Open Audit log, which shows the last 24 hours by default. Set From (UTC) to the start of this act's sitting, so
-  that no earlier act's rows are counted, and apply. Filter by Result: Failures only. Then clear that and filter by
-  Action "Msf".
+Do: Open Audit log, which shows the last 24 hours by default. Set From (SAST) to the start of this act's sitting, so
+  that no earlier act's rows are counted, and press Show. Choose Result: Failures only and press Show. Then choose All
+  results, type "Msf" in Action and press Show.
 Expect:
+  - The page is subtitled "Every consequential action at Kgosi Kgari Teaching Hospital, newest first." Nothing filters
+    until Show, which moves the focus to the count line: "‹n› actions." (166 in the T398 replay), and under it "Read
+    from ‹From› SAST to ‹hh:mm› SAST, when you pressed Show. Turning a page keeps this window." (T400, R3-L01).
   - Every row is KGK's, newest first, 50 to a page. The rows include CreateActivityCommand and
-    TransitionActivityCommand by each registrar and consultant, and Mr Smit's MSF commands, each with its actor and OK.
-  - Failures only leaves four rows, each FAILED: Dr Ndlovu's two refused creates (the future date and the date before
-    his programme started), Dr Dlamini's refused submit, and Dr Khumalo's decline without a note.
-  - "Msf" leaves Mr Smit's nineteen commands: the template, two campaigns, ten invitations, one removal, the open,
-    the withdrawal, the resend, the close and the release.
+    TransitionActivityCommand by each registrar and consultant, and Mr Smit's MSF commands, each with the person by
+    name and Success.
+  - Failures only leaves four rows, "4 actions.", each Failed, its refusal under the badge: Dr Ndlovu's two refused
+    creates (the future date and the date before their programme started), Dr Dlamini's refused submit, and Dr
+    Khumalo's decline without a note.
+  - "Msf" leaves Mr Smit's nineteen commands, "19 actions.": the template, two campaigns, ten invitations, one
+    removal, the open, the withdrawal, the resend, the close and the release.
   - No respondent's submission and no devadmin row is listed, because those carry no institution (T101, T205).
 
 Step 3.56 — Prof Mbatha opens one entry (act-3-operations.md)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/audit → /admin/audit/{Id:guid}
 Do: Under Failures only, open Dr Ndlovu's future-date create.
-Expect: The Event card shows the time to the millisecond, category Command, action CreateActivityCommand, and result
-  Failed with "Date observed: The date cannot be after today (…)." The Actor card shows Dr Ndlovu's user id, display
-  name and IP address. There is no Payload card: only an Administrator reads the raw JSON. "Back to log" returns to the
-  list.
+Expect: The entry is headed "Audit entry", under the trail Home › Audit log › Audit entry, and subtitled
+  "CreateActivityCommand by Sipho Ndlovu, ‹time› SAST · Failed" (T400, R2-E01). What happened shows the time in SAST to
+  the millisecond with the stored UTC under it ("Stored as … UTC"), category Command, action CreateActivityCommand,
+  institution Kgosi Kgari Teaching Hospital, and Failed with "Date observed: The date cannot be after today (…)." under
+  the badge. Who shows Sipho Ndlovu by name, their user id and the address ::/48, with "Cut to its first 48 bits when
+  stored.". There is no Payload section: only an Administrator reads the raw JSON. The trail's Audit log returns to the
+  list as it was left, Failures only, page 1, with the focus on the entry's Detail (R3-L13); there is no Back to log.
 
 Step 3.57 — devadmin reads the log across institutions (act-3-operations.md)
 Role: Administrator — devadmin@wombat.local
 Route: /admin/audit → /admin/audit/{Id:guid}
-Do: Open Audit log, with From (UTC) set to the start of this act's sitting as in Step 3.55. Open one respondent's
-  submission (SubmitMsfResponseCommand), then one of Dr Naidoo's TransitionActivityCommand rows.
-Expect: The log holds every institution's rows and the rows with no institution. Among them are eight
-  SubmitMsfResponseCommand rows whose actor is "system", and devadmin's own RunScheduledJobNowCommand. The submission's
-  detail names no user and no display name, only a truncated address. Its payload shows the token and the answers as
-  "[REDACTED]" (T101, T205). Dr Naidoo's payload shows the principal as "[PRINCIPAL]", and the data patch and note as
-  "[REDACTED]".
+Do: Open Audit log, set From (SAST) to the start of this act's sitting as in Step 3.55, and press Show. Open one
+  respondent's submission (SubmitMsfResponseCommand), then one of Dr Naidoo's TransitionActivityCommand rows.
+Expect: The page is subtitled "Every consequential action across the institutions, and those with no institution,
+  newest first.", and its filters end with Institution (All institutions, No institution, Demo Institution, Kgosi Kgari
+  Teaching Hospital). The log holds every institution's rows and the rows with no institution, "‹n› actions." (174 in
+  the T398 replay, from 19:00 SAST), each person by name with their institution under it (T400, R3-L05). Among them
+  are eight SubmitMsfResponseCommand rows whose Person reads "MSF respondent (no account)" over "No institution", and
+  devadmin's own RunScheduledJobNowCommand, by Demo Administrator. The submission's entry: What happened's Institution
+  reads "No institution"; Who reads "No person: an MSF respondent answers by link, with no account.", User id None,
+  and the address ::/48 with "Cut to its first 48 bits when stored." (R3-E02). Its Payload, laid out one property a
+  line, shows the token and the answers as "[REDACTED]" (T101, T205). Dr Naidoo's payload shows the principal as
+  "[PRINCIPAL]", and the data patch and note as "[REDACTED]" (R3-E03).
 
 Step 4.38 — Prof Mbatha reads the sitting in the audit log (act-4-annual-review.md)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/audit → /admin/audit/{Id:guid}
-Do: Filter Action to RecordCommitteeDecisionCommand. Open one successful entry. Then filter to
-  RevokeEntrustmentDecisionCommand.
+Do: Type RecordCommitteeDecisionCommand in Action and press Show. Open one successful entry. Then type
+  RevokeEntrustmentDecisionCommand in Action and press Show.
 Expect:
   - **No failed entry:** Steps 4.23 and 4.24 are refused on the page before anything is sent (round 3 item 16, T324), so
-    no FAILED row is written; the handler's quorum and category refusals stay as the backstop (T361).
-  - **The successful entries:** five OK rows by Dr Zulu, one per review.
-  - **An entry's detail:** the Event card and the Actor card only. The Payload card is an Administrator's (Step 3.56),
-    so she reads no summary. The stored summary, checked with SQL, keeps ReviewId, Category and PresentUserIds in the
-    clear and holds Rationale, Conditions and UndecidedNote as "[REDACTED]" (T101, T361).
-  - **The revocation's entry:** its actor is Dr Mokoena. Its stored Reason is "[REDACTED]".
+    no Failed row is written; the handler's quorum and category refusals stay as the backstop (T361).
+  - **The successful entries:** "5 actions.", five Success rows by Thandi Zulu, one per review (T400, R3-L09).
+  - **An entry's detail:** What happened, Who and What it was done to only, with no Payload section. The Payload is an
+    Administrator's (Step 3.56), so Prof Mbatha reads no summary (R2-E04). The stored summary, checked with SQL,
+    keeps ReviewId, Category and PresentUserIds in the clear and holds Rationale, Conditions and UndecidedNote as
+    "[REDACTED]" (T101, T361).
+  - **The revocation's entry:** "1 action.", its person Refilwe Mokoena (R3-L10, R2-E05). Its stored Reason is
+    "[REDACTED]".
 
 Step 6.38 — devadmin rebuilds curriculum progress (act-6-catalogue.md)
 Role: Administrator — devadmin
@@ -819,10 +846,15 @@ Step A.2.1 — devadmin reads the scheduled jobs (appendix-cross-cutting.md)
 Role: Administrator — devadmin
 Route: / → /admin/jobs
 Do: Open Scheduled jobs from the menu and read every row.
-Expect: Each row shows the job's description and its cron schedule (UTC), with its last run, that run's status badge
-  and its next run in the server's local time. Each has Disable and Run now, both named for the job (T239). A job that
-  has never run reads "—" for its last run and status. Run history is linked from the header. The eight jobs, by key
-  (T379 retired `portfolio-export-cleanup` with its definition and runs, so a genuine PDF keeps verifying):
+Expect: The page is subtitled "The eight jobs Wombat runs on a schedule. Run one now, disable or enable one, or read
+  every run in Run history." Its columns are Job, Schedule, Last run and Next run, then the actions; there is no
+  Enabled column (T400, R3-J01). Each row shows the job's key over its description; its schedule in words in SAST
+  with its cron under it ("Daily at 09:00 SAST" over "cron 0 7 * * *, UTC"); its last run in SAST with that run's
+  status badge under it; and its next run in SAST. Each has Run now and Disable, both named for the job (T239). A job
+  that has never run reads "Not run yet" for its last run. Run history is linked from the header.
+  scheduled-job-run-retention reads "Deletes job run records and mail outcomes older than 90 days." (Q18). The eight
+  jobs, by key (T379 retired `portfolio-export-cleanup` with its definition and runs, so a genuine PDF keeps
+  verifying):
   - activity-draft-nudge
   - assessor-pending-nudge
   - audit-log-retention
@@ -836,15 +868,20 @@ Step A.2.2 — devadmin disables a job and enables it again (appendix-cross-cutt
 Role: Administrator — devadmin
 Route: /admin/jobs
 Do: Disable msf-campaign-auto-close, try to run it now, then enable it again.
-Expect: Disabling says "Job 'msf-campaign-auto-close' disabled." The row then reads "—" for its next run, its toggle
-  says Enable, and its Run now is unavailable. Once enabled again, its next run is the next hour. The scheduler does not
-  run a disabled job. The audit log records both changes.
+Expect: Disabling says "Disabled msf-campaign-auto-close. The scheduler will not run it until you enable it." above
+  the list, and it takes the focus (T400, R3-J02). The row then reads "None while disabled" for its next run, its
+  toggle says Enable, and its Run now is unavailable, with "Enable it to run it." beside it: a press sends nothing.
+  Once enabled again: "Enabled msf-campaign-auto-close. Its next run is ‹the next hour› SAST.", and the row's next run
+  is the next hour (R3-J03). Enabled after an hour it missed while disabled, it reads "Enabled msf-campaign-auto-close.
+  It runs at the next check, within 30 seconds." instead, with that as its next run (K5). The scheduler does not run a
+  disabled job. The audit log records both changes.
 
 Step A.2.4 — devadmin runs the weekly digest, and Mr Smit is skipped (appendix-cross-cutting.md)
 Role: Administrator — devadmin
 Route: /admin/jobs
 Do: Run weekly-coordinator-digest now, then read the application log.
-Expect: "Job 'weekly-coordinator-digest' dispatched."; the row's last run is now, and it reads Succeeded. The log holds
+Expect: "Ran weekly-coordinator-digest: Succeeded at ‹YYYY-MM-DD hh:mm› SAST." above the list, focused, once the run
+  has ended (T400, R3-J04); the row's last run is now, and it reads Succeeded. The log holds
   "WeeklyCoordinatorDigestJob: digests sent n; coordinators skipped: …", with at least one counted as "opted out of
   digest emails". No "Your weekly Wombat digest" mail greets Pieter.
 
@@ -880,23 +917,28 @@ Expect: Each run reads Succeeded, and each job logs one line:
   - msf-campaign-auto-close: "no expired campaigns found.", since Act 3's campaign was closed and released.
   - msf-invitation-expiry-reminder: "no respondent is due a reminder."
   - audit-log-retention: "complete. Total archived: 0.", since nothing is two years old.
-  - scheduled-job-run-retention: "no old runs to delete."
+  - scheduled-job-run-retention: "no old runs or mail outcomes to delete."
 
 Step A.2.10 — devadmin reads the run history (appendix-cross-cutting.md)
 Role: Administrator — devadmin
 Route: /admin/jobs → /admin/jobs/runs
-Do: Open Run history. Filter it:
-  - by the key "weekly-coordinator-digest";
-  - by the key "digest";
-  - by the status Failed;
-  - from today.
-Expect: The runs are listed newest first, each with its key, start, finish, duration, status badge, who triggered it
-  and any error. A run by hand names the person who ran it, devadmin, by name, never by user id (DESIGN.md § Page
-  shapes, T142); one the scheduler ran reads "scheduler". Filters apply only when Filter is pressed.
-  - The full key shows the digest's runs, the two by hand among them, and no other job's.
-  - "digest" alone matches nothing: the filter wants the whole key.
-  - Failed shows "No runs found".
-  - From today shows today's runs, those of this appendix among them. The date is read as a UTC day.
+Do: On Scheduled jobs (A.2.9's page) press Run history. Then:
+  - choose weekly-coordinator-digest in Job and press Show;
+  - choose All jobs in Job and Failed in Status, and press Show;
+  - choose All in Status, set From to today, and press Show.
+Expect: Run history, subtitled "Every run of the eight jobs, newest first, kept for 90 days.", under the trail Home ›
+  Scheduled jobs › Run history, filters by Job (a select of the eight keys, All jobs first), Status, From and To (each
+  "a South African day"), then Show (T400, R3-R01). The runs are listed newest first, each with its job, its start in
+  SAST, its duration, its status badge (a failed run's error under it) and who ran it. A run by hand names the person
+  who ran it, devadmin, by name ("Demo Administrator"), never by user id (DESIGN.md § Page shapes, T142); one the
+  scheduler ran reads "Scheduler". Nothing filters until Show is pressed, and Show moves the focus to the count line.
+  - Unfiltered, the count line reads "‹n› runs." and the pager "Showing 1–‹n› of ‹n›": the 10 runs by hand (Step
+    3.32's one, A.2.4's, A.2.6's, A.2.8's two and A.2.9's five) and the scheduler's (the seven jobs it ran at the first
+    start, then msf-campaign-auto-close each hour since: 11 in the T398 replay's hours, so 21).
+  - weekly-coordinator-digest shows "2 runs.", the two by hand, and no other job's; Clear filters is offered (R3-R02).
+  - Failed shows "No runs match these filters.", then "No runs match", "The filters are kept above. Clear them to see
+    all ‹n›." and Clear the filters (R2-R03).
+  - From today shows today's runs, those of this appendix among them (R3-R04). The day is a South African day.
 
 Step A.5.2 — Prof Mbatha opens the Administrator's own pages (appendix-cross-cutting.md)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
@@ -917,17 +959,25 @@ Role: Administrator — devadmin
 Route: / → /admin/institutions → /admin/institutions/{Id:int}
 Do: Open Institutions from the nav. Read the list, open KGK, set its contact email to
   `paediatrics@kgk.wombat.local`, and save.
-Expect: The list holds the Demo Institution and Kgosi Kgari Teaching Hospital. Each row shows its short code, contact
-  email, status (Active) and creation time, with an Edit named for it; Create institution heads the page. Saving says
-  "Institution saved." The Administrator is offered the Status box and Deactivate.
+Expect: The list, subtitled "The institutions that hold Wombat's people and records.", holds the Demo Institution and
+  Kgosi Kgari Teaching Hospital. Each row shows its short code, contact email, status (Active) and the day it was
+  created, with an Edit named for it; Create institution heads the page. KGK's record is headed and tabbed by its name,
+  with "KGK · Active" under the heading and no Back link: the trail Home › Institutions › Kgosi Kgari Teaching Hospital
+  is the way back (T400, R2-I02, R3-I12). It offers Name, Short code and Contact email, then Cancel and Save. Saving
+  says "Kgosi Kgari Teaching Hospital saved. Its contact email is now paediatrics@kgk.wombat.local.", which takes the
+  focus. Status reads Active, "A new invitation can name it.", with Deactivate…, in a section of its own; there is no
+  Active box.
 
 Step A.6.2 — devadmin reads the system health card (appendix-cross-cutting.md)
 Role: Administrator — devadmin
 Route: /
-Do: Read the dashboard's System health and Users across institutions cards.
-Expect: Database connection is green. The card's other two lines, Email queue and Last nightly job, are amber whatever
-  their state, and each carries a task id: they are stubs, tied neither to the mail queue nor to Scheduled jobs
-  (reported). The users card counts registered accounts.
+Do: Read Home's System health and Accounts cards.
+Expect: System health's three lines, in this order, each its state as a word on a badge, with no coloured dot and no
+  task id (T400, R3-H01): Database reads OK, "The database answers."; Mail reads Not configured, "Mail is written to
+  the log, not sent."; Scheduled jobs reads OK, "All 8 jobs last succeeded." (A.2.4 ran the weekly digest, the last
+  never run). Accounts reads 24, every account but an erased one: Step 1.11's 11 and the fourteen people Act 2
+  registered, 25, less Dr Ndlovu's, erased in A.1.12. Under it, "Every account Wombat holds but an erased one." and
+  "None is locked.". Scheduled jobs and Users are buttons in the cards' footers.
 
 Step A.6.9 — devadmin opens his own account (appendix-cross-cutting.md)
 Role: Administrator — devadmin
@@ -951,6 +1001,8 @@ Step A.7.11 — devadmin on his phone (appendix-cross-cutting.md)
 Role: Administrator — devadmin
 Route: / → /admin/jobs → /admin/jobs/runs → /admin/institutions
 Do: At 390 px, open Scheduled jobs, Run history and Institutions.
-Expect: The jobs table scrolls inside its container, with each Run now and toggle reachable. The run-history filters
-  stack.
+Expect: Each job is a stacked block, its state, next run, Run now and Disable in view, each button 44 px (T400,
+  R3-J01-390). The run-history filters stack, and its runs stack likewise, under "‹n› runs." (A.2.10's, plus each
+  msf-campaign-auto-close the scheduler has run since: 22 in the T398 replay's hours; R3-R05). Institutions' rows
+  stack too, KGK's contact hod.paediatrics@kgk.wombat.local (A.6.3). Nothing scrolls sideways.
 ```

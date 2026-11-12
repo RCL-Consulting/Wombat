@@ -193,6 +193,67 @@ public sealed class InstitutionEditRecordTests : TestContext
         cut.Markup.Should().NotContain("Npgsql");
     }
 
+    // ─── Q17, T10: Institution unavailable, for both roles (T400) ─────────────
+
+    [Fact]
+    public void AnIdOutsideHerScope_IsInstitutionUnavailable_WithGoToHome_NeverPageNotFound()
+    {
+        Services.AddSingleton<IScopedSender>(new FakeSender { Missing = true });
+        var navigation = Services.GetRequiredService<FakeNavigationManager>();
+        var cut = RenderPage(null, waitForForm: false);
+
+        cut.WaitForAssertion(() => Text(cut.Find("h1")).Should().Be("Institution unavailable"));
+        Text(cut.Find(".detail-card--empty .state-panel-copy")).Should().Be("This institution does not exist, or you cannot open it.");
+        cut.FindAll(".detail-card--empty .form-actions a").Select(link => (Text(link), link.GetAttribute("href")))
+            .Should().Equal(("Go to Home", "/"));
+        cut.FindAll("form").Should().BeEmpty();
+        navigation.Uri.Should().NotContain("not-found", "until T400 she was sent to Page not found");
+    }
+
+    [Fact]
+    public void AnUnknownId_IsInstitutionUnavailable_ForTheAdministrator_WithGoToInstitutions()
+    {
+        SignInAsAdministrator();
+        var cut = RenderPage(new FakeSender { Missing = true }, waitForForm: false);
+
+        cut.WaitForAssertion(() => Text(cut.Find("h1")).Should().Be("Institution unavailable"));
+        cut.FindAll(".detail-card--empty .form-actions a").Select(link => (Text(link), link.GetAttribute("href")))
+            .Should().Equal(("Go to Institutions", "/admin/institutions"));
+        cut.FindAll("section.user-section").Should().BeEmpty();
+    }
+
+    // ─── K13: a create lands here (T400) ────────────────────────────────────
+
+    [Fact]
+    public void ACreateArrives_ByTheToken_WritesCreated_FocusesIt_AndStripsTheToken()
+    {
+        SignInAsAdministrator();
+        Services.AddSingleton<IScopedSender>(new FakeSender());
+        var navigation = Services.GetRequiredService<FakeNavigationManager>();
+        navigation.NavigateTo(CatalogueLinks.InstitutionCreated(KgkId));
+
+        var cut = RenderPage(null);
+
+        Text(cut.Find(".action-result .alert.alert-success")).Should().Be($"{KgkName} created.");
+        cut.WaitForAssertion(() => navigation.Uri.Should().EndWith("/admin/institutions/2"));
+        navigation.History.First().State.Should().Be(NavigationState.Succeeded);
+        navigation.History.First().Options.ReplaceHistoryEntry.Should().BeTrue("a reload says nothing");
+        cut.WaitForAssertion(() => JSInterop.Invocations.Should().Contain(call => call.Identifier == "Blazor._internal.domWrapper.focus"));
+    }
+
+    [Fact]
+    public void ATokenOnAnIdTheCallerCannotOpen_WritesNothing()
+    {
+        SignInAsAdministrator();
+        Services.AddSingleton<IScopedSender>(new FakeSender { Missing = true });
+        Services.GetRequiredService<FakeNavigationManager>().NavigateTo(CatalogueLinks.InstitutionCreated(KgkId));
+
+        var cut = RenderPage(null, waitForForm: false);
+
+        cut.WaitForAssertion(() => Text(cut.Find("h1")).Should().Be("Institution unavailable"));
+        cut.FindAll(".alert-success").Should().BeEmpty();
+    }
+
     // ─── S12: the create route is the Administrator's alone ─────────────────
 
     [Fact]
@@ -227,9 +288,22 @@ public sealed class InstitutionEditRecordTests : TestContext
             call.Identifier == PageFocus.FocusByIdIdentifier && Equals(call.Arguments[0], fieldId)));
     }
 
-    private IRenderedComponent<InstitutionEdit> RenderPage(FakeSender sender, bool waitForForm = true)
+    private void SignInAsAdministrator()
     {
-        Services.AddSingleton<IScopedSender>(sender);
+        _auth.SetAuthorized("devadmin@test");
+        _auth.SetRoles(WombatRoles.Administrator);
+        _auth.SetPolicies("Administrator");
+        _auth.SetClaims(new Claim(ClaimTypes.NameIdentifier, "devadmin"));
+    }
+
+    /// <summary>Renders the page; a null sender is one the test registered itself, before reading a service.</summary>
+    private IRenderedComponent<InstitutionEdit> RenderPage(FakeSender? sender, bool waitForForm = true)
+    {
+        if (sender is not null)
+        {
+            Services.AddSingleton<IScopedSender>(sender);
+        }
+
         var cut = RenderComponent<InstitutionEdit>(parameters => parameters.Add(page => page.Id, KgkId));
         if (waitForForm)
         {
@@ -254,6 +328,9 @@ public sealed class InstitutionEditRecordTests : TestContext
 
         public TaskCompletionSource<InstitutionDto?>? HoldRead { get; init; }
 
+        /// <summary>The read answers null: no such institution, or one outside the caller's scope (Q17).</summary>
+        public bool Missing { get; init; }
+
         public Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
         {
             switch (request)
@@ -262,6 +339,8 @@ public sealed class InstitutionEditRecordTests : TestContext
                     return HoldRead.Task.ContinueWith(task => (TResponse)(object)task.Result!, cancellationToken);
                 case GetInstitutionByIdQuery when ReadFailure is not null:
                     return Task.FromException<TResponse>(ReadFailure);
+                case GetInstitutionByIdQuery when Missing:
+                    return Task.FromResult((TResponse)(object)null!);
                 case GetInstitutionByIdQuery:
                     return Task.FromResult((TResponse)(object)_institution);
                 case UpdateInstitutionCommand command:

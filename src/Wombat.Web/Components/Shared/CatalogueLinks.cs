@@ -54,6 +54,23 @@ public static class CatalogueLinks
 
     private static readonly string[] Tokens = [CreatedToken, AddedToken, SavedToken, BackToken, ClonedToken];
 
+    // Flow 18 (T400, lane A, K13): the institutions, the Administrator's.
+
+    /// <summary>Institutions: <c>/admin/institutions</c>.</summary>
+    public const string Institutions = "/admin/institutions";
+
+    /// <summary>Create institution: <c>/admin/institutions/new</c>.</summary>
+    public const string NewInstitution = "/admin/institutions/new";
+
+    /// <summary>An institution's record: <c>/admin/institutions/7</c>.</summary>
+    public static string Institution(int institutionId) => Invariant($"{Institutions}/{institutionId}");
+
+    /// <summary>
+    /// The record a create lands on, <c>/admin/institutions/7?created</c> (K13): the record reads the institution in the
+    /// caller's scope, writes "‹name› created.", focuses it, and replaces its address without the token.
+    /// </summary>
+    public static string InstitutionCreated(int institutionId) => Invariant($"{Institution(institutionId)}?{CreatedToken}");
+
     // Flow 16 (T394, build-contracts § 0): the College's and the Administrator's pages.
 
     /// <summary>Colleges, the Administrator's: <c>/admin/colleges</c>.</summary>

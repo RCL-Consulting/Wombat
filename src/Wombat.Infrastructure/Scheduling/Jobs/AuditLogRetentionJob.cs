@@ -22,7 +22,7 @@ public sealed class AuditLogRetentionJob : IScheduledJob
 
     public string Key => "audit-log-retention";
     public string CronExpression => "0 3 * * *";
-    public string Description => "Archives audit log entries older than 2 years into the archive table (daily at 03:00 UTC).";
+    public string Description => "Archives audit log entries older than 2 years into the archive table.";
 
     public async Task ExecuteAsync(ScheduledJobContext context, CancellationToken cancellationToken)
     {

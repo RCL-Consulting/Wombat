@@ -1,124 +1,234 @@
 @page "/admin/jobs"
 @attribute [Authorize(Policy = "Administrator")]
+@using Wombat.Application.Features.Scheduling
+@using Wombat.Application.Features.Scheduling.Commands.DisableScheduledJob
+@using Wombat.Application.Features.Scheduling.Commands.EnableScheduledJob
+@using Wombat.Application.Features.Scheduling.Commands.RunScheduledJobNow
+@using Wombat.Application.Features.Scheduling.Queries.GetScheduledJobStatus
+@using Wombat.Application.Scheduling
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IJSRuntime JS
+@inject ILogger<ScheduledJobsList> Logger
 
 <PageTitle>Scheduled jobs · Wombat</PageTitle>
 
-<PageHeader Title="Scheduled jobs" Subtitle="View and manage background jobs. Toggle jobs on or off, trigger manual runs, and view run history.">
-  <Actions>
-    <a class="btn btn-outline" href="/admin/jobs/runs">
-      <Icon Name="clock" />
-      Run history
-    </a>
-  </Actions>
-</PageHeader>
+@*
+  Scheduled jobs (T400, flow 18, lane B; boards R3-J01–J10, R2-J11, J12).
 
-<StatePanel IsLoading="@(_jobs is null && string.IsNullOrWhiteSpace(_errorMessage))" LoadError="@_errorMessage" IsEmpty="@(_jobs?.Count == 0)" EmptyTitle="No jobs registered" EmptyBody="No scheduled jobs have been registered in the system.">
-  @if (_jobs is not null)
-  {
-    <DataTable TItem="Wombat.Application.Features.Scheduling.ScheduledJobDto" Items="_jobs" Caption="Scheduled jobs">
-      <HeaderRow>
-        <tr>
-          <th>Job</th>
-          <th>Schedule</th>
-          <th>Last run</th>
-          <th>Status</th>
-          <th>Next run</th>
-          <th>Enabled</th>
-          <th><span class="visually-hidden">Actions</span></th>
-        </tr>
-      </HeaderRow>
-      <Row Context="job">
-        <tr>
-          <td>
-            <strong>@job.Key</strong>
-            <div class="text-muted text-sm">@job.Description</div>
-          </td>
-          <td><code>@job.CronExpression</code></td>
-          <td>@(job.LastRunAt?.ToLocalTime().ToString("yyyy-MM-dd HH:mm") ?? "—")</td>
-          <td>
-            @if (job.LastRunStatus is not null)
-            {
-              <span class="badge @BadgeFor.JobRun(job.LastRunStatus)">@job.LastRunStatus</span>
-            }
-            else
-            {
-              <span>—</span>
-            }
-          </td>
-          <td>@(job.NextRunAt?.ToLocalTime().ToString("yyyy-MM-dd HH:mm") ?? "—")</td>
-          <td>
-            @* While a row's action runs the other buttons are disabled, and the one pressed is not (T234): it has the
-               focus, and a browser drops the focus of a button it disables, to the page. A second press sends nothing. *@
-            @* T239: each named by its job, whose key is unique: "Disable msf-campaign-auto-close", and in the next cell
-               "Run now: msf-campaign-auto-close". *@
-            <button class="btn btn-outline btn-sm" @onclick="() => ToggleAsync(job)" disabled="@OtherInFlight(ToggleAction(job))"
-                    aria-label="@($"{(job.IsEnabled ? "Disable" : "Enable")} {job.Key}")"
-                    aria-disabled="@InFlight.AriaDisabled(Running(ToggleAction(job)))">
-              @(job.IsEnabled ? "Disable" : "Enable")
-            </button>
-          </td>
-          <td>
-            <div class="actions-cell">
-              <button class="btn btn-outline btn-sm" @onclick="() => RunNowAsync(job)" disabled="@(OtherInFlight(RunAction(job)) || !job.IsEnabled)"
-                      aria-label="@($"Run now: {job.Key}")"
-                      aria-disabled="@InFlight.AriaDisabled(Running(RunAction(job)))">
-                Run now
-              </button>
-            </div>
-          </td>
-        </tr>
-      </Row>
-    </DataTable>
-  }
-</StatePanel>
+  - The eight jobs by key (T15's subtitle; Run history in the header, which needs no data, R2-J11). StackWide, and the
+    1150px stack through .jobs-page (§ 0, C1). Job is the row header, the key over its description (S7); Schedule in
+    words in SAST with "cron ‹expr›, UTC" under it, any other cron that line alone (T2, K7); Last run in SAST, its badge
+    under it and a failed run's first error line under that, or "Not run yet"; Next run in SAST by the host's rule (K5),
+    "At the next check, within 30 seconds" for a job already due, "None while disabled". The column headed Enabled went.
+  - Actions: Run now, then Disable or Enable, each named for its row (T239). Run now on a disabled job stays in the tab
+    order, aria-disabled, described by "Enable it to run it.", and a press sends nothing (R3-J02); "Running…" while its
+    run goes (T16, R3-J05), the other row actions disabled meanwhile, as built (T234).
+  - One result region above the list (T5; until T400 after the table), which takes the focus after every action: the
+    result, the refusal (a warning, N7: until T400 the focus stayed on the button) and the failure (T23's fixed words, the
+    cause to the log, never the exception's text, T329). The page reads again after each, so a refused run on a job
+    disabled meanwhile shows its row disabled (R3-J09).
+  - Loading and a failed read (R2-J11, J12): the loading line and the skeleton; the house sentence with Try again, which
+    focuses the h1 once it reads (S3).
+*@
+<PageHeader Title="Scheduled jobs" Subtitle="@JobWords.JobsSubtitle" Actions="@RunHistoryLink" />
 
-@* What Enable, Disable or Run now did. It takes the focus once the action is done (T234; DESIGN.md § Button system): a
-   status arriving on its own is often not read. A refusal leaves the focus on the button: it is an alert, read at once. *@
-<ActionResult @ref="_result">
-  @if (!string.IsNullOrWhiteSpace(_actionMessage))
-  {
-    <Alert Kind="@(_actionSuccess ? "success" : "danger")">@_actionMessage</Alert>
-  }
-</ActionResult>
+<div class="people-page jobs-page" aria-busy="@(_loading ? "true" : null)">
+  <ActionResult @ref="_result">
+    @* Each kind written out, so the class scan reads it (DefinedClassTests): a result a success, a refusal a warning read
+       at once (role alert), a failed run or a failure a danger. *@
+    @if (_outcome is { Kind: OutcomeKind.Done } done)
+    {
+      <Alert Kind="success">@done.Text</Alert>
+    }
+    else if (_outcome is { Kind: OutcomeKind.Refused } refused)
+    {
+      <Alert Kind="warning" Role="alert">@refused.Text</Alert>
+    }
+    else if (_outcome is { Kind: OutcomeKind.RunFailed } runFailed)
+    {
+      <Alert Kind="danger">@runFailed.Text@(" ")<a href="@JobWords.FailedRunsOf(runFailed.Key)">@JobWords.ItsRuns<span class="visually-hidden">@JobWords.ItsRunsHidden(runFailed.Key)</span></a></Alert>
+    }
+    else if (_outcome is { Kind: OutcomeKind.Failed } failed)
+    {
+      <Alert Kind="danger"><strong>@failed.Lead</strong>@(" ")@failed.Text</Alert>
+    }
+  </ActionResult>
+
+  <StatePanel IsLoading="_loading" LoadError="@_loadError" OnRetry="RetryAsync" FocusAfterRetry="FocusPageHeadingAsync">
+    <LoadingContent>
+      <p class="loading-line" role="status">@JobWords.JobsLoading</p>
+      <div class="detail-card" aria-hidden="true">
+        <div class="skeleton skel-title"></div>
+        <div class="skeleton skel-line"></div>
+        <div class="skeleton skel-line"></div>
+        <div class="skeleton skel-line"></div>
+        <div class="skeleton skel-line skel-short"></div>
+      </div>
+    </LoadingContent>
+    <ChildContent>
+      @if (_jobs is not null)
+      {
+        <DataTable TItem="ScheduledJobDto" Items="_jobs" StackWide="true" Caption="@JobWords.JobsCaption">
+          <HeaderRow>
+            <tr role="row">
+              <th scope="col" role="columnheader">Job</th>
+              <th scope="col" role="columnheader">Schedule</th>
+              <th scope="col" role="columnheader">Last run</th>
+              <th scope="col" role="columnheader">Next run</th>
+              <th scope="col" role="columnheader"><span class="visually-hidden">Actions</span></th>
+            </tr>
+          </HeaderRow>
+          <Row Context="job">
+            <tr role="row" @key="job.Key">
+              @* S7: the key over its description, painted by .people-page's row-header rules. *@
+              <th scope="row" role="rowheader"><span class="person-cell"><strong>@job.Key</strong><span>@job.Description</span></span></th>
+              <td role="cell" data-label="Schedule">
+                @if (ScheduleWords.Words(job.CronExpression) is { } words)
+                {
+                  <span class="person-cell">@words<span><code>@ScheduleWords.CronLine(job.CronExpression)</code></span></span>
+                }
+                else
+                {
+                  <code>@ScheduleWords.CronLine(job.CronExpression)</code>
+                }
+              </td>
+              <td role="cell" data-label="Last run">
+                @if (job.LastRunAt is { } lastRun)
+                {
+                  @* A time breaks only between its day and its hour (DESIGN.md § Table system). *@
+                  <span class="nowrap">@JobWords.Day(lastRun)</span>@(" ")<span class="nowrap">@JobWords.ClockToMinute(lastRun)</span><br /><span class="badge @BadgeFor.JobRun(job.LastRunStatus)">@JobWords.Status(job.LastRunStatus)</span>
+                  @if (job.LastRunError is { } error)
+                  {
+                    <br /><span class="text-sm">@error</span>
+                  }
+                }
+                else
+                {
+                  <span class="muted">@JobWords.NotRunYet</span>
+                }
+              </td>
+              <td role="cell" data-label="Next run">
+                @if (!job.IsEnabled)
+                {
+                  <span class="muted">@JobWords.NoneWhileDisabled</span>
+                }
+                else if (!job.ScheduleReadable)
+                {
+                  <span class="muted">@JobWords.ScheduleUnreadable</span>
+                }
+                else if (job.IsDue)
+                {
+                  @JobWords.AtTheNextCheck
+                }
+                else if (job.NextRunAt is { } next)
+                {
+                  <span class="nowrap">@JobWords.Day(next)</span>@(" ")<span class="nowrap">@JobWords.ClockToMinute(next)</span>
+                }
+              </td>
+              <td role="cell">
+                <div class="actions-cell">
+                  @* While a row's action runs the other buttons are disabled, and the one pressed is not (T234): it has
+                     the focus, and a browser drops the focus of a button it disables. A second press sends nothing.
+                     T239: each named by its job, whose key is unique: "Run now: msf-campaign-auto-close". On a disabled
+                     job Run now is aria-disabled with its reason, never disabled: it stays in the tab order, and a press
+                     sends nothing (R3-J02). *@
+                  <button type="button" class="btn btn-outline btn-sm" @onclick="() => RunNowAsync(job)"
+                          disabled="@OtherInFlight(RunAction(job))"
+                          aria-label="@($"{RunLabel(job)}: {job.Key}")"
+                          aria-disabled="@(!job.IsEnabled || Running(RunAction(job)) ? "true" : null)"
+                          aria-describedby="@(job.IsEnabled ? null : WhyId(job))">@RunLabel(job)</button>
+                  <button type="button" class="btn btn-outline btn-sm" @onclick="() => ToggleAsync(job)"
+                          disabled="@OtherInFlight(ToggleAction(job))"
+                          aria-label="@($"{ToggleLabel(job)} {job.Key}")"
+                          aria-disabled="@InFlight.AriaDisabled(Running(ToggleAction(job)))">@ToggleLabel(job)</button>
+                  @if (!job.IsEnabled)
+                  {
+                    @* A span, not a p: a p's margins would open the actions cell's row (R3-J02's note). *@
+                    <span class="muted text-sm" id="@WhyId(job)">@JobWords.EnableToRun</span>
+                  }
+                </div>
+              </td>
+            </tr>
+          </Row>
+        </DataTable>
+      }
+    </ChildContent>
+  </StatePanel>
+</div>
 
 @code {
-  private IReadOnlyList<Wombat.Application.Features.Scheduling.ScheduledJobDto>? _jobs;
-  private string? _errorMessage;
+  private static readonly RenderFragment RunHistoryLink =
+    @<a class="btn btn-outline" href="@JobLinks.Runs"><Icon Name="clock" />@JobWords.RunHistory</a>;
+
+  private enum OutcomeKind
+  {
+    Done,
+    Refused,
+    RunFailed,
+    Failed
+  }
+
+  /// <summary>What an action said: its kind, its job, a failure's bolded first sentence, and its words.</summary>
+  private sealed record Outcome(OutcomeKind Kind, string Key, string? Lead, string Text);
+
+  private IReadOnlyList<ScheduledJobDto>? _jobs;
+  private bool _loading = true;
+  private string? _loadError;
   private ActionResult? _result;
+  private Outcome? _outcome;
 
   /// <summary>The row action that has been sent and has not yet answered, or null. (T234)</summary>
   private string? _inFlight;
 
-  private static string ToggleAction(Wombat.Application.Features.Scheduling.ScheduledJobDto job) => $"toggle:{job.Key}";
+  private static string ToggleAction(ScheduledJobDto job) => $"toggle:{job.Key}";
 
-  private static string RunAction(Wombat.Application.Features.Scheduling.ScheduledJobDto job) => $"run:{job.Key}";
+  private static string RunAction(ScheduledJobDto job) => $"run:{job.Key}";
+
+  private static string WhyId(ScheduledJobDto job) => $"why-{job.Key}";
+
+  private static string ToggleLabel(ScheduledJobDto job) => job.IsEnabled ? JobWords.Disable : JobWords.Enable;
+
+  private string RunLabel(ScheduledJobDto job) => Running(RunAction(job)) ? JobWords.Running : JobWords.RunNow;
 
   private bool OtherInFlight(string action) => _inFlight is not null && _inFlight != action;
 
   private bool Running(string action) => _inFlight == action;
-  private string? _actionMessage;
-  private bool _actionSuccess;
 
-  protected override async Task OnInitializedAsync()
-  {
-    await LoadJobsAsync();
-  }
+  protected override Task OnInitializedAsync() => LoadAsync(showLoading: true);
 
-  private async Task LoadJobsAsync()
+  /// <summary>Reads the jobs. The first read and Try again's show the loading state; the read after an action answers in place.</summary>
+  private async Task LoadAsync(bool showLoading)
   {
+    if (showLoading)
+    {
+      _loading = true;
+    }
+
+    _loadError = null;
     try
     {
-      _jobs = await Sender.Send(new Wombat.Application.Features.Scheduling.Queries.GetScheduledJobStatus.GetScheduledJobStatusQuery());
+      _jobs = await Sender.Send(new GetScheduledJobStatusQuery());
     }
-    catch (Exception ex)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      _errorMessage = ex.Message;
+      // T329: never the exception's text on the page; the cause goes to the log.
+      Logger.LogError(exception, "The scheduled jobs could not be read.");
+      _jobs = null;
+      _loadError = JobWords.JobsLoadFailed;
+    }
+    finally
+    {
+      _loading = false;
     }
   }
 
-  private async Task ToggleAsync(Wombat.Application.Features.Scheduling.ScheduledJobDto job)
+  private Task RetryAsync() => LoadAsync(showLoading: true);
+
+  // After Try again has read, the h1 takes the focus (S3).
+  private ValueTask FocusPageHeadingAsync() => PageFocus.FocusHeadingAsync(JS);
+
+  private async Task ToggleAsync(ScheduledJobDto job)
   {
     if (_inFlight is not null)
     {
@@ -126,63 +236,69 @@
     }
 
     _inFlight = ToggleAction(job);
-    _actionMessage = null;
+    _outcome = null;
+    var enabling = !job.IsEnabled;
 
     try
     {
-      if (job.IsEnabled)
+      if (enabling)
       {
-        await Sender.Send(new Wombat.Application.Features.Scheduling.Commands.DisableScheduledJob.DisableScheduledJobCommand(job.Key));
-        _actionMessage = $"Job '{job.Key}' disabled.";
+        await Sender.Send(new EnableScheduledJobCommand(job.Key));
       }
       else
       {
-        await Sender.Send(new Wombat.Application.Features.Scheduling.Commands.EnableScheduledJob.EnableScheduledJobCommand(job.Key));
-        _actionMessage = $"Job '{job.Key}' enabled.";
+        await Sender.Send(new DisableScheduledJobCommand(job.Key));
       }
-      _actionSuccess = true;
-      await LoadJobsAsync();
-      _result?.FocusAfterRender();
     }
-    catch (Exception ex)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      _actionMessage = ex.Message;
-      _actionSuccess = false;
-    }
-    finally
-    {
+      // T23: the act named, the cause to the log; the row is as it was.
+      Logger.LogError(exception, "Scheduled job {JobKey} could not be {Change}.", job.Key, enabling ? "enabled" : "disabled");
+      _outcome = new Outcome(
+        OutcomeKind.Failed, job.Key, enabling ? JobWords.CouldNotEnable(job.Key) : JobWords.CouldNotDisable(job.Key), JobWords.NothingHasChanged);
       _inFlight = null;
+      _result?.FocusAfterRender();
+      return;
     }
+
+    await LoadAsync(showLoading: false);
+    var reread = _jobs?.FirstOrDefault(row => row.Key == job.Key);
+    _outcome = new Outcome(OutcomeKind.Done, job.Key, null, enabling ? JobWords.Enabled(job.Key, reread) : JobWords.Disabled(job.Key));
+    _inFlight = null;
+    _result?.FocusAfterRender();
   }
 
-  private async Task RunNowAsync(Wombat.Application.Features.Scheduling.ScheduledJobDto job)
+  private async Task RunNowAsync(ScheduledJobDto job)
   {
-    if (_inFlight is not null)
+    // A disabled job's Run now is aria-disabled: a press sends nothing (R3-J02).
+    if (_inFlight is not null || !job.IsEnabled)
     {
       return;
     }
 
     _inFlight = RunAction(job);
-    _actionMessage = null;
+    _outcome = null;
 
     try
     {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "unknown";
-      await Sender.Send(new Wombat.Application.Features.Scheduling.Commands.RunScheduledJobNow.RunScheduledJobNowCommand(job.Key, userId));
-      _actionMessage = $"Job '{job.Key}' dispatched.";
-      _actionSuccess = true;
-      await LoadJobsAsync();
-      _result?.FocusAfterRender();
+      var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+      var ran = await Sender.Send(new RunScheduledJobNowCommand(job.Key, user));
+      _outcome = new Outcome(JobWords.Failed(ran) ? OutcomeKind.RunFailed : OutcomeKind.Done, job.Key, null, JobWords.Ran(job.Key, ran));
     }
-    catch (Exception ex)
+    catch (ScheduledJobRefusal refusal)
     {
-      _actionMessage = ex.Message;
-      _actionSuccess = false;
+      // Already running, or disabled since the page was read (K6, T22): its own words, a warning read at once.
+      _outcome = new Outcome(OutcomeKind.Refused, job.Key, null, refusal.Message);
     }
-    finally
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      _inFlight = null;
+      Logger.LogError(exception, "Scheduled job {JobKey} could not be started.", job.Key);
+      _outcome = new Outcome(OutcomeKind.Failed, job.Key, JobWords.CouldNotStart(job.Key), JobWords.NothingHasChanged);
     }
+
+    // The run has ended, or was refused: the rows say where each job is now (R3-J04, J09).
+    await LoadAsync(showLoading: false);
+    _inFlight = null;
+    _result?.FocusAfterRender();
   }
 }

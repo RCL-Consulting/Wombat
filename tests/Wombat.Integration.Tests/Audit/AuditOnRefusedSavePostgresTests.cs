@@ -14,6 +14,7 @@ using Wombat.Application.Common.Options;
 using Wombat.Application.Common.Security;
 using Wombat.Application.Features.Accounts;
 using Wombat.Application.Features.Institutions.Commands.CreateInstitution;
+using Wombat.Application.Features.Institutions.Commands.UpdateInstitution;
 using Wombat.Application.Features.MultiSourceFeedback;
 using Wombat.Domain.Identity;
 using Wombat.Domain.MultiSourceFeedback;
@@ -138,17 +139,24 @@ public sealed class AuditOnRefusedSavePostgresTests : IAsyncLifetime
             var shortCode = $"T201-{suffix}";
 
             var created = new HandlerOutcome();
-            await CreateInstitutionThroughTheAuditPipelineAsync(schema, $"T201 first {suffix}", shortCode, created);
+            await CreateInstitutionThroughTheAuditPipelineAsync(schema, $"T201 first {suffix}", $"{shortCode}-was", created);
             created.Thrown.Should().BeNull();
 
+            // T400 (flow 18, R3-I09): the create refuses a short code another institution holds before it stages anything,
+            // so the clash the save must translate is one made between that check and the save, as two creates at once
+            // make it: the first institution takes the code just before the second's insert reaches the server.
+            var race = new RaceBeforeFirstSave();
+            race.Arm(() => TakeTheShortCodeAsync(schema, $"{shortCode}-was", shortCode));
             var duplicate = new HandlerOutcome();
             var createDuplicate = () =>
-                CreateInstitutionThroughTheAuditPipelineAsync(schema, $"T201 second {suffix}", shortCode, duplicate);
+                CreateInstitutionThroughTheAuditPipelineAsync(schema, $"T201 second {suffix}", shortCode, duplicate, race);
 
             var thrown = (await createDuplicate.Should().ThrowAsync<InvalidOperationException>()).Which;
             thrown.Should().BeSameAs(duplicate.Thrown);
             thrown.Message.Should().Be("An institution with the same name or short code already exists.");
             thrown.InnerException.Should().BeAssignableTo<DbUpdateException>("the handler translated a refused save");
+            thrown.Should().BeOfType<InstitutionUpdateRefusedException>()
+                .Which.Field.Should().Be(InstitutionRecordField.ShortCode, "the short code is what clashed");
 
             await using var read = NewContext(schema);
             var rows = await read.AuditEntries
@@ -163,6 +171,40 @@ public sealed class AuditOnRefusedSavePostgresTests : IAsyncLifetime
             (await read.Institutions.CountAsync(institution => institution.ShortCode == shortCode)).Should().Be(1);
             (await read.Institutions.AnyAsync(institution => institution.Name == $"T201 second {suffix}"))
                 .Should().BeFalse("the refused insert was discarded, not saved with the audit row");
+        }
+        finally
+        {
+            await _schemas.DropAllAsync();
+        }
+    }
+
+    /// <summary>
+    /// The build review's N-6: a create that a concurrent rename beats to the <em>name</em> is refused under Name, the field
+    /// that clashes, read again once the unique index has refused the insert.
+    /// </summary>
+    [Fact]
+    public async Task AUniqueViolationOnTheName_IsRefusedUnderName()
+    {
+        try
+        {
+            var schema = await MigratedSchemaAsync();
+            var suffix = Guid.NewGuid().ToString("N")[..8];
+            var name = $"T400 name {suffix}";
+
+            var created = new HandlerOutcome();
+            await CreateInstitutionThroughTheAuditPipelineAsync(schema, $"{name} was", $"N1-{suffix}", created);
+            created.Thrown.Should().BeNull();
+
+            var race = new RaceBeforeFirstSave();
+            race.Arm(() => TakeTheNameAsync(schema, $"{name} was", name));
+            var duplicate = new HandlerOutcome();
+            var createDuplicate = () =>
+                CreateInstitutionThroughTheAuditPipelineAsync(schema, name, $"N2-{suffix}", duplicate, race);
+
+            var thrown = (await createDuplicate.Should().ThrowAsync<InvalidOperationException>()).Which;
+            thrown.InnerException.Should().BeAssignableTo<DbUpdateException>("the unique index found the clash");
+            thrown.Should().BeOfType<InstitutionUpdateRefusedException>()
+                .Which.Field.Should().Be(InstitutionRecordField.Name);
         }
         finally
         {
@@ -186,11 +228,13 @@ public sealed class AuditOnRefusedSavePostgresTests : IAsyncLifetime
             var shortCode = $"T201-{suffix}";
 
             var created = new HandlerOutcome();
-            await CreateInstitutionThroughTheAuditPipelineAsync(schema, $"T201 first {suffix}", shortCode, created);
+            await CreateInstitutionThroughTheAuditPipelineAsync(schema, $"T201 first {suffix}", $"{shortCode}-was", created);
             created.Thrown.Should().BeNull();
 
-            // Armed once the handler has thrown, so it runs inside the audit write's save.
+            // The clash made between the create's check and its save (T400, as above); then, armed once the handler has
+            // thrown, the deletion runs inside the audit write's save.
             var race = new RaceBeforeFirstSave();
+            race.Arm(() => TakeTheShortCodeAsync(schema, $"{shortCode}-was", shortCode));
             var duplicate = new HandlerOutcome
             {
                 OnThrown = () => race.Arm(async () =>
@@ -348,6 +392,27 @@ public sealed class AuditOnRefusedSavePostgresTests : IAsyncLifetime
                     return Unit.Value;
                 },
                 CancellationToken.None);
+    }
+
+    /// <summary>
+    /// Another request renames an institution's short code to one a create has just checked is free (T400: the create's
+    /// check runs before its save, so only a race reaches the unique index).
+    /// </summary>
+    private async Task TakeTheShortCodeAsync(string schema, string from, string to)
+    {
+        await using var competing = NewContext(schema);
+        await competing.Institutions
+            .Where(institution => institution.ShortCode == from)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(institution => institution.ShortCode, to));
+    }
+
+    /// <summary>Another request renames an institution to the name a create has just checked is free (N-6).</summary>
+    private async Task TakeTheNameAsync(string schema, string from, string to)
+    {
+        await using var competing = NewContext(schema);
+        await competing.Institutions
+            .Where(institution => institution.Name == from)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(institution => institution.Name, to));
     }
 
     /// <summary>The exception the handler itself threw, captured inside the pipeline, before the audit write runs.</summary>

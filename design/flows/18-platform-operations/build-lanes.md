@@ -294,6 +294,12 @@ commits): Domain 899, Application 4466, Infrastructure 1035, Architecture 52, We
 squash (from its handoff; the replay's fixes may have added a few). § 0 re-runs them first, then records the counts on
 `t400` after its commit here; the integrator fills the squash's.
 
+**Measured by § 0** (2026-11-11): at `367b3c10` (the branch unchanged) Domain 899, Application 4466, Infrastructure
+1035, Architecture 52, Web 4811, Integration 532. On `t400` after § 0's commit: Domain 907 (+8, `EmailOutcomeTests`),
+Application 4491 (+25: `JobScheduleTests` 18, `DataRightsPeopleNamesTests` 7), Infrastructure 1035, Architecture 52, Web
+4833 (+22: `SastTimeTests` 8, `JobLinksTests` 10, `NarrowLayoutTests`' C1 pin 4), Integration 533 (+1,
+`EmailOutcomePostgresTests`). Build 0 warnings. What the lanes must know beyond the contracts: `build-s0-notes.md`.
+
 ## The lane plan
 
 § 0, one wave of three lanes, the merge, the sweep, then the runbook lane, two Sonnet reviews and one fix pass: **eight
@@ -591,3 +597,6 @@ A third round only if round two finds a new defect of substance. The integrator 
   the row's id. Rows already stored are scenario data and are not rewritten. Say "typed only" to treat only the typed
   refusal classes and `ValidationException` as refusals (many plain-sentence refusals would then read "The action
   failed."), or "as today" to drop K10 and keep storing every exception's text.
+  *Built as recommended; then the build review's S2 (F1, the operator's, 2026-11-12, "take the recommendation"): an
+  `UnauthorizedAccessException` is a refusal only when Wombat's code threw it, by the same throw-site test
+  (`AuditFailureText`); a framework one (file access, with a path in its text) stores "The action failed." and is logged.*

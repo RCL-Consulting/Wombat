@@ -19,7 +19,8 @@ namespace Wombat.Web.Tests.Admin;
 
 /// <summary>
 /// T302: the institution page offers the controls that change an institution's state only to those the Administrator
-/// policy admits, the rule of the two commands behind them. An InstitutionalAdmin reads the state as text. T291 item 7:
+/// policy admits, the rule of the two commands behind them. T400 (flow 18, R3-I11–I16): the Administrator's are a Status
+/// section's Deactivate… and Reactivate…, each asking in ConfirmDialog's action mode (M1); there is no Active box. An InstitutionalAdmin reads the state as text. T291 item 7:
 /// her Cancel leads home, not to the Administrator's institutions list, and T376 (flow 12, I01) gives her no Back link:
 /// the trail's Home is her way back. T264: Deactivate asks first.
 /// </summary>
@@ -90,252 +91,180 @@ public sealed class InstitutionEditStatusTests : TestContext
         JSInterop.VerifyNotInvoke("wombatDialog.showModal");
     }
 
-    // ─── The Administrator ──────────────────────────────────────────────────
+    // ─── The Administrator (T400, flow 18, lane A; R3-I11–I16, M1, T11, K17) ───
 
     [Fact]
-    public void AnAdministrator_IsShownTheActiveBox_AndDeactivate()
+    public void AnAdministrator_IsShownAStatusSection_WithDeactivate_AndNoActiveBox()
     {
         SignInAsAdministrator();
         var cut = RenderPage(new FakeSender());
 
-        cut.Find("#institution-active").HasAttribute("checked").Should().BeTrue();
-        cut.Find("#institution-active").GetAttribute("aria-describedby").Should().Be("institution-active-help");
-        Text(cut.Find("#institution-active-help")).Should().Contain("cannot be named on a new invitation");
-        cut.FindAll("#institution-status").Should().BeEmpty("the box says it");
+        cut.FindAll("input[type=checkbox]").Should().BeEmpty("T400: there is no Active box; Save never asks");
+        cut.FindAll("#institution-status").Should().BeEmpty("the Status section says it");
+        var section = cut.Find("section.user-section");
+        section.GetAttribute("aria-labelledby").Should().Be("institution-status-heading");
+        Text(section.QuerySelector("h2")!).Should().Be("Status");
+        Text(section.QuerySelector("p")!).Should().Be("Active A new invitation can name it.");
+        section.QuerySelector("p .badge")!.ClassList.Should().Contain("badge-completed");
 
-        var deactivate = PageButtons(cut).Single(button => Text(button) == "Deactivate");
+        var deactivate = PageButton(cut, "Deactivate…");
         deactivate.ClassList.Should().Contain("btn-outline").And.NotContain("btn-danger",
             "the red button belongs only in the dialog's footer (DESIGN.md § Button system)");
-        Links(cut).Should().Equal(("Back to institutions", "/admin/institutions"), ("Cancel", "/admin/institutions"));
+        deactivate.GetAttribute("aria-haspopup").Should().Be("dialog");
+        deactivate.Closest("form").Should().BeNull("the trigger is the Status section's, not the form's");
+        PageButtons(cut).Select(Text).Should().Equal("Save", "Deactivate…");
+        Links(cut).Should().Equal(("Cancel", "/admin/institutions"));
+        Text(cut.Find("h1")).Should().Be("Kgosi Kgari Teaching Hospital");
+        Text(cut.Find(".page-subtitle")).Should().Be("KGK · Active");
     }
 
     [Fact]
-    public void AnInactiveInstitution_IsNotOfferedDeactivate_AndIsReactivatedByTickingActiveAndSaving()
+    public void AnInactiveInstitution_OffersReactivate_NeverDeactivate()
+    {
+        SignInAsAdministrator();
+        var cut = RenderPage(new FakeSender(isActive: false));
+
+        PageButtons(cut).Select(Text).Should().Equal("Save", "Reactivate…");
+        Text(cut.Find("section.user-section p")).Should().Be(
+            "Inactive No new invitation can name it. Its people, their records and the invitations already sent are kept.");
+        cut.Find("section.user-section p .badge").ClassList.Should().Contain("badge-withdrawn");
+        Text(cut.Find(".page-subtitle")).Should().Be("KGK · Inactive");
+    }
+
+    /// <summary>M1: both dialogs are ConfirmDialog's action mode, Cancel first and autofocused, the action after it.</summary>
+    [Theory]
+    [InlineData(true, "Deactivate Kgosi Kgari Teaching Hospital?", "Deactivate", "btn-danger",
+        "No new invitation can be issued for it until it is reactivated. Its people, their records and the invitations already sent are kept. You can reactivate it on this page.")]
+    [InlineData(false, "Reactivate Kgosi Kgari Teaching Hospital?", "Reactivate", "btn-primary",
+        "A new invitation can name it again. Its people and their records are as they were.")]
+    public void EachTrigger_AsksInTheActionMode_OpeningOnCancel_AndSendsNothingUntilConfirmed(
+        bool isActive, string title, string confirm, string confirmClass, string body)
+    {
+        SignInAsAdministrator();
+        var sender = new FakeSender(isActive);
+        var cut = RenderPage(sender);
+
+        PageButton(cut, isActive ? "Deactivate…" : "Reactivate…").Click();
+
+        var dialog = cut.FindAll("dialog").Single(candidate => Text(candidate.QuerySelector("h2")!) == title);
+        dialog.QuerySelector("form").Should().BeNull("a dialog that does not post is the action mode (M1)");
+        dialog.QuerySelector(".form-container > h2").Should().NotBeNull();
+        Text(dialog.QuerySelector(".form-container > p")!).Should().Be(body);
+        var buttons = dialog.QuerySelectorAll(".form-actions button").ToList();
+        buttons.Select(Text).Should().Equal("Cancel", confirm);
+        buttons[0].HasAttribute("autofocus").Should().BeTrue("it opens on Cancel");
+        buttons[1].ClassList.Should().Contain(confirmClass);
+        JSInterop.VerifyInvoke("wombatDialog.showModal").Arguments[1].Should().Be(
+            isActive ? "institution-deactivate" : "institution-reactivate", "Cancel and Escape return to the trigger");
+        sender.Commands.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void ConfirmingDeactivate_SendsItsOwnCommand_SaysSoByName_AndOffersReactivate()
+    {
+        SignInAsAdministrator();
+        var sender = new FakeSender();
+        var cut = RenderPage(sender);
+
+        PageButton(cut, "Deactivate…").Click();
+        ConfirmButton(cut, "Deactivate").Click();
+
+        sender.Commands.Should().ContainSingle().Which.Should().BeOfType<DeactivateInstitutionCommand>().Which.Id.Should().Be(KgkId);
+        Text(cut.Find(".action-result .alert.alert-success")).Should().Be(
+            "Kgosi Kgari Teaching Hospital deactivated. A new invitation can no longer name it.");
+        PageButtons(cut).Select(Text).Should().Equal("Save", "Reactivate…");
+        Text(cut.Find(".page-subtitle")).Should().Be("KGK · Inactive");
+        cut.WaitForAssertion(() => FocusCalls().Should().NotBeEmpty("the result takes the focus once the dialog has closed"));
+    }
+
+    [Fact]
+    public void ConfirmingReactivate_SendsItsOwnCommand_AndSaysSoByName()
     {
         SignInAsAdministrator();
         var sender = new FakeSender(isActive: false);
         var cut = RenderPage(sender);
 
-        PageButtons(cut).Select(Text).Should().Equal(["Save"], "an inactive institution has nothing to deactivate");
-        cut.Find("#institution-active").HasAttribute("checked").Should().BeFalse();
+        PageButton(cut, "Reactivate…").Click();
+        ConfirmButton(cut, "Reactivate").Click();
 
-        cut.Find("#institution-active").Change(true);
-        cut.Find("form").Submit();
-
-        JSInterop.VerifyNotInvoke("wombatDialog.showModal");
-        sender.Commands.Select(command => command.GetType()).Should().Equal(
-            typeof(UpdateInstitutionCommand), typeof(ReactivateInstitutionCommand));
-        sender.Commands.OfType<ReactivateInstitutionCommand>().Single().Id.Should().Be(KgkId);
-        Text(cut.Find(".action-result .alert.alert-success")).Should().Be("Institution saved and reactivated.");
-        PageButtons(cut).Select(Text).Should().Equal(["Deactivate", "Save"], "the institution is active again");
+        sender.Commands.Should().ContainSingle().Which.Should().BeOfType<ReactivateInstitutionCommand>();
+        Text(cut.Find(".action-result .alert.alert-success")).Should().Be(
+            "Kgosi Kgari Teaching Hospital reactivated. A new invitation can name it again.");
+        PageButtons(cut).Select(Text).Should().Equal("Save", "Deactivate…");
     }
 
+    /// <summary>K17: a status change leaves typing not yet saved in the fields, unsaved.</summary>
     [Fact]
-    public void Deactivate_OpensADialogNamingTheInstitution_AndSendsNothingUntilConfirmed()
+    public void AStatusChange_KeepsUnsavedTyping_InTheFields()
     {
         SignInAsAdministrator();
         var sender = new FakeSender();
         var cut = RenderPage(sender);
 
-        PageButton(cut, "Deactivate").Click();
+        cut.Find("#institution-email").Change("typed-not-saved@kgk.wombat.local");
+        PageButton(cut, "Deactivate…").Click();
+        ConfirmButton(cut, "Deactivate").Click();
 
-        JSInterop.VerifyInvoke("wombatDialog.showModal");
-        sender.Commands.Should().BeEmpty("opening the dialog must not deactivate the institution");
-        Text(cut.Find("dialog h2")).Should().Be("Deactivate Kgosi Kgari Teaching Hospital?");
-        Text(cut.Find("dialog p")).Should().Contain("No new invitation can be issued for it until it is reactivated.");
+        cut.Find("#institution-email").GetAttribute("value").Should().Be("typed-not-saved@kgk.wombat.local");
+        sender.Commands.Should().NotContain(command => command is UpdateInstitutionCommand);
     }
 
     [Fact]
-    public void ConfirmingDeactivate_DeactivatesTheInstitution_AndDeactivateIsNoLongerOffered()
+    public void Save_NeverAsks_AndSaysTheContactEmailByName()
     {
         SignInAsAdministrator();
         var sender = new FakeSender();
         var cut = RenderPage(sender);
 
-        PageButton(cut, "Deactivate").Click();
-        ConfirmButton(cut).Click();
-
-        sender.Commands.Should().ContainSingle().Which.Should().BeOfType<DeactivateInstitutionCommand>()
-            .Which.Id.Should().Be(KgkId);
-        Text(cut.Find(".action-result .alert.alert-success")).Should().Be("Institution deactivated.");
-        cut.Find("#institution-active").HasAttribute("checked").Should().BeFalse();
-        PageButtons(cut).Select(Text).Should().Equal(["Save"], "the institution is inactive now");
-
-        // Deactivate had the focus, and it is gone, so the result takes it, once the dialog has closed.
-        cut.WaitForAssertion(() => FocusCalls().Should().ContainSingle());
-        var calls = JSInterop.Invocations.Select(invocation => invocation.Identifier).ToList();
-        calls.IndexOf("wombatDialog.close").Should().BeGreaterThan(-1)
-            .And.BeLessThan(calls.IndexOf(FocusIdentifier), "while the modal is open nothing outside it can take the focus");
-    }
-
-    [Fact]
-    public void UntickingActiveAndSaving_AsksFirst_ThenSavesAndDeactivates()
-    {
-        SignInAsAdministrator();
-        var sender = new FakeSender();
-        var cut = RenderPage(sender);
-
-        cut.Find("#institution-name").Change("Kgosi Kgari Hospital");
-        cut.Find("#institution-active").Change(false);
-        cut.Find("form").Submit();
-
-        JSInterop.VerifyInvoke("wombatDialog.showModal");
-        sender.Commands.Should().BeEmpty("unticking Active and saving deactivates the institution, so it asks first");
-        Text(cut.Find("dialog h2")).Should().Be("Deactivate Kgosi Kgari Teaching Hospital?", "it names the record as stored");
-
-        ConfirmButton(cut).Click();
-
-        sender.Commands.Select(command => command.GetType()).Should().Equal(
-            typeof(UpdateInstitutionCommand), typeof(DeactivateInstitutionCommand));
-        sender.Commands.OfType<UpdateInstitutionCommand>().Single().Name.Should().Be("Kgosi Kgari Hospital");
-        Text(cut.Find(".action-result .alert.alert-success")).Should().Be("Institution saved and deactivated.");
-        PageButtons(cut).Select(Text).Should().Equal(["Save"]);
-    }
-
-    [Fact]
-    public void UntickingActiveAndSaving_ThenCancelling_SendsNothing()
-    {
-        SignInAsAdministrator();
-        var sender = new FakeSender();
-        var cut = RenderPage(sender);
-
-        cut.Find("#institution-active").Change(false);
-        cut.Find("form").Submit();
-        cut.FindAll("dialog button").Single(button => Text(button) == "Cancel").Click();
-
-        sender.Commands.Should().BeEmpty();
-        cut.FindAll(".alert.alert-success").Should().BeEmpty();
-    }
-
-    [Fact]
-    public void SavingAnActiveInstitutionThatStaysActive_SendsOnlyTheUpdate()
-    {
-        SignInAsAdministrator();
-        var sender = new FakeSender();
-        var cut = RenderPage(sender);
-
+        cut.Find("#institution-email").Change("paediatrics@kgk.wombat.local");
         cut.Find("form").Submit();
 
         JSInterop.VerifyNotInvoke("wombatDialog.showModal");
         sender.Commands.Should().ContainSingle().Which.Should().BeOfType<UpdateInstitutionCommand>();
-        Text(cut.Find(".action-result .alert.alert-success")).Should().Be("Institution saved.");
-    }
-
-    // ─── Another Administrator changed the state after the page loaded ──────
-
-    [Fact]
-    public void AnUntouchedUntickedBox_OnAnInstitutionReactivatedElsewhere_SendsOnlyTheUpdate_AndShowsItActive()
-    {
-        // Loaded inactive; another Administrator reactivates it; this one edits the email and saves, box untouched.
-        SignInAsAdministrator();
-        var sender = new FakeSender(isActive: false) { StateAtSave = true };
-        var cut = RenderPage(sender);
-
-        cut.Find("#institution-email").Change("hod.paediatrics@kgk.wombat.local");
-        cut.Find("form").Submit();
-
-        JSInterop.VerifyNotInvoke("wombatDialog.showModal");
-        sender.Commands.Should().ContainSingle("the box was not changed, so no state is sent, and no deactivation goes unasked")
-            .Which.Should().BeOfType<UpdateInstitutionCommand>();
-        Text(cut.Find(".action-result .alert.alert-success")).Should().Be("Institution saved.");
-        cut.Find("#institution-active").HasAttribute("checked").Should().BeTrue("the box shows the state as stored");
-        PageButtons(cut).Select(Text).Should().Equal(["Deactivate", "Save"]);
+        var result = cut.Find(".action-result .alert.alert-success");
+        Text(result).Should().Be(
+            "Kgosi Kgari Teaching Hospital saved. Its contact email is now paediatrics@kgk.wombat.local.");
+        result.QuerySelector("strong").Should().BeNull("R3-I12 bolds nothing in a success");
     }
 
     [Fact]
-    public void AnUntouchedTickedBox_OnAnInstitutionDeactivatedElsewhere_SendsOnlyTheUpdate_AndShowsItInactive()
+    public void AFailedStatusChange_IsT23sWords_NeverTheExceptions_AndTheStateIsAsItWas()
     {
         SignInAsAdministrator();
-        var sender = new FakeSender(isActive: true) { StateAtSave = false };
-        var cut = RenderPage(sender);
+        var cut = RenderPage(new FakeSender { StateRefusal = new InvalidOperationException("Npgsql: the database is down") });
 
-        cut.Find("#institution-name").Change("Kgosi Kgari Hospital");
-        cut.Find("form").Submit();
+        PageButton(cut, "Deactivate…").Click();
+        ConfirmButton(cut, "Deactivate").Click();
 
-        sender.Commands.Should().ContainSingle("the box was not changed, so the other Administrator's deactivation stands")
-            .Which.Should().BeOfType<UpdateInstitutionCommand>();
-        Text(cut.Find(".action-result .alert.alert-success")).Should().Be("Institution saved.");
-        cut.Find("#institution-active").HasAttribute("checked").Should().BeFalse();
-        PageButtons(cut).Select(Text).Should().Equal(["Save"]);
+        var failure = cut.Find(".action-result .alert.alert-danger");
+        Text(failure).Should().Be(
+            "Could not deactivate the institution. Nothing has changed. Try again, or come back in a few minutes.");
+        Text(failure.QuerySelector("strong")!).Should().Be("Could not deactivate the institution.");
+        cut.Markup.Should().NotContain("Npgsql");
+        PageButtons(cut).Select(Text).Should().Equal("Save", "Deactivate…");
     }
 
     [Fact]
-    public void AConfirmedUntick_OnAnInstitutionAlreadyDeactivatedElsewhere_SendsOnlyTheUpdate()
+    public void TheAdministratorPolicy_WithoutTheRole_IsShownTheStatusSection()
     {
-        SignInAsAdministrator();
-        var sender = new FakeSender(isActive: true) { StateAtSave = false };
-        var cut = RenderPage(sender);
-
-        cut.Find("#institution-active").Change(false);
-        cut.Find("form").Submit();
-        ConfirmButton(cut).Click();
-
-        sender.Commands.Should().ContainSingle("it is already what she asked for").Which.Should().BeOfType<UpdateInstitutionCommand>();
-        cut.Find("#institution-active").HasAttribute("checked").Should().BeFalse();
-        PageButtons(cut).Select(Text).Should().Equal(["Save"]);
-    }
-
-    [Fact]
-    public void ARefusedStateCommand_AfterALandedUpdate_SaysBothInOneAlert_AndLeavesTheBoxAsSet()
-    {
-        SignInAsAdministrator();
-        var sender = new FakeSender { StateRefusal = new InvalidOperationException("Institution 2 was not found.") };
-        var cut = RenderPage(sender);
-
-        cut.Find("#institution-active").Change(false);
-        cut.Find("form").Submit();
-        ConfirmButton(cut).Click();
-
-        sender.Commands.Select(command => command.GetType()).Should().Equal(
-            typeof(UpdateInstitutionCommand), typeof(DeactivateInstitutionCommand));
-        cut.FindAll(".alert.alert-success").Should().BeEmpty("a success beside a refusal says two things at once");
-        Text(cut.Find(".action-result .alert.alert-danger")).Should().Be(
-            "Institution saved, but not deactivated: Institution 2 was not found.");
-        cut.Find("#institution-active").HasAttribute("checked").Should().BeFalse("the untick stays on the form, unsaved");
-        PageButtons(cut).Select(Text).Should().Equal(["Deactivate", "Save"], "the institution is still active as stored");
-    }
-
-    // ─── The Administrator policy decides, not the role ─────────────────────
-
-    [Fact]
-    public void TheAdministratorPolicy_WithoutTheRole_IsShownTheStateControls()
-    {
-        _auth.SetAuthorized("policy-only@test");
-        _auth.SetRoles(WombatRoles.InstitutionalAdmin);
+        _auth.SetAuthorized("devadmin@test");
         _auth.SetPolicies(AdministratorPolicy);
+        _auth.SetClaims(new Claim(ClaimTypes.NameIdentifier, "devadmin"));
         var cut = RenderPage(new FakeSender());
 
-        cut.FindAll("#institution-active").Should().ContainSingle();
-        PageButtons(cut).Select(Text).Should().Equal(["Deactivate", "Save"]);
-        Links(cut).Should().Equal(("Back to institutions", "/admin/institutions"), ("Cancel", "/admin/institutions"));
+        cut.FindAll("section.user-section").Should().ContainSingle();
     }
 
     [Fact]
     public void TheAdministratorRole_WithoutThePolicy_IsShownStatusAsText()
     {
-        _auth.SetAuthorized("role-only@test");
+        _auth.SetAuthorized("devadmin@test");
         _auth.SetRoles(WombatRoles.Administrator);
+        _auth.SetClaims(new Claim(ClaimTypes.NameIdentifier, "devadmin"));
         var cut = RenderPage(new FakeSender());
 
-        cut.FindAll("#institution-active").Should().BeEmpty("the page asks the policy (DESIGN.md § Table system, T211)");
+        cut.FindAll("section.user-section").Should().BeEmpty();
         Text(cut.Find("#institution-status")).Should().Be("Active");
-        PageButtons(cut).Select(Text).Should().Equal(["Save changes"]);
-        Links(cut).Should().Equal(("Cancel", "/"));
-    }
-
-    [Fact]
-    public void ARefusedDeactivate_LeavesTheInstitutionActive_AndDeactivateOffered()
-    {
-        SignInAsAdministrator();
-        var cut = RenderPage(new FakeSender { StateRefusal = new InvalidOperationException("Institution 2 was not found.") });
-
-        PageButton(cut, "Deactivate").Click();
-        ConfirmButton(cut).Click();
-
-        Text(cut.Find(".action-result .alert.alert-danger")).Should().Be("Institution 2 was not found.");
-        cut.Find("#institution-active").HasAttribute("checked").Should().BeTrue();
-        PageButton(cut, "Deactivate").Should().NotBeNull("the dialog hands the focus back to it");
-        FocusCalls().Should().BeEmpty("a refusal leaves the focus where it was");
     }
 
     // ─── Helpers ────────────────────────────────────────────────────────────
@@ -375,8 +304,8 @@ public sealed class InstitutionEditStatusTests : TestContext
     private static IReadOnlyList<IElement> PageButtons(IRenderedFragment cut)
         => cut.FindAll("button").Where(button => button.Closest("dialog") is null).ToList();
 
-    private static IElement ConfirmButton(IRenderedFragment cut)
-        => cut.FindAll("dialog button").Single(button => Text(button) == "Deactivate");
+    private static IElement ConfirmButton(IRenderedFragment cut, string label)
+        => cut.FindAll("dialog button").Single(button => Text(button) == label);
 
     private static string Text(IElement element) => Regex.Replace(element.TextContent, @"\s+", " ").Trim();
 

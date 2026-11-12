@@ -1,8 +1,8 @@
 using System.Diagnostics;
-using System.Globalization;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http.Features;
+using Wombat.Web.Components.Shared;
 using Wombat.Web.Security;
 
 namespace Wombat.Web.Navigation;
@@ -46,9 +46,6 @@ internal static class ErrorPages
 
     /// <summary>The log category of the error page's own faults.</summary>
     public const string LogCategory = "Wombat.Web.Navigation.ErrorPages";
-
-    /// <summary>South Africa keeps UTC+2 all year (<see cref="Domain.Curricula.ProgrammeCalendar" />).</summary>
-    private static readonly TimeSpan SouthAfricanOffset = TimeSpan.FromHours(2);
 
     /// <summary>
     /// Reruns a browser's failed page load as <see cref="Path" />, answered 500. Call it before the middleware whose
@@ -132,8 +129,7 @@ internal static class ErrorPages
     }
 
     /// <summary>A moment as the page states it: "2026-09-26 15:14 SAST", on the South African clock.</summary>
-    public static string TimeOf(DateTimeOffset moment)
-        => moment.ToOffset(SouthAfricanOffset).ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture) + " SAST";
+    public static string TimeOf(DateTimeOffset moment) => SastTime.Minute(moment);
 
     /// <summary>
     /// Where Try again goes: the address that failed, its path and query, when it is a path on this site. Null when no

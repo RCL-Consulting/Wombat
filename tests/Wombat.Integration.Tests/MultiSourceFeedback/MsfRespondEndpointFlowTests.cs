@@ -632,7 +632,9 @@ public sealed class MsfRespondEndpointFlowTests : IAsyncLifetime
         }
 
         var autoClose = Factory.Services.GetRequiredService<MsfCampaignAutoCloseJob>().Key;
-        await SendAsync(new RunScheduledJobNowCommand(autoClose, "admin-1"));
+        // T400 (K6): the command carries the caller, whose id the handler reads; never a string the page passes.
+        await SendAsync(new RunScheduledJobNowCommand(autoClose, new ClaimsPrincipal(new ClaimsIdentity(
+            [new Claim(ClaimTypes.NameIdentifier, "admin-1"), new Claim(ClaimTypes.Role, WombatRoles.Administrator)], "Test"))));
 
         await SendAsync(new WithdrawMsfCampaignCommand(withdrawn, MsfCampaignState.Open, _coordinator));
 

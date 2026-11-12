@@ -1,5 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Wombat.Domain.Audit;
 
 namespace Wombat.Application.Audit;
@@ -17,11 +19,23 @@ public sealed class AuditPipelineBehavior<TRequest, TResponse> : IPipelineBehavi
 {
     private readonly IAuditWriter _auditWriter;
     private readonly IAuditContextProvider _contextProvider;
+    private readonly ILogger _logger;
 
-    public AuditPipelineBehavior(IAuditWriter auditWriter, IAuditContextProvider contextProvider)
+    /// <summary>The pipeline as the container builds it: a failure that is no refusal is logged (T400, K10).</summary>
+    public AuditPipelineBehavior(
+        IAuditWriter auditWriter,
+        IAuditContextProvider contextProvider,
+        ILogger<AuditPipelineBehavior<TRequest, TResponse>> logger)
     {
         _auditWriter = auditWriter;
         _contextProvider = contextProvider;
+        _logger = logger;
+    }
+
+    /// <summary>For a test that drives the pipeline by hand and reads only the row: nothing is logged.</summary>
+    public AuditPipelineBehavior(IAuditWriter auditWriter, IAuditContextProvider contextProvider)
+        : this(auditWriter, contextProvider, NullLogger<AuditPipelineBehavior<TRequest, TResponse>>.Instance)
+    {
     }
 
     public async Task<TResponse> Handle(
@@ -90,6 +104,12 @@ public sealed class AuditPipelineBehavior<TRequest, TResponse> : IPipelineBehavi
         CancellationToken cancellationToken)
     {
         var actor = ActorOf(request);
+
+        // A refusal's own words, or "The action failed." (T400, K10, P1): the row is read on the audit log, by an
+        // institution's administrator too, so a framework's text for a developer is never stored in it. Such an exception
+        // goes to the application log whole, with the row's id, so the two can be matched. The caller still gets it as
+        // thrown.
+        var refusal = AuditFailureText.RefusalOf(ex);
         var entry = AuditEntry.Create(
             occurredAt: occurredAt,
             category: AuditCategory.Command,
@@ -101,7 +121,27 @@ public sealed class AuditPipelineBehavior<TRequest, TResponse> : IPipelineBehavi
             actorUserAgent: actor.UserAgent,
             institutionId: actor.InstitutionId,
             summaryJson: AuditPayloadSerializer.Serialize(request),
-            errorMessage: ex.Message);
+            errorMessage: refusal ?? AuditFailureText.ActionFailed);
+
+        if (refusal is null && ex is OperationCanceledException)
+        {
+            // A cancelled command (a circuit torn down mid-send) is no fault of the code: the row says it did not complete,
+            // and the log notes it without an error (the build review's N-5).
+            _logger.LogInformation(
+                "{Action} was cancelled; its audit entry {AuditEntryId} stores \"{Stored}\".",
+                action,
+                entry.Id,
+                AuditFailureText.ActionFailed);
+        }
+        else if (refusal is null)
+        {
+            _logger.LogError(
+                ex,
+                "{Action} failed; its audit entry {AuditEntryId} stores \"{Stored}\" in place of the exception's text.",
+                action,
+                entry.Id,
+                AuditFailureText.ActionFailed);
+        }
 
         // The writer saves through the handler's own DbContext, and that save flushes everything still tracked.
         //

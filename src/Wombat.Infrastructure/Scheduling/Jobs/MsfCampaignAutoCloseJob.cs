@@ -53,7 +53,7 @@ public sealed class MsfCampaignAutoCloseJob : IScheduledJob
 
     public string Key => "msf-campaign-auto-close";
     public string CronExpression => "0 * * * *";
-    public string Description => "Closes open MSF campaigns whose window has ended and anonymises their respondents (hourly).";
+    public string Description => "Closes open MSF campaigns whose window has ended and anonymises their respondents.";
 
     public async Task ExecuteAsync(ScheduledJobContext context, CancellationToken cancellationToken)
     {

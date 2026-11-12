@@ -4,6 +4,7 @@ using Wombat.Application.Features.Audit.Queries.ListAuditEntries;
 using Wombat.Application.Tests.TestHelpers;
 using Wombat.Domain.Audit;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Application.Tests.Audit;
 
@@ -28,7 +29,7 @@ public sealed class ListAuditEntriesQueryHandlerTests
         db.Set<AuditEntry>().AddRange(old, recent);
         await db.SaveChangesAsync();
 
-        var handler = new ListAuditEntriesQueryHandler(db);
+        var handler = new ListAuditEntriesQueryHandler(db, FakeUserDirectory.Empty, TimeProvider.System);
         var result = await handler.Handle(new ListAuditEntriesQuery(TestPrincipals.Administrator()), CancellationToken.None);
 
         result.Items.Should().ContainSingle();
@@ -46,7 +47,7 @@ public sealed class ListAuditEntriesQueryHandlerTests
         db.Set<AuditEntry>().AddRange(cmd, auth);
         await db.SaveChangesAsync();
 
-        var handler = new ListAuditEntriesQueryHandler(db);
+        var handler = new ListAuditEntriesQueryHandler(db, FakeUserDirectory.Empty, TimeProvider.System);
         var result = await handler.Handle(new ListAuditEntriesQuery(TestPrincipals.Administrator(), Category: AuditCategory.Authentication), CancellationToken.None);
 
         result.Items.Should().ContainSingle();
@@ -64,7 +65,7 @@ public sealed class ListAuditEntriesQueryHandlerTests
         db.Set<AuditEntry>().AddRange(success, failure);
         await db.SaveChangesAsync();
 
-        var handler = new ListAuditEntriesQueryHandler(db);
+        var handler = new ListAuditEntriesQueryHandler(db, FakeUserDirectory.Empty, TimeProvider.System);
         var result = await handler.Handle(new ListAuditEntriesQuery(TestPrincipals.Administrator(), SuccessOnly: true), CancellationToken.None);
 
         result.Items.Should().ContainSingle();
@@ -83,12 +84,31 @@ public sealed class ListAuditEntriesQueryHandlerTests
         db.Set<AuditEntry>().AddRange(entries);
         await db.SaveChangesAsync();
 
-        var handler = new ListAuditEntriesQueryHandler(db);
+        var handler = new ListAuditEntriesQueryHandler(db, FakeUserDirectory.Empty, TimeProvider.System);
         var result = await handler.Handle(new ListAuditEntriesQuery(TestPrincipals.Administrator(), Page: 2, PageSize: 3), CancellationToken.None);
 
         result.TotalCount.Should().Be(10);
         result.Items.Should().HaveCount(3);
         result.Page.Should().Be(2);
+    }
+
+    /// <summary>The build review's N-4, N8: a page past the last reads the last, and no page number overflows the offset.</summary>
+    [Theory]
+    [InlineData(5)]
+    [InlineData(int.MaxValue)]
+    public async Task Handle_APagePastTheLast_ReadsTheLast(int asked)
+    {
+        await using var db = CreateDb();
+        db.Set<AuditEntry>().AddRange(Enumerable.Range(1, 10).Select(i =>
+            AuditEntry.Create(DateTime.UtcNow.AddMinutes(-i), AuditCategory.Command, $"Cmd{i}", true)));
+        await db.SaveChangesAsync();
+
+        var handler = new ListAuditEntriesQueryHandler(db, FakeUserDirectory.Empty, TimeProvider.System);
+        var result = await handler.Handle(
+            new ListAuditEntriesQuery(TestPrincipals.Administrator(), Page: asked, PageSize: 3), CancellationToken.None);
+
+        result.Page.Should().Be(4);
+        result.Items.Should().ContainSingle().Which.Action.Should().Be("Cmd10");
     }
 
     /// <summary>
@@ -116,7 +136,7 @@ public sealed class ListAuditEntriesQueryHandlerTests
         db.Set<AuditEntry>().Add(Entry(10, tie.AddSeconds(-1)));
         await db.SaveChangesAsync();
 
-        var handler = new ListAuditEntriesQueryHandler(db);
+        var handler = new ListAuditEntriesQueryHandler(db, FakeUserDirectory.Empty, TimeProvider.System);
         var pages = new List<IReadOnlyList<int>>();
         for (var page = 1; page <= 4; page++)
         {

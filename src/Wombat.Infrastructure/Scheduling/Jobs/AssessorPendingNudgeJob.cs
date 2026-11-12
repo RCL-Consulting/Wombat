@@ -50,7 +50,7 @@ public sealed class AssessorPendingNudgeJob : IScheduledJob
 
     public string Key => "assessor-pending-nudge";
     public string CronExpression => "0 9 * * *";
-    public string Description => $"Nudges assessors about activities waiting for their assessment for more than {_nudgeDays} days (daily at 09:00 UTC).";
+    public string Description => $"Nudges assessors about activities waiting for their assessment for more than {_nudgeDays} days.";
 
     public async Task ExecuteAsync(ScheduledJobContext context, CancellationToken cancellationToken)
     {

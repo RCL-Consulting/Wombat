@@ -84,13 +84,14 @@ public class NoAddressInLogsTests
     public void The_scan_reads_every_line_the_mail_worker_writes()
     {
         // The guard for the test above: a scan that found no call sites, or could not read the worker's, would pass for
-        // the wrong reason. The worker writes seven lines about a mail, each naming it by its reference.
+        // the wrong reason. The worker writes eight lines about a mail, each naming it by its reference (the eighth, T400:
+        // an outcome Home could not record).
         var sites = Assemblies.SelectMany(assembly => CallSitesIn(assembly)).ToList();
 
         sites.Should().HaveCountGreaterThan(50, "guard: src makes far more log calls than this, so the scan is blind");
         sites.Where(site => site.TopLevelType == "Wombat.Infrastructure.Email.EmailWorker")
             .Select(site => site.Template)
-            .Should().HaveCount(7)
+            .Should().HaveCount(8)
             .And.AllSatisfy(template => template.Should().Contain("{Reference}").And.Contain("{Tags}"));
     }
 

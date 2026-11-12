@@ -23,7 +23,7 @@ public sealed class EntrustmentDecisionExpiryJob : IScheduledJob
 
     public string Key => "entrustment-decision-expiry";
     public string CronExpression => "30 3 * * *";
-    public string Description => "Expires entrustment decisions past their ExpiresOn date and sends 30-day expiry reminders (daily at 03:30 UTC).";
+    public string Description => "Expires entrustment decisions past their expiry date and sends 30-day expiry reminders.";
 
     public async Task ExecuteAsync(ScheduledJobContext context, CancellationToken cancellationToken)
     {

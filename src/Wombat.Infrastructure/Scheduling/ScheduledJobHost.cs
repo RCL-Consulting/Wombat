@@ -96,12 +96,7 @@ public sealed class ScheduledJobHost : BackgroundService
 
     private bool IsDue(ScheduledJobDefinition definition, DateTime utcNow, IApplicationDbContext dbContext, CancellationToken ct, out CronExpression? cronExpression)
     {
-        cronExpression = null;
-        try
-        {
-            cronExpression = CronExpression.Parse(definition.CronExpression);
-        }
-        catch
+        if (!JobSchedule.TryParse(definition.CronExpression, out cronExpression) || cronExpression is null)
         {
             _logger.LogWarning("Invalid cron expression for job '{Key}': {Cron}", definition.Key, definition.CronExpression);
             return false;
@@ -113,10 +108,9 @@ public sealed class ScheduledJobHost : BackgroundService
             .Select(r => (DateTime?)r.StartedAt)
             .FirstOrDefault();
 
-        var baseTime = lastRun ?? utcNow.AddDays(-1);
-        var nextOccurrence = cronExpression.GetNextOccurrence(baseTime, inclusive: false);
-
-        return nextOccurrence.HasValue && nextOccurrence.Value <= utcNow;
+        // The rule Home and the Scheduled jobs page judge by too (T400, K4, K5), so neither names a time this host would
+        // not keep.
+        return JobSchedule.IsDue(cronExpression, lastRun, utcNow);
     }
 
     private async Task DispatchJobAsync(IScheduledJob job, string? triggeredBy, CancellationToken cancellationToken)

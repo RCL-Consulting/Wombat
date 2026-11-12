@@ -98,7 +98,8 @@ public static class DependencyInjection
         services.AddSingleton<EmailQueue>();
         services.AddTransient<ISmtpSender, MailKitEmailSender>();
         var smtpHost = configuration[$"{EmailSettings.SectionName}:SmtpHost"];
-        if (string.IsNullOrWhiteSpace(smtpHost))
+        var mailConfigured = !string.IsNullOrWhiteSpace(smtpHost);
+        if (!mailConfigured)
         {
             services.AddScoped<IEmailSender, LoggingEmailSender>();
         }
@@ -106,7 +107,14 @@ public static class DependencyInjection
         {
             services.AddScoped<IEmailSender, QueuedEmailSender>();
             services.AddHostedService<EmailWorker>();
+            // Each mail's outcome, for Home's Mail line (T400, flow 18, Q18, K3): only where the worker runs, so a host that
+            // writes its mail to the log records none.
+            services.AddScoped<EmailOutcomeRecorder>();
         }
+
+        // What Home's Mail line reads in-process (T400, flow 18, Q2): whether a mail server is set, and this host's queue.
+        // Both hosts, whichever branch: Home says "Not configured" from it.
+        services.AddSingleton<IEmailHealth>(provider => new EmailHealth(mailConfigured, provider.GetRequiredService<EmailQueue>()));
 
         // What the mail worker reports about a mail that asks (T251): an MSF link's is recorded onto its invitation, and so
         // is an account invitation's (T283); a nudge's or a digest's is counted for its job's run and logged (T283).

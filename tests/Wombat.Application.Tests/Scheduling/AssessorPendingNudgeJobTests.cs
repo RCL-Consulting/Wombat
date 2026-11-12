@@ -288,7 +288,7 @@ public sealed class AssessorPendingNudgeJobTests
         emailSender.Sent.Should().ContainSingle("at 2 days the request is past the cutoff");
 
         Job(provider).Description.Should().Be(
-            "Nudges assessors about activities waiting for their assessment for more than 5 days (daily at 09:00 UTC).");
+            "Nudges assessors about activities waiting for their assessment for more than 5 days.", "T400, T15: the Schedule column says when");
         Job(provider, new DashboardThresholds { AssessorNudgeDays = 2 }).Description.Should().Contain("for more than 2 days");
         new DashboardThresholds().AssessorNudgeDays.Should().Be(5);
     }

@@ -83,6 +83,26 @@ internal static class DataRightsPeople
                   ?? (live.TryGetValue(id, out var name) && !string.IsNullOrWhiteSpace(name) ? name : id),
             StringComparer.Ordinal);
     }
+
+    /// <summary>
+    /// Every person in <paramref name="ids" /> by the name a page prints (T400, flow 18, M3, Q15): the pseudonym for one
+    /// erased, matched by the id they had or by the pseudonym itself; the live "First Last" otherwise; the id itself for an
+    /// account with no name or one the directory does not know. One read of the erasures, one of the directory. Run
+    /// history's Ran by and the audit's Person and Who read it.
+    /// </summary>
+    /// <remarks>
+    /// A row's stored display name (an audit row's <c>ActorDisplay</c>) is never consulted: it keeps the name the person
+    /// had when they acted, which an erasure does not overwrite (<c>ErasureExecutor</c>).
+    /// </remarks>
+    public static async Task<IReadOnlyDictionary<string, string>> NamesOfAsync(
+        IApplicationDbContext dbContext,
+        IUserAdministrationService users,
+        IReadOnlyCollection<string> ids,
+        CancellationToken cancellationToken)
+    {
+        var erasures = await ErasuresOfAsync(dbContext, ids, cancellationToken);
+        return await StaffNamesAsync(users, erasures, ids, cancellationToken);
+    }
 }
 
 /// <summary>The erasure records a read found, looked up by the id a person had or by their pseudonym (T387).</summary>

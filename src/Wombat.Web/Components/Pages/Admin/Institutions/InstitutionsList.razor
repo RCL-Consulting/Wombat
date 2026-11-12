@@ -2,65 +2,114 @@
 @attribute [Authorize(Policy = "Administrator")]
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IJSRuntime JS
+@inject ILogger<InstitutionsList> Logger
+@using Wombat.Web.Components.Pages.Admin.Invitations
 
 <PageTitle>Institutions · Wombat</PageTitle>
 
-<PageHeader Title="Institutions" Subtitle="Maintain institution records and drill into their speciality structure.">
+@*
+  T400 (flow 18, lane A; boards R2-I01–I06): the Administrator's institutions, by name, on one page (institutions are
+  few). Each institution's name is its row's header; Contact email "None" where there is none; Status a badge, Inactive
+  on the neutral tint; Created the South African day (T24). Stacked from 1150px down (.institutions-page, S8: a
+  readability choice). Create institution waits for the read (R2-I04); loading says so in words, and a failed read is the
+  house sentence with Try again (R2-I05, T329), never the exception's text.
+*@
+<PageHeader Title="Institutions" Subtitle="@InstitutionWords.ListSubtitle">
   <Actions>
-    <a class="btn btn-primary" href="/admin/institutions/new">
-      <Icon Name="plus" />
-      Create institution
-    </a>
+    @if (_institutions is not null)
+    {
+      <a class="btn btn-primary" href="@CatalogueLinks.NewInstitution">
+        <Icon Name="plus" />
+        @InstitutionWords.CreateHeading
+      </a>
+    }
   </Actions>
 </PageHeader>
 
-<StatePanel IsLoading="@(_institutions is null && string.IsNullOrWhiteSpace(_errorMessage))" LoadError="@_errorMessage" IsEmpty="@(_institutions?.Count == 0)" EmptyTitle="No institutions yet" EmptyBody="Create the first institution to start configuring scope and onboarding.">
-  @if (_institutions is not null)
-  {
-    <DataTable TItem="InstitutionDto" Items="_institutions" Caption="Institutions">
-      <HeaderRow>
-        <tr>
-          <th>Name</th>
-          <th>Short code</th>
-          <th>Contact email</th>
-          <th>Status</th>
-          <th>Created</th>
-          <th><span class="visually-hidden">Actions</span></th>
-        </tr>
-      </HeaderRow>
-      <Row Context="institution">
-        <tr>
-          <td>@institution.Name</td>
-          <td>@institution.ShortCode</td>
-          <td>@institution.ContactEmail</td>
-          <td>@(institution.IsActive ? "Active" : "Inactive")</td>
-          <td>@institution.CreatedOn.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
-          <td>
-            <div class="actions-cell">
-              @* T239: named by the institution, whose name is unique. *@
-              <a class="btn btn-outline btn-sm" href="@($"/admin/institutions/{institution.Id}")" aria-label="@($"Edit {institution.Name}")">Edit</a>
-            </div>
-          </td>
-        </tr>
-      </Row>
-    </DataTable>
-  }
-</StatePanel>
+<div class="people-page institutions-page">
+  <StatePanel IsLoading="@(_institutions is null && _loadError is null)" LoadError="@_loadError"
+              OnRetry="LoadAsync" FocusAfterRetry="FocusHeadingAsync"
+              IsEmpty="@(_institutions?.Count == 0)" EmptyTitle="@InstitutionWords.EmptyTitle" EmptyBody="@InstitutionWords.EmptyBody">
+    <LoadingContent>
+      <p class="loading-line" role="status">@InstitutionWords.LoadingInstitutions</p>
+      <div class="detail-card" aria-hidden="true">
+        <div class="skeleton skel-title"></div>
+        <div class="skeleton skel-line"></div>
+        <div class="skeleton skel-line"></div>
+        <div class="skeleton skel-line skel-short"></div>
+      </div>
+    </LoadingContent>
+    <ChildContent>
+      @if (_institutions is not null)
+      {
+        <DataTable TItem="InstitutionDto" Items="_institutions" StackWide="true" Caption="@InstitutionWords.Caption">
+          <HeaderRow>
+            <tr role="row">
+              <th scope="col" role="columnheader" class="col-wrap">Name</th>
+              <th scope="col" role="columnheader" class="col-fit--wide">Short code</th>
+              <th scope="col" role="columnheader" class="col-wrap">Contact email</th>
+              <th scope="col" role="columnheader" class="col-fit--wide">Status</th>
+              <th scope="col" role="columnheader" class="col-fit--wide">Created</th>
+              <th scope="col" role="columnheader" class="col-fit--wide"><span class="visually-hidden">Actions</span></th>
+            </tr>
+          </HeaderRow>
+          <Row Context="institution">
+            <tr role="row" @key="institution.Id">
+              <th scope="row" role="rowheader" class="col-wrap">@institution.Name</th>
+              <td role="cell" data-label="Short code" class="col-fit--wide">@institution.ShortCode</td>
+              <td role="cell" data-label="Contact email" class="col-wrap">
+                @if (institution.ContactEmail is { } email)
+                {
+                  @InvitationText.Address(email)
+                }
+                else
+                {
+                  <span class="muted">@InstitutionWords.NoContactEmail</span>
+                }
+              </td>
+              @* Active green, Inactive on the neutral tint (R3-0-spec-3 § 11): the programme outcome's pair of classes. *@
+              <td role="cell" data-label="Status" class="col-fit--wide"><span class="badge @BadgeFor.ProgrammeOutcome(institution.IsActive)">@InstitutionWords.Status(institution.IsActive)</span></td>
+              @* T24: the South African day of its creation, never the server's local time. *@
+              <td role="cell" data-label="Created" class="col-fit--wide">@SastTime.Day(institution.CreatedOn)</td>
+              <td role="cell" class="col-fit--wide">
+                @* T239: named for its row by the institution's name, which is unique ("Edit Demo Institution"). The boards
+                   draw the name as a visually hidden span; RowActionMarkupTests holds every row action to an aria-label. *@
+                <a class="btn btn-sm btn-outline" href="@CatalogueLinks.Institution(institution.Id)" aria-label="@($"{InstitutionWords.Edit} {_rowNames[institution.Id]}")">@InstitutionWords.Edit</a>
+              </td>
+            </tr>
+          </Row>
+        </DataTable>
+      }
+    </ChildContent>
+  </StatePanel>
+</div>
 
 @code {
   private IReadOnlyList<InstitutionDto>? _institutions;
-  private string? _errorMessage;
+  private IReadOnlyDictionary<int, string> _rowNames = new Dictionary<int, string>();
+  private string? _loadError;
 
-  protected override async Task OnInitializedAsync()
+  protected override Task OnInitializedAsync() => LoadAsync();
+
+  private async Task LoadAsync()
   {
+    _loadError = null;
+    _institutions = null;
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      _institutions = await Sender.Send(new GetInstitutionsListQuery(authState.User));
+      var institutions = await Sender.Send(new GetInstitutionsListQuery(authState.User));
+      _rowNames = RowNames.Distinct(institutions, institution => institution.Id, institution => institution.Name);
+      _institutions = institutions;
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      _errorMessage = exception.Message;
+      // T329: the failure to the log, fixed words on the page.
+      Logger.LogError(exception, "The institutions could not be read.");
+      _loadError = InstitutionWords.InstitutionsLoadFailed;
     }
   }
+
+  private ValueTask FocusHeadingAsync() => PageFocus.FocusHeadingAsync(JS);
 }

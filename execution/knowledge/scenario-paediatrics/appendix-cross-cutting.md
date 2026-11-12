@@ -518,10 +518,15 @@ Gap: none (the withdrawn review still draws the live Annexure A card, 17 EPAs on
 Role: Administrator — devadmin
 Route: / → /admin/jobs
 Do: Open Scheduled jobs from the menu and read every row.
-Expect: Each row shows the job's description and its cron schedule (UTC), with its last run, that run's status badge
-  and its next run in the server's local time. Each has Disable and Run now, both named for the job (T239). A job that
-  has never run reads "—" for its last run and status. Run history is linked from the header. The eight jobs, by key
-  (T379 retired `portfolio-export-cleanup` with its definition and runs, so a genuine PDF keeps verifying):
+Expect: The page is subtitled "The eight jobs Wombat runs on a schedule. Run one now, disable or enable one, or read
+  every run in Run history." Its columns are Job, Schedule, Last run and Next run, then the actions; there is no
+  Enabled column (T400, R3-J01). Each row shows the job's key over its description; its schedule in words in SAST
+  with its cron under it ("Daily at 09:00 SAST" over "cron 0 7 * * *, UTC"); its last run in SAST with that run's
+  status badge under it; and its next run in SAST. Each has Run now and Disable, both named for the job (T239). A job
+  that has never run reads "Not run yet" for its last run. Run history is linked from the header.
+  scheduled-job-run-retention reads "Deletes job run records and mail outcomes older than 90 days." (Q18). The eight
+  jobs, by key (T379 retired `portfolio-export-cleanup` with its definition and runs, so a genuine PDF keeps
+  verifying):
   - activity-draft-nudge
   - assessor-pending-nudge
   - audit-log-retention
@@ -538,20 +543,26 @@ Actual (2026-11-10, T398 replay, wombat_scenario_t398): Scheduled jobs from the 
   scheduler's catch-up at 17:00; assessor-pending-nudge 19:15, msf-campaign-auto-close 21:00) and read Succeeded;
   weekly-coordinator-digest, never run (D is a Tuesday), reads "—" for its last run and status, next 2026-11-16 10:00.
   Run history is a header action.
-Gap: none
+Gap: none. The T398 Actual above predates T400 (the cron in UTC, the Enabled column, "—"); the next replay re-reads the
+  step.
 
 ### Step A.2.2 — devadmin disables a job and enables it again
 Role: Administrator — devadmin
 Route: /admin/jobs
 Do: Disable msf-campaign-auto-close, try to run it now, then enable it again.
-Expect: Disabling says "Job 'msf-campaign-auto-close' disabled." The row then reads "—" for its next run, its toggle
-  says Enable, and its Run now is unavailable. Once enabled again, its next run is the next hour. The scheduler does not
-  run a disabled job. The audit log records both changes.
+Expect: Disabling says "Disabled msf-campaign-auto-close. The scheduler will not run it until you enable it." above
+  the list, and it takes the focus (T400, R3-J02). The row then reads "None while disabled" for its next run, its
+  toggle says Enable, and its Run now is unavailable, with "Enable it to run it." beside it: a press sends nothing.
+  Once enabled again: "Enabled msf-campaign-auto-close. Its next run is ‹the next hour› SAST.", and the row's next run
+  is the next hour (R3-J03). Enabled after an hour it missed while disabled, it reads "Enabled msf-campaign-auto-close.
+  It runs at the next check, within 30 seconds." instead, with that as its next run (K5). The scheduler does not run a
+  disabled job. The audit log records both changes.
 Actual (2026-11-10, T398 replay, wombat_scenario_t398): Disable msf-campaign-auto-close: "Job
   'msf-campaign-auto-close' disabled." took the focus; the row reads Next run "—", its toggle "Enable
   msf-campaign-auto-close", Run now disabled (a forced press did nothing; the alert stayed the disable's). Enable:
   "Job 'msf-campaign-auto-close' enabled.", next run 2026-11-10 22:00 (the next hour), Run now available again.
-Gap: none
+Gap: none. The T398 Actual above predates T400 ("Job '…' disabled.", "—" for the next run); the next replay re-reads the
+  step.
 
 ### Step A.2.3 — Mr Smit opts out of digest emails
 Role: Coordinator — Mr Pieter Smit
@@ -569,7 +580,8 @@ Gap: none
 Role: Administrator — devadmin
 Route: /admin/jobs
 Do: Run weekly-coordinator-digest now, then read the application log.
-Expect: "Job 'weekly-coordinator-digest' dispatched."; the row's last run is now, and it reads Succeeded. The log holds
+Expect: "Ran weekly-coordinator-digest: Succeeded at ‹YYYY-MM-DD hh:mm› SAST." above the list, focused, once the run
+  has ended (T400, R3-J04); the row's last run is now, and it reads Succeeded. The log holds
   "WeeklyCoordinatorDigestJob: digests sent n; coordinators skipped: …", with at least one counted as "opted out of
   digest emails". No "Your weekly Wombat digest" mail greets Pieter.
 Note: Each mail is logged as "Stub email <reference> … not sent", with its subject and text and no address (T282). The
@@ -579,7 +591,7 @@ Actual (2026-11-10, T398 replay, wombat_scenario_t398): "Job 'weekly-coordinator
   skipped: deactivated 0, opted out of digest emails 1, no email address 0, holds Trainee 0, no institution 0." Its
   one Stub email "Your weekly Wombat digest" (digest, coordinator-weekly) greets "Hi Demo," (the dev coordinator);
   none greets Pieter.
-Gap: none
+Gap: none. The T398 Actual above predates T400 ("dispatched"); the next replay re-reads the step.
 
 ### Step A.2.5 — Mr Smit opts back in
 Role: Coordinator — Mr Pieter Smit
@@ -665,29 +677,34 @@ Expect: Each run reads Succeeded, and each job logs one line:
   - msf-campaign-auto-close: "no expired campaigns found.", since Act 3's campaign was closed and released.
   - msf-invitation-expiry-reminder: "no respondent is due a reminder."
   - audit-log-retention: "complete. Total archived: 0.", since nothing is two years old.
-  - scheduled-job-run-retention: "no old runs to delete."
+  - scheduled-job-run-retention: "no old runs or mail outcomes to delete."
 Actual (2026-11-10, T398 replay, wombat_scenario_t398): The five remaining jobs, one at a time, each "Job '<key>'
   dispatched." and Succeeded (21:41), one line each: "EntrustmentDecisionExpiryJob: expired 0 decisions (sent 0),
   reminded 0 expiring soon (sent 0)."; "MsfCampaignAutoCloseJob: no expired campaigns found.";
   "MsfInvitationExpiryReminderJob: no respondent is due a reminder."; "AuditLogRetentionJob: complete. Total archived:
-  0."; "ScheduledJobRunRetentionJob: no old runs to delete." No mail.
+  0."; "ScheduledJobRunRetentionJob: no old runs to delete." (pre-T400 words; now "… or mail outcomes …") No mail.
 Gap: none
 
 ### Step A.2.10 — devadmin reads the run history
 Role: Administrator — devadmin
 Route: /admin/jobs → /admin/jobs/runs
-Do: Open Run history. Filter it:
-  - by the key "weekly-coordinator-digest";
-  - by the key "digest";
-  - by the status Failed;
-  - from today.
-Expect: The runs are listed newest first, each with its key, start, finish, duration, status badge, who triggered it
-  and any error. A run by hand names the person who ran it, devadmin, by name, never by user id (DESIGN.md § Page
-  shapes, T142); one the scheduler ran reads "scheduler". Filters apply only when Filter is pressed.
-  - The full key shows the digest's runs, the two by hand among them, and no other job's.
-  - "digest" alone matches nothing: the filter wants the whole key.
-  - Failed shows "No runs found".
-  - From today shows today's runs, those of this appendix among them. The date is read as a UTC day.
+Do: On Scheduled jobs (A.2.9's page) press Run history. Then:
+  - choose weekly-coordinator-digest in Job and press Show;
+  - choose All jobs in Job and Failed in Status, and press Show;
+  - choose All in Status, set From to today, and press Show.
+Expect: Run history, subtitled "Every run of the eight jobs, newest first, kept for 90 days.", under the trail Home ›
+  Scheduled jobs › Run history, filters by Job (a select of the eight keys, All jobs first), Status, From and To (each
+  "a South African day"), then Show (T400, R3-R01). The runs are listed newest first, each with its job, its start in
+  SAST, its duration, its status badge (a failed run's error under it) and who ran it. A run by hand names the person
+  who ran it, devadmin, by name ("Demo Administrator"), never by user id (DESIGN.md § Page shapes, T142); one the
+  scheduler ran reads "Scheduler". Nothing filters until Show is pressed, and Show moves the focus to the count line.
+  - Unfiltered, the count line reads "‹n› runs." and the pager "Showing 1–‹n› of ‹n›": the 10 runs by hand (Step
+    3.32's one, A.2.4's, A.2.6's, A.2.8's two and A.2.9's five) and the scheduler's (the seven jobs it ran at the first
+    start, then msf-campaign-auto-close each hour since: 11 in the T398 replay's hours, so 21).
+  - weekly-coordinator-digest shows "2 runs.", the two by hand, and no other job's; Clear filters is offered (R3-R02).
+  - Failed shows "No runs match these filters.", then "No runs match", "The filters are kept above. Clear them to see
+    all ‹n›." and Clear the filters (R2-R03).
+  - From today shows today's runs, those of this appendix among them (R3-R04). The day is a South African day.
 Actual (2026-11-10, T398 replay, wombat_scenario_t398): Run history from the jobs header (tab "Job run history ·
   Wombat", trail Home > Scheduled jobs > Job run history): 21 runs newest first, Key, Started, Finished, Duration,
   Status, Triggered by, Error. The scheduler's read "scheduler"; the ones by hand read
@@ -695,9 +712,9 @@ Actual (2026-11-10, T398 replay, wombat_scenario_t398): Run history from the job
   "weekly-coordinator-digest": its two runs by hand (21:39:40, 21:39:58), no other job. "digest": "No runs found".
   Failed: "No runs found". From 2026-11-10 (the UTC and SAST date at 21:42): 21 runs, the appendix's among them. The
   key's placeholder reads "Filter by key...". The midnight case cannot be played at this hour.
-Gap: F-A.2.10a, T324 (still: "Triggered by" prints devadmin's user id, not his name). F-A.2.10b, T327 (still: the
-  placeholder invites a part, and only the whole key matches). F-A.2.10c (kin to T325, T384: the From date is read as
-  a UTC day; not played at 21:42, so unchanged)
+Gap: F-A.2.10a, T324, F-A.2.10b, T327 and F-A.2.10c closed by T400 (2026-11-11): Ran by a name, Job a select of the
+  keys, From a South African day. The T398 Actual above predates T400 (the free-text key, Filter, "scheduler", "No runs
+  found"); the next replay re-reads the step.
 
 ## A.3 — Institutional sign-in (SSO)
 
@@ -997,12 +1014,15 @@ Gap: none
 
 ### Step A.5.5 — Another institution's records, by id
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
-Route: /admin/institutions/{Id:int} → /not-found → /admin/users/{UserId}
+Route: /admin/institutions/{Id:int} → /admin/users/{UserId}
 Do: Open the Demo Institution's page by its id. Then open the page of the dev trainee `trainee@wombat.local` by that
   account's id.
-Expect: The institution shows Page not found, not "You cannot open this page". The user shows "User unavailable" ("The
-  user could not be found or is outside your scope."), headed and tabbed "User", under Home › Users › User, with Go to
-  Users and no Back to users (T376, P23). Neither page confirms that the record exists (CLAUDE.md: 404, not 403).
+Expect: The institution stays at its address and shows "Institution unavailable", in the heading and the tab, with
+  "This institution does not exist, or you cannot open it." and Go to Home, under the trail Home › Institution
+  unavailable; never "You cannot open this page" (T400, Q17, R2-I20). An unknown id reads the same. The user shows
+  "User unavailable" ("The user could not be found or is outside your scope."), headed and tabbed "User", under Home ›
+  Users › User, with Go to Users and no Back to users (T376, P23). Neither page confirms that the record exists
+  (CLAUDE.md: 404, not 403).
 Note: The Demo Institution stands in for another institution only here. Its ids come from
   `SELECT "Id" FROM "Institutions" WHERE "Name" = 'Demo Institution'` and from `"AspNetUsers"`. On a host without the
   dev accounts, play the institution half only.
@@ -1011,7 +1031,7 @@ Actual (2026-11-10, T398 replay, wombat_scenario_t398): /admin/institutions/1 (t
   its address, tab "User · Wombat", trail Home > Users > User, Users lit: "User", "User unavailable / The user could
   not be found or is outside your scope." and Go to Users, no Back to users; an unknown id (00000000-...-0001) reads
   the same. Neither reveals that the record exists.
-Gap: none
+Gap: none. The T398 Actual above predates T400 (the institution at Page not found); the next replay re-reads the step.
 
 ### Step A.5.6 — Another registrar's activity, by id
 Role: Trainee — Dr Anele Dlamini
@@ -1226,9 +1246,14 @@ Role: Administrator — devadmin
 Route: / → /admin/institutions → /admin/institutions/{Id:int}
 Do: Open Institutions from the nav. Read the list, open KGK, set its contact email to
   `paediatrics@kgk.wombat.local`, and save.
-Expect: The list holds the Demo Institution and Kgosi Kgari Teaching Hospital. Each row shows its short code, contact
-  email, status (Active) and creation time, with an Edit named for it; Create institution heads the page. Saving says
-  "Institution saved." The Administrator is offered the Status box and Deactivate.
+Expect: The list, subtitled "The institutions that hold Wombat's people and records.", holds the Demo Institution and
+  Kgosi Kgari Teaching Hospital. Each row shows its short code, contact email, status (Active) and the day it was
+  created, with an Edit named for it; Create institution heads the page. KGK's record is headed and tabbed by its name,
+  with "KGK · Active" under the heading and no Back link: the trail Home › Institutions › Kgosi Kgari Teaching Hospital
+  is the way back (T400, R2-I02, R3-I12). It offers Name, Short code and Contact email, then Cancel and Save. Saving
+  says "Kgosi Kgari Teaching Hospital saved. Its contact email is now paediatrics@kgk.wombat.local.", which takes the
+  focus. Status reads Active, "A new invitation can name it.", with Deactivate…, in a section of its own; there is no
+  Active box.
 Actual (2026-11-10, T398 replay, wombat_scenario_t398): Institutions from the Organisations group, lit, subtitled
   "Maintain institution records and drill into their speciality structure.", Create institution in the header. Rows:
   Demo Institution (DEMO, admin@demo.local, Active, 2026-11-10 17:00) and Kgosi Kgari Teaching Hospital (KGK,
@@ -1237,22 +1262,27 @@ Actual (2026-11-10, T398 replay, wombat_scenario_t398): Institutions from the Or
   email, Status with the Active box and its help ("An inactive institution cannot be named on a new invitation. ..."),
   then Cancel, Deactivate and Save. Contact email set to paediatrics@kgk.wombat.local, saved: "Institution saved."
   took the focus. At 390 px nothing scrolls sideways.
-Gap: F-A.6.1a, T326 (still: the subtitle promises a speciality drill-down that no row offers)
+Gap: F-A.6.1a, T326 closed by T400 (2026-11-11): the list's subtitle promises no drill-down. The T398 Actual above
+  predates T400 ("Edit institution", Back to institutions, the Active box, "Institution saved."); the next replay
+  re-reads the step.
 
 ### Step A.6.2 — devadmin reads the system health card
 Role: Administrator — devadmin
 Route: /
-Do: Read the dashboard's System health and Users across institutions cards.
-Expect: Database connection is green. The card's other two lines, Email queue and Last nightly job, are amber whatever
-  their state, and each carries a task id: they are stubs, tied neither to the mail queue nor to Scheduled jobs
-  (reported). The users card counts registered accounts.
+Do: Read Home's System health and Accounts cards.
+Expect: System health's three lines, in this order, each its state as a word on a badge, with no coloured dot and no
+  task id (T400, R3-H01): Database reads OK, "The database answers."; Mail reads Not configured, "Mail is written to
+  the log, not sent."; Scheduled jobs reads OK, "All 8 jobs last succeeded." (A.2.4 ran the weekly digest, the last
+  never run). Accounts reads 24, every account but an erased one: Step 1.11's 11 and the fourteen people Act 2
+  registered, 25, less Dr Ndlovu's, erased in A.1.12. Under it, "Every account Wombat holds but an erased one." and
+  "None is locked.". Scheduled jobs and Users are buttons in the cards' footers.
 Actual (2026-11-10, T398 replay, wombat_scenario_t398): Home, "Administrator · Semester 2, 2026". System health:
   Database connection with status-dot ok, "Email queue (T012)" and "Last nightly job (T024)" each with status-dot
   warn, although every job last Succeeded. Users across institutions reads "22 registered users"; AspNetUsers holds 25
   rows, 22 of them with a role. Each dot is an empty span with no text or label.
-Gap: F-A.6.2a, T327 (still: two stub lines, as the Expect records). F-A.6.2b, T327 (still: the count is of role
-  holders, leaving out Dr Molefe, Dr du Plessis and the erased account). F-A.6.2c, T327 (still: each state is a colour
-  alone)
+Gap: F-A.6.2a, F-A.6.2b and F-A.6.2c, T327 closed by T400 (2026-11-11): no stub line, Accounts counts every account but
+  an erased one, each state a word. The T398 Actual above predates T400 (the dots, "22 registered users"); the next
+  replay re-reads the step.
 
 ### Step A.6.3 — Prof Mbatha edits her own institution
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
@@ -1804,15 +1834,18 @@ Gap: none (T323's item-editor half and the 901-990 overflow stay fixed; the step
 Role: Administrator — devadmin
 Route: / → /admin/jobs → /admin/jobs/runs → /admin/institutions
 Do: At 390 px, open Scheduled jobs, Run history and Institutions.
-Expect: The jobs table scrolls inside its container, with each Run now and toggle reachable. The run-history filters
-  stack.
+Expect: Each job is a stacked block, its state, next run, Run now and Disable in view, each button 44 px (T400,
+  R3-J01-390). The run-history filters stack, and its runs stack likewise, under "‹n› runs." (A.2.10's, plus each
+  msf-campaign-auto-close the scheduler has run since: 22 in the T398 replay's hours; R3-R05). Institutions' rows
+  stack too, KGK's contact hod.paediatrics@kgk.wombat.local (A.6.3). Nothing scrolls sideways.
 Actual (2026-11-10, T398 replay, wombat_scenario_t398): At 390 px. The bar "Acting as Administrator"; the menu's rows
   44 px. Scheduled jobs: the table (655 px) scrolls in its container; "Disable <key>" (28 px) and "Run now: <key>" (47
   px) in reach. Run history: the trail one 44 px "Scheduled jobs" link; Key, Status, From, To stack (41 to 349),
   Filter under them, the table (696 px) under that, scrolling in its container. Institutions: 2 rows (KGK with
   hod.paediatrics@kgk.wombat.local, Active), the table (681 px) in its container, each Edit in reach. Nothing scrolls
   sideways.
-Gap: none
+Gap: none. The T398 Actual above predates T400 (the jobs table scrolling in its container); the next replay re-reads the
+  step.
 
 ### Step A.7.12 — The anonymous pages on a phone
 Role: Anonymous — a verifier

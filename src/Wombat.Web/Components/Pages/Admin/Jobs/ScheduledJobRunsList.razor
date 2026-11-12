@@ -1,122 +1,306 @@
 @page "/admin/jobs/runs"
 @attribute [Authorize(Policy = "Administrator")]
+@using Wombat.Application.Features.Scheduling
+@using Wombat.Application.Features.Scheduling.Queries.GetScheduledJobRuns
 @inject IScopedSender Sender
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@inject ILogger<ScheduledJobRunsList> Logger
 
-<PageTitle>Job run history · Wombat</PageTitle>
+<PageTitle>Run history · Wombat</PageTitle>
 
-<PageHeader Title="Job run history" Subtitle="View the execution history of scheduled jobs.">
-  <Actions>
-    <a class="btn btn-outline" href="/admin/jobs">
-      <Icon Name="arrow-left" />
-      Back to jobs
-    </a>
-  </Actions>
-</PageHeader>
+@*
+  Run history (T400, flow 18, lane B; boards R3-R01–R09, R2-R03, R08, R10, R11). Until T400 "Job run history", with
+  Back to jobs, a free-text key filtered per keystroke, UTC days, the server's clock, a user id for Triggered by and the
+  error cut at 80 characters.
 
-@* The list page's filter (DESIGN.md § Table system): a search-container of labelled search fields, its button in a
-   form-actions row. Until T266 it was a form-row of form-label and form-input, none of which app.css defines, laid out
-   by an inline style whose spacing tokens (--space-3, --space-4) :root does not define either. *@
-<div class="search-container shadow">
-  <div class="search-grid">
-    <div class="search-field">
-      <label for="job-runs-key">Job key</label>
-      <input id="job-runs-key" type="text" class="form-control" @bind="_filterKey" @bind:event="oninput" placeholder="Filter by key..." />
+  - The filters (T1): Job a select of the jobs' keys, "All jobs" first (it cannot miss); Status; From and To as South
+    African days (K7); Show, then Clear filters once a filter is applied, in .filter-actions (T328). Nothing filters until
+    Show, which goes to the page's own address with what was chosen (T18), so Home's and a failed run's "Its runs" open
+    the same rows; the page reads the address whenever it changes. The filters stay drawn over the loading and the load
+    error; Show waits for the first read (R2-R10).
+  - h2 "Runs" (N1), which a page turn focuses; the count line, which Show focuses and which is no live region (N2).
+  - The table: StackWide, in the 1024px stack through .job-runs-page (§ 0, C1); Job the row header (S7); Started in SAST
+    to the second, breaking only between its day and its hour; Duration, "—" while it runs; Status, a failed run's
+    error whole under its badge (T1); Ran by the person's name, or "Scheduler" (M3).
+  - PagerControls at 50 (M2), in its own order. No match: what was asked, and "Clear the filters", which focuses Job; no
+    runs at all: "No job has run yet", with no count line and no pager (R2-R08).
+  - A failed read in fixed words with Try again, which focuses the h1 once it reads (S3, T329).
+*@
+<PageHeader Title="Run history" Subtitle="@JobWords.RunsSubtitle" />
+
+<div class="people-page job-runs-page" aria-busy="@(_loading ? "true" : null)">
+  <form class="search-container people-filter" role="search" aria-label="@JobWords.FilterName" novalidate @onsubmit="ShowAsync">
+    <div class="search-grid">
+      <div class="search-field">
+        <label for="@JobFieldId">@JobWords.JobLabel</label>
+        <select id="@JobFieldId" class="form-select" @bind="_formJob">
+          <option value="">@JobWords.AllJobs</option>
+          @foreach (var key in JobKeys)
+          {
+            <option value="@key">@key</option>
+          }
+        </select>
+      </div>
+      <div class="search-field">
+        <label for="runs-status">@JobWords.StatusLabel</label>
+        <select id="runs-status" class="form-select" @bind="_formStatus">
+          <option value="">@JobWords.AllStatuses</option>
+          @foreach (var status in JobWords.Statuses)
+          {
+            <option value="@status">@JobWords.Status(status)</option>
+          }
+        </select>
+      </div>
+      <div class="search-field">
+        <label for="runs-from">@JobWords.FromLabel</label>
+        <input id="runs-from" type="date" class="form-control" @bind="_formFrom" />
+      </div>
+      <div class="search-field">
+        <label for="runs-to">@JobWords.ToLabel</label>
+        <input id="runs-to" type="date" class="form-control" @bind="_formTo" />
+      </div>
     </div>
-    <div class="search-field">
-      <label for="job-runs-status">Status</label>
-      <select id="job-runs-status" class="form-select" @bind="_filterStatus">
-        <option value="">All</option>
-        <option value="Succeeded">Succeeded</option>
-        <option value="Failed">Failed</option>
-        <option value="Running">Running</option>
-      </select>
+    <div class="filter-actions">
+      <button type="submit" class="btn btn-primary" aria-disabled="@(_page is null ? "true" : null)">@JobWords.Show</button>
+      @if (_applied.IsFiltered)
+      {
+        <button type="button" class="btn btn-outline" @onclick="ClearAsync">@JobWords.ClearFilters</button>
+      }
     </div>
-    <div class="search-field">
-      <label for="job-runs-from">From</label>
-      <input id="job-runs-from" type="date" class="form-control" @bind="_filterFrom" />
-    </div>
-    <div class="search-field">
-      <label for="job-runs-to">To</label>
-      <input id="job-runs-to" type="date" class="form-control" @bind="_filterTo" />
-    </div>
-  </div>
-  <FormActions>
-    <button type="button" class="btn btn-primary" @onclick="LoadRunsAsync">Filter</button>
-  </FormActions>
+  </form>
+
+  <h2 id="@HeadingId" class="list-section-title" tabindex="-1">@JobWords.RunsHeading</h2>
+
+  <StatePanel @ref="_panel" IsLoading="_loading" LoadError="@_loadError" OnRetry="RetryAsync" FocusAfterRetry="FocusPageHeadingAsync">
+    <LoadingContent>
+      <p class="loading-line" role="status">@JobWords.RunsLoading</p>
+      <div class="detail-card" aria-hidden="true">
+        <div class="skeleton skel-title"></div>
+        <div class="skeleton skel-line"></div>
+        <div class="skeleton skel-line"></div>
+        <div class="skeleton skel-line"></div>
+        <div class="skeleton skel-line skel-short"></div>
+      </div>
+    </LoadingContent>
+    <ChildContent>
+      @if (_page is { } page)
+      {
+        @if (page.AllRunsCount == 0)
+        {
+          @* A new install (R2-R08): no count line, no table, no pager. *@
+          <div class="detail-card detail-card--empty">
+            <div class="state-panel-title">@JobWords.NoneTitle</div>
+            <div class="state-panel-copy">@JobWords.NoneBody</div>
+          </div>
+        }
+        else
+        {
+          <p id="@CountLineId" tabindex="-1">@JobWords.CountLine(page.TotalCount)</p>
+          @if (page.Items.Count == 0)
+          {
+            @* No match is not empty (T17, R2-R03): the filters are kept, and one press clears them. *@
+            <div class="detail-card detail-card--empty">
+              <div class="state-panel-title">@JobWords.NoMatchTitle</div>
+              <div class="state-panel-copy">@JobWords.NoMatchBody(page.AllRunsCount)</div>
+              <div class="form-actions">
+                <button type="button" class="btn btn-primary" @onclick="ClearAsync">@JobWords.ClearTheFilters</button>
+              </div>
+            </div>
+          }
+          else
+          {
+            <DataTable TItem="ScheduledJobRunDto" Items="page.Items" StackWide="true" Caption="@JobWords.RunsCaption">
+              <HeaderRow>
+                <tr role="row">
+                  <th scope="col" role="columnheader">Job</th>
+                  <th scope="col" role="columnheader">Started</th>
+                  <th scope="col" role="columnheader" class="col-fit--wide">Duration</th>
+                  <th scope="col" role="columnheader">Status</th>
+                  <th scope="col" role="columnheader">Ran by</th>
+                </tr>
+              </HeaderRow>
+              <Row Context="run">
+                <tr role="row" @key="run.Id">
+                  <th scope="row" role="rowheader">@run.Key</th>
+                  <td role="cell" data-label="Started"><span class="nowrap">@JobWords.Day(run.StartedAt)</span>@(" ")<span class="nowrap">@JobWords.ClockToSecond(run.StartedAt)</span></td>
+                  <td role="cell" data-label="Duration" class="col-fit--wide">@JobWords.Duration(run.StartedAt, run.FinishedAt)</td>
+                  <td role="cell" data-label="Status">
+                    <span class="badge @BadgeFor.JobRun(run.Status)">@JobWords.Status(run.Status)</span>
+                    @if (!string.IsNullOrWhiteSpace(run.ErrorMessage))
+                    {
+                      @* The error whole, wrapping under its badge (T1, R3-R07): never cut at 80 with a tooltip. *@
+                      <br /><span class="text-sm">@run.ErrorMessage</span>
+                    }
+                  </td>
+                  <td role="cell" data-label="Ran by">@JobWords.RanBy(run.RanBy)</td>
+                </tr>
+              </Row>
+            </DataTable>
+            <PagerControls Page="page.Page" PageSize="page.PageSize" TotalCount="page.TotalCount"
+                           OnPageChanged="TurnPageAsync" OnPageSizeChanged="ChangePageSizeAsync" />
+          }
+        }
+      }
+    </ChildContent>
+  </StatePanel>
 </div>
 
-<StatePanel IsLoading="@(_runs is null && string.IsNullOrWhiteSpace(_errorMessage))" LoadError="@_errorMessage" IsEmpty="@(_runs?.Count == 0)" EmptyTitle="No runs found" EmptyBody="No job runs match the selected filters.">
-  @if (_runs is not null)
-  {
-    <DataTable TItem="Wombat.Application.Features.Scheduling.ScheduledJobRunDto" Items="_runs" Caption="Job runs">
-      <HeaderRow>
-        <tr>
-          <th>Key</th>
-          <th>Started</th>
-          <th>Finished</th>
-          <th>Duration</th>
-          <th>Status</th>
-          <th>Triggered by</th>
-          <th>Error</th>
-        </tr>
-      </HeaderRow>
-      <Row Context="run">
-        <tr>
-          <td>@run.Key</td>
-          <td>@run.StartedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</td>
-          <td>@(run.FinishedAt?.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss") ?? "—")</td>
-          <td>@FormatDuration(run.StartedAt, run.FinishedAt)</td>
-          <td><span class="badge @BadgeFor.JobRun(run.Status)">@run.Status</span></td>
-          <td>@(run.TriggeredBy ?? "scheduler")</td>
-          <td>
-            @if (!string.IsNullOrWhiteSpace(run.ErrorMessage))
-            {
-              <span class="text-danger text-sm" title="@run.ErrorMessage">@Truncate(run.ErrorMessage, 80)</span>
-            }
-          </td>
-        </tr>
-      </Row>
-    </DataTable>
-  }
-</StatePanel>
-
 @code {
-  private IReadOnlyList<Wombat.Application.Features.Scheduling.ScheduledJobRunDto>? _runs;
-  private string? _errorMessage;
-  private string? _filterKey;
-  private string? _filterStatus;
-  private DateOnly? _filterFrom;
-  private DateOnly? _filterTo;
+  private const string JobFieldId = "runs-job";
+  private const string HeadingId = "runs-heading";
+  private const string CountLineId = "runs-count";
 
-  protected override async Task OnInitializedAsync()
+  [SupplyParameterFromQuery(Name = JobLinks.JobParameter)] public string? Job { get; set; }
+
+  [SupplyParameterFromQuery(Name = JobLinks.StatusParameter)] public string? Status { get; set; }
+
+  [SupplyParameterFromQuery(Name = RunHistoryAddress.FromParameter)] public string? From { get; set; }
+
+  [SupplyParameterFromQuery(Name = RunHistoryAddress.ToParameter)] public string? To { get; set; }
+
+  [SupplyParameterFromQuery(Name = RunHistoryAddress.PageParameter)] public int? PageNumber { get; set; }
+
+  [SupplyParameterFromQuery(Name = RunHistoryAddress.SizeParameter)] public int? Size { get; set; }
+
+  private ScheduledJobRunsPageDto? _page;
+  private bool _loading = true;
+  private string? _loadError;
+  private StatePanel? _panel;
+  private bool _loadedOnce;
+  private RunHistoryAddress _applied = RunHistoryAddress.None;
+
+  // The form's fields: what is being chosen, which changes nothing until Show.
+  private string _formJob = string.Empty;
+  private string _formStatus = string.Empty;
+  private DateOnly? _formFrom;
+  private DateOnly? _formTo;
+
+  // What takes the focus once the read the page's own action started has drawn: the count line after Show, the heading
+  // after a page turn, Job after a clear; none for a change of page size, which leaves it on the select.
+  private string? _focusOnArrival;
+  private string? _focusId;
+
+  // The keys the select offers: the stored jobs' (the read's), and the one the address names, so it is shown selected.
+  private IEnumerable<string> JobKeys
+    => (_page?.JobKeys ?? []).Concat(_applied.Job is { } job && _page?.JobKeys.Contains(job) != true ? [job] : []);
+
+  protected override async Task OnParametersSetAsync()
   {
-    await LoadRunsAsync();
+    // The address is what was asked: the form shows it, and the list answers it (T18).
+    _applied = RunHistoryAddress.From(Job, Status, From, To, PageNumber, Size);
+    _formJob = _applied.Job ?? string.Empty;
+    _formStatus = _applied.Status ?? string.Empty;
+    _formFrom = _applied.FromDay;
+    _formTo = _applied.ToDay;
+
+    _focusId = _focusOnArrival;
+    _focusOnArrival = null;
+    await LoadAsync(showLoading: !_loadedOnce);
+    _loadedOnce = true;
   }
 
-  private async Task LoadRunsAsync()
+  /// <summary>
+  /// Reads the page the address asks for. The first read and Try again's show the loading state; Show, Clear and a page
+  /// turn answer in place, the filters and the table staying until the answer comes.
+  /// </summary>
+  private async Task LoadAsync(bool showLoading)
   {
-    _errorMessage = null;
+    if (showLoading)
+    {
+      _loading = true;
+    }
+
+    _loadError = null;
     try
     {
-      _runs = await Sender.Send(new Wombat.Application.Features.Scheduling.Queries.GetScheduledJobRuns.GetScheduledJobRunsQuery(
-          Key: string.IsNullOrWhiteSpace(_filterKey) ? null : _filterKey.Trim(),
-          Status: string.IsNullOrWhiteSpace(_filterStatus) ? null : _filterStatus,
-          From: _filterFrom,
-          To: _filterTo));
+      _page = await Sender.Send(new GetScheduledJobRunsQuery(
+        _applied.Job, _applied.Status, _applied.FromDay, _applied.ToDay, _applied.Page, _applied.PageSize));
     }
-    catch (Exception ex)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      _errorMessage = ex.Message;
+      // T329: never the exception's text on the page; the cause goes to the log.
+      Logger.LogError(exception, "The run history could not be read.");
+      _page = null;
+      _loadError = JobWords.RunsLoadFailed;
+      _focusId = null;
+    }
+    finally
+    {
+      _loading = false;
     }
   }
 
-  private static string FormatDuration(DateTime started, DateTime? finished)
+  /// <summary>Show: the page's own address with the values chosen, from the first page; the count line takes the focus.</summary>
+  private Task ShowAsync()
   {
-    if (finished is null) return "—";
-    var duration = finished.Value - started;
-    return duration.TotalSeconds < 1 ? $"{duration.TotalMilliseconds:F0}ms" : $"{duration.TotalSeconds:F1}s";
+    // Show waits for the first read (R2-R10): aria-disabled, a press sends nothing.
+    if (_page is null)
+    {
+      return Task.CompletedTask;
+    }
+
+    var target = _applied with
+    {
+      Job = Blank(_formJob),
+      Status = Blank(_formStatus),
+      FromDay = _formFrom,
+      ToDay = _formTo,
+      Page = 1
+    };
+    return GoAsync(target, CountLineId);
   }
 
-  private static string Truncate(string value, int maxLength)
-    => value.Length <= maxLength ? value : value[..maxLength] + "…";
+  /// <summary>Clear filters and Clear the filters: every filter reset, from the first page; Job takes the focus.</summary>
+  private Task ClearAsync() => GoAsync(RunHistoryAddress.None with { PageSize = _applied.PageSize }, JobFieldId);
+
+  // After a page turn the list's heading takes the focus (N1, T264).
+  private Task TurnPageAsync(int page) => GoAsync(_applied with { Page = page }, HeadingId);
+
+  // A change of size reads the first page at that size; the focus stays on the select (T350 build review, A1).
+  private Task ChangePageSizeAsync(int size) => GoAsync(_applied with { Page = 1, PageSize = size }, null);
+
+  private async Task GoAsync(RunHistoryAddress target, string? focusId)
+  {
+    var address = target.Address();
+    var here = "/" + Navigation.ToBaseRelativePath(Navigation.Uri);
+    if (string.Equals(here, address, StringComparison.Ordinal))
+    {
+      // Navigating to the address shown would change no parameter: read again in place.
+      _applied = target;
+      _focusId = focusId;
+      await LoadAsync(showLoading: false);
+      if (_loadError is not null)
+      {
+        _panel?.FocusFailureAfterRender();
+      }
+
+      return;
+    }
+
+    _focusOnArrival = focusId;
+    Navigation.NavigateTo(address);
+  }
+
+  private async Task RetryAsync()
+  {
+    _loading = true;
+    StateHasChanged();
+    await LoadAsync(showLoading: true);
+  }
+
+  // After Try again has read, the h1 takes the focus (S3).
+  private ValueTask FocusPageHeadingAsync() => PageFocus.FocusHeadingAsync(JS);
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (_focusId is { } id && !_loading && _page is not null && _loadError is null)
+    {
+      _focusId = null;
+      // The no-runs state draws no count line; its heading is then the answer.
+      await PageFocus.FocusByIdAsync(JS, id == CountLineId && _page.AllRunsCount == 0 ? HeadingId : id);
+    }
+  }
+
+  private static string? Blank(string? value) => string.IsNullOrWhiteSpace(value) ? null : value;
 }

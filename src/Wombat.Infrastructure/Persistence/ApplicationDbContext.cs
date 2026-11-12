@@ -4,6 +4,7 @@ using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Audit;
 using Wombat.Domain.DataRights;
+using Wombat.Domain.Email;
 using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.EntrustmentDecisions;
@@ -71,6 +72,7 @@ public class ApplicationDbContext : IdentityDbContext<WombatIdentityUser>, IAppl
     public DbSet<PortfolioExport> PortfolioExports => Set<PortfolioExport>();
     public DbSet<ScheduledJobDefinition> ScheduledJobDefinitions => Set<ScheduledJobDefinition>();
     public DbSet<ScheduledJobRun> ScheduledJobRuns => Set<ScheduledJobRun>();
+    public DbSet<EmailOutcome> EmailOutcomes => Set<EmailOutcome>();
     public DbSet<AuditEntry> AuditEntries => Set<AuditEntry>();
     public DbSet<AuditEntryArchive> AuditEntryArchives => Set<AuditEntryArchive>();
     public DbSet<DataRightsRequest> DataRightsRequests => Set<DataRightsRequest>();

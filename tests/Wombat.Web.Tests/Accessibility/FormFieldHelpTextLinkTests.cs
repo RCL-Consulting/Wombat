@@ -87,7 +87,8 @@ public sealed partial class FormFieldHelpTextLinkTests : TestContext
         // 34 in 10 files since T387: My data rights draws its described radios, reason and reminder box by hand (flow 14).
         // 25 since T392 (flow 15, Q14): the items page's edit row and Add form, each with its own help, became one item page.
         fields.Should().HaveCountGreaterThanOrEqualTo(23, "guard: the scan finds the callers (25 since T392), or it proves nothing");
-        fields.Select(field => field.File).Distinct().Should().HaveCountGreaterThanOrEqualTo(10);
+        // T400 (flow 18): the institution's create page and record write their fields as the boards draw them, not as FormFields.
+        fields.Select(field => field.File).Distinct().Should().HaveCountGreaterThanOrEqualTo(9);
 
         var unlinked = fields
             .Where(field => !InputNamesItsHelp(field.Markup, field.InputId))
@@ -116,7 +117,7 @@ public sealed partial class FormFieldHelpTextLinkTests : TestContext
         // 109 since T387: My data rights' three went with its select and its two preference boxes (flow 14, Q4, Q6).
         // T392 (flow 15): Curriculum adoptions' two went with its picker, adoption by rows on Curricula (lane A, Q1, Q7);
         // the items page's edit row and Add form became one item page's fields (lane B, Q14). 85 since T392.
-        fields.Should().HaveCountGreaterThanOrEqualTo(80, "guard: the scan finds every FormField (85 since T392), or it proves nothing");
+        fields.Should().HaveCountGreaterThanOrEqualTo(75, "guard: the scan finds every FormField (79 since T400), or it proves nothing");
 
         var unnamed = fields
             .SelectMany(field => UnnamedSlotText(field.Markup, field.InputId)

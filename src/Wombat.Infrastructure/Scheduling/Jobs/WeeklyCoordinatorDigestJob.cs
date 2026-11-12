@@ -95,7 +95,7 @@ public sealed class WeeklyCoordinatorDigestJob : IScheduledJob
 
     public string Key => "weekly-coordinator-digest";
     public string CronExpression => "0 8 * * 1";
-    public string Description => "Sends weekly digest emails to Coordinators on Mondays at 08:00 UTC.";
+    public string Description => "Sends weekly digest emails to Coordinators.";
 
     public async Task ExecuteAsync(ScheduledJobContext context, CancellationToken cancellationToken)
     {

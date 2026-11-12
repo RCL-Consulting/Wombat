@@ -5,33 +5,78 @@
 @rendermode InteractiveServer
 @inherits RoleDashboard<AdministratorDashboardSummaryDto>
 
-@* Two cards (R2-Shell-Admin). Job status is in System health only. Until T335 a Maintenance card repeated four nav links;
-   the one it held that the nav does not, Curriculum progress, is linked from Curricula, the page that owns it (S20). *@
+@*
+  The Administrator's Home (T400, flow 18, lane A; boards R3-H01–H12; DESIGN.md § Dashboard page). Two cards, each a
+  section named by its h2, in DashboardCard's markup:
+  - System health (span 2): three lines in fixed order, Database, Mail, Scheduled jobs (T8), each its name, a visually
+    hidden ":" (N7: "Database: OK"), its state as a word on a badge, and its sentences in words (Q2, Q3, Q13, Q18). No
+    status dot (S5) and no link in a sentence: the links are the footer's buttons (S1), "Its runs" only when one job has
+    failed, and no footer while the jobs line reads Not read (R3-H08).
+  - Accounts: every account but an erased one, and how many cannot sign in now (Q4, Q14, T14), with Users in its footer;
+    Not read, with no footer, when the directory did not answer.
+  Each part is read on its own (K11, T9): a database that does not answer leaves the Database line and, with no mail server
+  set, the Mail line. Until T400 the card held three status dots, two of them stubs naming tasks ("Email queue (T012)"), and
+  "Users across institutions" counted distinct ids across the roles.
+*@
 <DashboardFrame IsLoading="IsLoading" Failed="Failed" OnRetry="LoadAsync">
-  <DashboardCard Title="System health" Icon="settings" Span="2" IsLoading="IsLoading">
+  <DashboardCard Title="@AdministratorHomeWords.HealthTitle" Icon="settings" HeadingId="card-health" Span="2" IsLoading="IsLoading">
     @if (Summary is { } summary)
     {
-      <ul class="list-unstyled">
-        <li class="list-row">
-          <span><span class="status-dot @(summary.DatabaseHealthy ? "ok" : "err")"></span>Database connection</span>
-        </li>
-        <li class="list-row">
-          <span><span class="status-dot warn"></span>Email queue <span class="muted">(T012)</span></span>
-        </li>
-        <li class="list-row">
-          <span><span class="status-dot warn"></span>Last nightly job <span class="muted">(T024)</span></span>
-        </li>
+      <ul class="health-list">
+        @foreach (var line in Lines(summary))
+        {
+          <li class="health-line">
+            <span class="health-line-name">@line.Name<span class="visually-hidden">:</span><span class="badge @line.BadgeClass">@line.Badge</span></span>
+            <div class="health-line-text">
+              @foreach (var paragraph in line.Paragraphs)
+              {
+                <p>@paragraph</p>
+              }
+              @if (line.Items.Count > 0)
+              {
+                <ul>
+                  @foreach (var item in line.Items)
+                  {
+                    <li>@item</li>
+                  }
+                </ul>
+              }
+            </div>
+          </li>
+        }
       </ul>
+      @if (summary.Jobs is not null)
+      {
+        <div class="dashboard-card-footer">
+          @if (AdministratorHomeWords.FailedJobKey(summary.Jobs) is { } failedKey)
+          {
+            <a class="btn btn-sm btn-outline" href="@ItsRunsHref(failedKey)">@AdministratorHomeWords.ItsRunsLink<span class="visually-hidden">@AdministratorHomeWords.ItsRunsHidden(failedKey)</span></a>
+          }
+          <a class="btn btn-sm btn-outline" href="@JobLinks.Jobs">@AdministratorHomeWords.ScheduledJobsLink</a>
+        </div>
+      }
     }
   </DashboardCard>
 
-  <DashboardCard Title="Users across institutions" Icon="users" Emphasis="true" IsLoading="IsLoading">
+  <DashboardCard Title="@AdministratorHomeWords.AccountsTitle" Icon="users" HeadingId="card-accounts" Emphasis="true" IsLoading="IsLoading">
     @if (Summary is { } summary)
     {
-      <div class="dashboard-metric">
-        <span class="dashboard-metric-value">@summary.TotalUserCount</span>
-        <span class="dashboard-metric-label">registered users</span>
-      </div>
+      if (summary.Accounts is { } accounts)
+      {
+        <div class="dashboard-metric">
+          <span class="dashboard-metric-value">@accounts.Accounts</span>
+          <span class="dashboard-metric-label">@AdministratorHomeWords.AccountsLabel(accounts.Accounts)</span>
+        </div>
+        <p class="muted text-sm">@AdministratorHomeWords.AccountsSentence</p>
+        <p>@AdministratorHomeWords.Locked(accounts.Locked)</p>
+        <div class="dashboard-card-footer">
+          <a class="btn btn-sm btn-outline" href="@PeopleLinks.Users">@AdministratorHomeWords.UsersLink</a>
+        </div>
+      }
+      else
+      {
+        <p>@AdministratorHomeWords.NotReadSentence</p>
+      }
     }
   </DashboardCard>
 </DashboardFrame>
@@ -39,4 +84,14 @@
 @code {
   protected override IRequest<AdministratorDashboardSummaryDto> QueryFor(ClaimsPrincipal user)
     => new GetAdministratorDashboardSummaryQuery(user);
+
+  /// <summary>Run history filtered to the one failed job's failed runs (T18, R3-H05): the jobs page's own builder.</summary>
+  private static string ItsRunsHref(string key) => Wombat.Web.Components.Pages.Admin.Jobs.JobWords.FailedRunsOf(key);
+
+  private static IEnumerable<AdministratorHomeWords.HealthLine> Lines(AdministratorDashboardSummaryDto summary)
+  {
+    yield return AdministratorHomeWords.Database(summary);
+    yield return AdministratorHomeWords.Mail(summary.Mail);
+    yield return AdministratorHomeWords.Jobs(summary.Jobs);
+  }
 }

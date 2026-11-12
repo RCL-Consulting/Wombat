@@ -70,14 +70,16 @@ public sealed class WaitingCardsTests : TestContext
     public void TheAdministratorsHome_HasSystemHealthAndUsers_AndNoMaintenanceCard()
     {
         _auth.SetRoles("Administrator");
-        Services.AddSingleton<IScopedSender>(new Sender(new AdministratorDashboardSummaryDto(DatabaseHealthy: true, TotalUserCount: 12)));
+        Services.AddSingleton<IScopedSender>(new Sender(AdministratorHomeFixtures.Healthy()));
 
         var cut = RenderComponent<AdministratorDashboard>();
         cut.WaitForState(() => cut.FindAll(".detail-card").Count > 0 && cut.FindAll(".skeleton").Count == 0);
 
-        Titles(cut).Should().Equal("System health", "Users across institutions");
+        Titles(cut).Should().Equal("System health", "Accounts");
         cut.FindAll(".detail-card").First().ClassList.Should().Contain("dashboard-span-2");
-        cut.FindAll("a").Should().BeEmpty("Maintenance's links were the nav's, and Curriculum progress is on Curricula");
+        // T400 (flow 18, S1): the cards' only links are their footers' buttons, Scheduled jobs and Users.
+        cut.FindAll("a").Select(link => link.GetAttribute("href")).Should().Equal(
+            ["/admin/jobs", "/admin/users"], "Maintenance's links were the nav's, and Curriculum progress is on Curricula");
     }
 
     // T328: every row of a dashboard's list is a .list-row, and no dashboard lays a row out with an inline flex style.

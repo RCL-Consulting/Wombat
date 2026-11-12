@@ -210,6 +210,26 @@ public sealed partial class NarrowLayoutTests
     }
 
     [Fact]
+    public void SystemHealthsLines_AnswerToTheirListsWidth_AndNoStatusDotIsLeft()
+    {
+        // T400 (flow 18, R1, S2): the health list is a container, so its lines take the narrow layout (the name and badge on
+        // one row over the sentences) from its own width, under 30rem, which from 1100 to 1112px it is (three tracks, the
+        // card spanning two), not from the viewport's. S5: the status dots are gone with Home's three.
+        var rules = Parse(File.ReadAllText(WebFile("wwwroot", "app.css")));
+
+        Rule(rules, string.Empty, ".health-list").Declarations.Should().Contain("container: health / inline-size");
+        var wide = Rule(rules, string.Empty, ".health-line");
+        wide.Declarations.Should().Contain("grid-template-columns: 10rem minmax(0, 1fr)");
+        var narrow = Rule(rules, "@container health (width < 30rem)", ".health-line");
+        narrow.Declarations.Should().Contain("grid-template-columns: minmax(0, 1fr)");
+        narrow.Index.Should().BeGreaterThan(wide.Index, "the two selectors are equally specific, so the narrow rule comes later");
+        Rule(rules, "@container health (width < 30rem)", ".health-line-name").Declarations.Should().Contain("flex-direction: row");
+        Rule(rules, string.Empty, ".health-line-text").Declarations.Should().Contain(["min-width: 0", "overflow-wrap: anywhere"]);
+
+        rules.SelectMany(Selectors).Should().NotContain(selector => selector.Contains(".status-dot", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void TheBuilder_AnswersToItsOwnCardsWidth_NotTheViewports()
     {
         // T266. The builder's two columns need 320px + 400px + the gap, 46.5rem, of the room its card gives them. They
@@ -346,6 +366,46 @@ public sealed partial class NarrowLayoutTests
             Selectors(rule).Should().Contain($".workflow-readout .clinic-table--stack-wide {part}",
                 $"the moves stack as the catalogue lists do: {part}");
         }
+    }
+
+    [Theory]
+    [InlineData("@media (max-width: 1150px)", ".curricula-page", ".institutions-page")]
+    [InlineData("@media (max-width: 1150px)", ".curricula-page", ".jobs-page")]
+    [InlineData("@media (max-width: 1150px)", ".curricula-page", ".audit-page")]
+    [InlineData("@media (max-width: 1024px)", ".epas-page", ".job-runs-page")]
+    public void FlowEighteensLists_StackInEveryOneOfTheirStacksSevenRules(string stack, string anchor, string list)
+    {
+        // T400 (flow 18, C1, S8): Institutions, Scheduled jobs and the audit log join the 1150px stack, Run history the
+        // 1024px one, as a readability choice (R3-0-spec-3 § 10): each class in all seven selector lists of its block, and
+        // in no other stack, so a later edit that drops one part leaves a half-stacked table.
+        var rules = Parse(File.ReadAllText(WebFile("wwwroot", "app.css")));
+        string[] parts =
+        [
+            "thead",
+            "tbody tr",
+            "tbody tr:last-child",
+            "td",
+            "tbody th",
+            "th[scope=\"row\"]",
+            "td[data-label]::before",
+            ".btn"
+        ];
+
+        var stackRules = rules.Where(rule => rule.AtRule == stack
+            && Selectors(rule).Any(selector => selector.StartsWith($"{anchor} .clinic-table--stack-wide", StringComparison.Ordinal)))
+            .ToList();
+        stackRules.Should().HaveCount(7, $"guard: the {stack} stack is seven rules");
+
+        foreach (var part in parts)
+        {
+            var rule = stackRules.Should().ContainSingle(candidate => Selectors(candidate).Contains($"{anchor} .clinic-table--stack-wide {part}")).Which;
+            Selectors(rule).Should().Contain($"{list} .clinic-table--stack-wide {part}", $"{list} stacks as {anchor} does: {part}");
+        }
+
+        rules.Where(rule => rule.AtRule != stack)
+            .SelectMany(Selectors)
+            .Should().NotContain(selector => selector.StartsWith($"{list} .clinic-table--stack-wide", StringComparison.Ordinal),
+                "the list stacks in its one shared block and nowhere else");
     }
 
     [Fact]

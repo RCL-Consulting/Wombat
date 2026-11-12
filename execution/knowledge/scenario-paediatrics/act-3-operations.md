@@ -1548,16 +1548,21 @@ Gap: none
 ### Step 3.55 — Prof Mbatha reads KGK's audit log
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/audit
-Do: Open Audit log, which shows the last 24 hours by default. Set From (UTC) to the start of this act's sitting, so
-  that no earlier act's rows are counted, and apply. Filter by Result: Failures only. Then clear that and filter by
-  Action "Msf".
+Do: Open Audit log, which shows the last 24 hours by default. Set From (SAST) to the start of this act's sitting, so
+  that no earlier act's rows are counted, and press Show. Choose Result: Failures only and press Show. Then choose All
+  results, type "Msf" in Action and press Show.
 Expect:
+  - The page is subtitled "Every consequential action at Kgosi Kgari Teaching Hospital, newest first." Nothing filters
+    until Show, which moves the focus to the count line: "‹n› actions." (166 in the T398 replay), and under it "Read
+    from ‹From› SAST to ‹hh:mm› SAST, when you pressed Show. Turning a page keeps this window." (T400, R3-L01).
   - Every row is KGK's, newest first, 50 to a page. The rows include CreateActivityCommand and
-    TransitionActivityCommand by each registrar and consultant, and Mr Smit's MSF commands, each with its actor and OK.
-  - Failures only leaves four rows, each FAILED: Dr Ndlovu's two refused creates (the future date and the date before
-    his programme started), Dr Dlamini's refused submit, and Dr Khumalo's decline without a note.
-  - "Msf" leaves Mr Smit's nineteen commands: the template, two campaigns, ten invitations, one removal, the open,
-    the withdrawal, the resend, the close and the release.
+    TransitionActivityCommand by each registrar and consultant, and Mr Smit's MSF commands, each with the person by
+    name and Success.
+  - Failures only leaves four rows, "4 actions.", each Failed, its refusal under the badge: Dr Ndlovu's two refused
+    creates (the future date and the date before their programme started), Dr Dlamini's refused submit, and Dr
+    Khumalo's decline without a note.
+  - "Msf" leaves Mr Smit's nineteen commands, "19 actions.": the template, two campaigns, ten invitations, one
+    removal, the open, the withdrawal, the resend, the close and the release.
   - No respondent's submission and no devadmin row is listed, because those carry no institution (T101, T205).
 Actual (2026-11-10, T398 replay, wombat_scenario_t398): From (UTC) 2026-11-10T16:58, the sitting's start (Act 2's last
   row 16:57:24 UTC, this act's first 16:59:38 UTC): 166 KGK rows read through the pager (58 Login, 25 Logout, 23
@@ -1568,39 +1573,50 @@ Actual (2026-11-10, T398 replay, wombat_scenario_t398): From (UTC) 2026-11-10T16
   submit (17:00:06). "Msf": Mr Smit's 19 (template, two campaigns, ten invitations, one removal, open, withdrawal,
   resend, close, release). The actor column is the email on command rows and the person's name on Login rows ("Nolwazi
   Mbatha").
-Gap: known T286 (still: F-3.55a, the audit log names a command's actor by email but a Login's by display name)
+Gap: F-3.55a, T286 closed by T400 (2026-11-11): every row names its person by name. The T398 Actual above predates T400
+  (From (UTC), the actor column, OK and FAILED); the next replay re-reads the step.
 
 ### Step 3.56 — Prof Mbatha opens one entry
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/audit → /admin/audit/{Id:guid}
 Do: Under Failures only, open Dr Ndlovu's future-date create.
-Expect: The Event card shows the time to the millisecond, category Command, action CreateActivityCommand, and result
-  Failed with "Date observed: The date cannot be after today (…)." The Actor card shows Dr Ndlovu's user id, display
-  name and IP address. There is no Payload card: only an Administrator reads the raw JSON. "Back to log" returns to the
-  list.
+Expect: The entry is headed "Audit entry", under the trail Home › Audit log › Audit entry, and subtitled
+  "CreateActivityCommand by Sipho Ndlovu, ‹time› SAST · Failed" (T400, R2-E01). What happened shows the time in SAST to
+  the millisecond with the stored UTC under it ("Stored as … UTC"), category Command, action CreateActivityCommand,
+  institution Kgosi Kgari Teaching Hospital, and Failed with "Date observed: The date cannot be after today (…)." under
+  the badge. Who shows Sipho Ndlovu by name, their user id and the address ::/48, with "Cut to its first 48 bits when
+  stored.". There is no Payload section: only an Administrator reads the raw JSON. The trail's Audit log returns to the
+  list as it was left, Failures only, page 1, with the focus on the entry's Detail (R3-L13); there is no Back to log.
 Actual (2026-11-10, T398 replay, wombat_scenario_t398): Failures only, Dr Ndlovu's future-date create (17:01:41)
   opened: Event: "When (UTC) 2026-11-10 17:01:41.861", Command, CreateActivityCommand, Failed, "Date observed: The date
   cannot be after today (2026-11-10)." Actor: user id, "Display name ndlovu@kgk.wombat.local", IP "::/48". Only Event
   and Actor, no Payload. Back to log returns to /admin/audit with From and Result empty.
-Gap: known T286 (still: F-3.56a, the Actor card's "Display name" is Dr Ndlovu's email); known T277 (still: F-3.56b,
-  Back to log drops the From and Failures-only filters)
+Gap: F-3.56a, T286 and F-3.56b, T277 closed by T400 (2026-11-11): Who names the person, and the trail returns to
+  Failures only. The T398 Actual above predates T400 (the Event and Actor cards, Back to log); the next replay re-reads
+  the step.
 
 ### Step 3.57 — devadmin reads the log across institutions
 Role: Administrator — devadmin@wombat.local
 Route: /admin/audit → /admin/audit/{Id:guid}
-Do: Open Audit log, with From (UTC) set to the start of this act's sitting as in Step 3.55. Open one respondent's
-  submission (SubmitMsfResponseCommand), then one of Dr Naidoo's TransitionActivityCommand rows.
-Expect: The log holds every institution's rows and the rows with no institution. Among them are eight
-  SubmitMsfResponseCommand rows whose actor is "system", and devadmin's own RunScheduledJobNowCommand. The submission's
-  detail names no user and no display name, only a truncated address. Its payload shows the token and the answers as
-  "[REDACTED]" (T101, T205). Dr Naidoo's payload shows the principal as "[PRINCIPAL]", and the data patch and note as
-  "[REDACTED]".
+Do: Open Audit log, set From (SAST) to the start of this act's sitting as in Step 3.55, and press Show. Open one
+  respondent's submission (SubmitMsfResponseCommand), then one of Dr Naidoo's TransitionActivityCommand rows.
+Expect: The page is subtitled "Every consequential action across the institutions, and those with no institution,
+  newest first.", and its filters end with Institution (All institutions, No institution, Demo Institution, Kgosi Kgari
+  Teaching Hospital). The log holds every institution's rows and the rows with no institution, "‹n› actions." (174 in
+  the T398 replay, from 19:00 SAST), each person by name with their institution under it (T400, R3-L05). Among them
+  are eight SubmitMsfResponseCommand rows whose Person reads "MSF respondent (no account)" over "No institution", and
+  devadmin's own RunScheduledJobNowCommand, by Demo Administrator. The submission's entry: What happened's Institution
+  reads "No institution"; Who reads "No person: an MSF respondent answers by link, with no account.", User id None,
+  and the address ::/48 with "Cut to its first 48 bits when stored." (R3-E02). Its Payload, laid out one property a
+  line, shows the token and the answers as "[REDACTED]" (T101, T205). Dr Naidoo's payload shows the principal as
+  "[PRINCIPAL]", and the data patch and note as "[REDACTED]" (R3-E03).
 Actual (2026-11-10, T398 replay, wombat_scenario_t398): From 2026-11-10T17:00 UTC: 174 rows across institutions: eight
   SubmitMsfResponseCommand by "system", one RunScheduledJobNowCommand by devadmin@wombat.local and devadmin's sign-ins,
   beside every KGK row (and the Demo accounts' two sign-ins). A submission's detail: User ID "—", Display name "—", IP
   "::/48"; payload {"token": "[REDACTED]", "answers": "[REDACTED]"}. Naidoo's complete of 13: principal "[PRINCIPAL]",
   note and dataPatchJson "[REDACTED]", activityId, actorUserId and transitionKey in clear.
-Gap: none
+Gap: none. The T398 Actual above predates T400 (From (UTC), "system", the detail's dashes); the next replay re-reads the
+  step.
 
 ## Act 3 outcome state
 

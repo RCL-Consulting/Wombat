@@ -92,6 +92,13 @@
 >   § Page-level patterns "List page" (Activity types: search with Show and Clear, own rows first, Set by, the release
 >   line) and § Builder layout (a tabs pattern, the field editor in place, the read in words, F1's Discard), and § app.css
 >   section order (two Flow 17 sections)).
+>   Flow 18, the operator keeps the platform running (2026-11-12, T400: § Dashboard page (the Administrator's Home, its
+>   System health lines in words, the status dots retired), § Page-level patterns (the institutions' list, create page
+>   and record with Deactivate…/Reactivate… dialogs; Scheduled jobs and Run history as pages; the audit log and an
+>   entry, its payload region), § Table system (Institutions, Scheduled jobs and the audit log join the 1150px stack, Run
+>   history the 1024px one; an error's column asks for a share), § Button system (Run now on a disabled job unavailable;
+>   `ConfirmDialog`'s action mode), § Pager (Run history and the audit log), the null-read words (Institution
+>   unavailable), and § app.css section order (three Flow 18 sections)).
 
 This file is the visual contract for the Wombat rewrite. It exists because the first pass at T010 said "copy ClinicAssist" without enumerating what that actually means, and the current `Wombat.Web/wwwroot/app.css` is still the 37-line Blazor default — raw `<h1>` + `<table class="table">` — which is nowhere near the reference.
 
@@ -321,7 +328,6 @@ Page (each pair on a solid ground):
 | `--focus-ring` on the success · warning · danger · info tints | 3 | 4.32 · 4.57 · 4.54 · 4.55 |
 | Tint edges and icons: success · warning · danger · info (`--secondary-color`) on their tints | 3 | 5.23 · 5.43 · 5.56 · 4.55 |
 | Neutral badge: text · edge on header-bg | 4.5 · 3 | 11.36 · 3.42 |
-| Status dots on surface: success · warning · danger | 3 | 5.88 · 5.77 · 5.95 |
 | Progress fill on its hover-bg track: secondary · success (complete) | 3 | 4.61 · 5.58 |
 | Reconnect bar: secondary on its header-bg track | 3 | 4.37 |
 | Error bar: text · the warning edge and icon on warning-bg | 4.5 · 3 | 11.89 · 5.43 |
@@ -779,6 +785,15 @@ Class order is **`.btn .btn-sm .btn-{variant} [spacing utilities]`**. The sizing
   sign-in", "Keep access") and its danger button what is done ("Remove Assessor", "Remove sign-in", "Lock out Thandi
   Zulu"). An action that is unavailable is never `disabled`: `aria-disabled="true"` and `.is-unavailable`, its reason
   beside it by `aria-describedby` (the last way in's "The institutional sign-in is the account's only way in.").
+- **Run now on a disabled job is unavailable, not disabled** (2026-11-11, T400, flow 18, R3-J02, T22): on Scheduled jobs
+  the row's Run now stays in the tab order with `aria-disabled="true"`, described (`aria-describedby`) by "Enable it to run
+  it." in a `span.muted.text-sm` beside the buttons (a span, not a p, so the actions cell's row does not open), and a press
+  sends nothing. A page read before someone disabled the job still cannot run it: the dispatcher refuses a disabled job
+  under the job's lock (`ScheduledJobRefusal`), and the refusal is a warning `Alert` (`role="alert"`) in the result region.
+  The page's one result region is **above the list** (T5), and every action's answer takes the focus there: the result
+  ("Ran ‹key›: Succeeded at ‹time› SAST."), the refusal (N7: it no longer leaves the focus on the button) and the failure
+  (T23's fixed words, the first sentence bold, the cause to the log). While Run now's run goes it reads "Running…"
+  (`aria-disabled`), the row's other actions natively disabled as T234 built them.
 - **The programme's two ends are outline triggers in a section of their own** (2026-10-27, T379, flow 13, Q24, N13, S19):
   the trainee profile's End this programme, apart from Save profile, is the section itself (no form element). Mark
   complete… and Deactivate… are flow 12's role rows (`.role-rows`: the note, then the `.btn-outline .btn-sm` trigger,
@@ -831,6 +846,14 @@ Class order is **`.btn .btn-sm .btn-{variant} [spacing utilities]`**. The sizing
   `ConfirmDialog.ShowAsync(returnFocusId)` from the handler that opens the dialog, since `ReturnFocusId` is still the last
   render's at that moment (`ActionFocusTests.SavesQuestion_ReturnsTheFocusToSave`). No count is read in a deactivation's
   dialog (Q15); no Reactivate button exists (ticking the box and saving reactivates).
+- **A dialog that does not post is `ConfirmDialog`'s action mode** (2026-11-11, T400, flow 18, M1):
+  `div.form-container > h2, p, div.form-actions`, Cancel first in the DOM and autofocused, the action after it; form mode
+  is for a dialog holding a real form that posts. An institution's Deactivate… (the danger "Deactivate") and Reactivate…
+  (the primary "Reactivate", `DangerAction=false`, "A new invitation can name it again. Its people and their records are
+  as they were.") are each an outline trigger with `aria-haspopup="dialog"` in the record's Status section, the trigger
+  the stored state allows and never the other (the picker rule); each opens on Cancel, Cancel and Escape return to the
+  trigger, and the confirm sends its own command and moves the focus to the result. Save never asks: the record has no
+  Active box (T400).
 - **A dialog with a field** (2026-10-14, T366, flow 09, M5). In the action mode a dialog may carry a field: the field,
   not the safe button, takes the first focus, and a refusal of the action shows inside the dialog, under the field, with
   what was typed kept; the dialog closes only on Cancel or success (the register's Revoke). `ConfirmDialog` takes
@@ -865,7 +888,7 @@ Class order is **`.btn .btn-sm .btn-{variant} [spacing utilities]`**. The sizing
   same rule while its `OnConfirm` runs, and its Cancel is disabled then.
 - **An action that is done moves the focus to its result** (T234), an `Alert` in an `.action-result` region
   (`tabindex="-1"`) where the page reports the result (at the top of a form page; under the button on the rebuild page,
-  above the form on the export check, under the table on the jobs list), once the page has rendered it. A status that
+  above the form on the export check, above the list on the jobs list since T400's T5), once the page has rendered it. A status that
   arrives on its own is often not read, and what the action changed may have taken its button away (a cleared choice, a
   closed row, a form rebuilt with what was stored, a swapped button). The shared `ActionResult` component
   (Components/Shared) is the region: the page puts its result alerts inside and calls `FocusAfterRender()` when the
@@ -1151,7 +1174,23 @@ one 1024px query in flow 16's shared part, with the builder's "Moves, as saved" 
 (six compact columns, 691 to 744px wide), Curricula (756px for the Administrator in a 717px container at 1025px) and the
 activity types list (T398, its Published, Draft and Status one word each, `.col-fit--wide`: 779px, 62px over at 1025px) stack by
 a 1150px query (1100px until the replay: at the appendix's end an institution's Curricula, with an adoption and a
-superseded version, ran 17px past its container at 1101px). A stacked row never scrolls, and its row actions are 44px.
+superseded version, ran 17px past its container at 1101px). Flow 18's lists join them (2026-11-11, T400, C1): Institutions
+(`.institutions-page`), Scheduled jobs (`.jobs-page`) and the audit log (`.audit-page`) the 1150px stack, Run history
+(`.job-runs-page`) the 1024px one, each class in all seven selector lists of its block, as **a readability choice, not an
+overflow fix** (S8, R3-0-spec-3 § 10): above 945px none of their natural tables overflows (Run history's needs 573 to
+579px), but at 1151px Institutions' Contact email runs over three lines and a job's description over four beside short
+cells; below 945px the stack also keeps the audit log and the job lists in their containers. A stacked row never scrolls, and its row actions are 44px.
+On the job lists Job is the row's header (`th scope="row"`, S7): on Scheduled jobs the key over its description in
+`.person-cell`, on Run history the key alone; `.people-page`'s row-header rules paint both, so no rule is new. A time in a
+cell breaks only between its day and its hour (`<span class="nowrap">2026-11-10</span> <span class="nowrap">21:41:44
+SAST</span>`), and a run's error under its badge is drawn whole and breaks anywhere rather than widen the table (T1).
+**While a row shows an error or a failure's words, that column asks for a share of the table** (2026-11-11, T400's
+build sweep): Scheduled jobs' Last run 25%, Run history's Status 30%, the audit log's Result 20% (`:has()` on the table,
+the header by its place), as round 3 drew them (R3-J08, R3-R07). A share is not a floor, so the narrowest table and the
+stacks' edges are unchanged; without it the text's max-content took the column to 326-463px at 1280 and broke the keys,
+descriptions, cron lines and command names of every other row over three to seven lines beside that column's empty band.
+The audit log's Action is `.col-wrap` with **no share** (`width: auto`; its 7rem floor and break kept for a narrow table):
+at 14% it held 144px at 1280, where a command's name broke over three lines beside When's and Person's empty bands.
 The build's sweep (900 to 1100px in 25px steps, each table's `scrollWidth` against its container's `clientWidth`) set
 the edges. Where the tables are tables, a column of one word, a date or a count (the scales' Levels; the
 EPA list's Status and Edit; the College's Curricula's Effective, count and Status) is `.col-fit--wide`, which fits its
@@ -1342,7 +1381,8 @@ dl.form-group     /* no margin on it or its <dd>s: a field shown as text to a ca
   names with `aria-describedby`, and the summary's "Seats: …" line focuses the first radio. `Design/MultiSelectOptionKeyTests`
   holds each person's group keyed.
 - **Required marks** (T373, flow 11, M11): a required field's label ends in the required mark (`span.required-mark`,
-  `aria-hidden`), its control carries `aria-required="true"`, and "* marks a field you must fill in." stands above the
+  `aria-hidden`), its control carries `aria-required="true"` (never the native `required`, which lets the browser refuse
+  in its own words before the page can: T400, flow 18, S6, the institution's create page and record), and "* marks a field you must fill in." stands above the
   form's first field; a group's legend adds a visually hidden " required". No "(optional)": a field's help says what leaving
   it empty does ("Leave it at Any speciality for the whole institution."). A single possible value is read out as
   `dl.form-group` with `dd.readonly-value` (S18). **On Invite a person, a field the chosen role does not take is not drawn,
@@ -2070,6 +2110,14 @@ and § 0's `ActivityTypeWords`; refusals in `BuilderRefusal`) is a `.user-page.a
   section (`CatalogueLinks.CollegeTreeAt`); a sub-speciality its speciality does not hold is Sub-speciality unavailable.
   Never an empty list offering Create. A read that throws is the load error ("Could not load the specialities. …",
   "Could not load this speciality. …", titled by the kind's word while read or failed).
+  An institution's (2026-11-11, T400, flow 18, Q17, T10; `InstitutionWords`): "Institution unavailable", "This institution
+  does not exist, or you cannot open it.", for both roles that open the record, in place of Page not found: Go to
+  Institutions for the Administrator, Go to Home for an institution's administrator, whose trail has no Institutions
+  crumb ("Home › Institution unavailable", 1.23).
+  An audit entry's is "Audit entry unavailable", "This audit entry does not exist, or you cannot open it." and Go to
+  Audit log (2026-11-11, T400, flow 18, lane C; T4, R2-E08), for a null read (an unknown id, a row of another institution
+  and a row with none, for an institution's administrator, alike, T101); its link and its trail return to the rows the
+  entry was opened from. A read that throws is the load error ("Could not load this audit entry. …", titled "Audit entry").
   **Every Unavailable is drawn one way, and its last crumb is its h1** (T394, fix pass S3, S4): a `.detail-card
   .detail-card--empty` holding `div.state-panel-copy` with the sentence, then `div.form-actions` with the one primary link,
   no icon (flow 15's markup, now also the tree's, a speciality's, a sub-speciality's and the old sub-specialities
@@ -3321,16 +3369,9 @@ calls decided (T215). An open review's own lines are read against it too, so a l
 
 ## Status dots
 
-```css
-.status-dot      /* 0.6rem circle, inline-block, margin-right sm */
-.status-dot.ok   /* --success-color, 5.88:1 on white */
-.status-dot.warn /* --warning-color, 5.77:1 */
-.status-dot.err  /* --danger-color, 5.95:1 */
-```
-
-Used in the Administrator dashboard system-health card to show service status at a glance. A dot is a meaningful mark,
-so it needs 3:1 against its ground; the ok and warn dots were 2.87 and 2.57:1 until the semantic colours darkened
-(2026-09-27, T335, flow 01; T322).
+**Retired** (2026-11-11, T400, flow 18, S5). Home's System health drew three dots, its only users; a state is now a word
+on a badge (`.health-line`, § Dashboard page; T327: never a state said by colour alone). `.status-dot` and its three
+states are gone from `app.css`, and their contrast row from § Design tokens.
 
 ## Pager
 
@@ -3355,6 +3396,10 @@ so it needs 3:1 against its ground; the ok and warn dots were 2.87 and 2.57:1 un
   A change of page size leaves the focus on the select (Chrome and Edge fire `change` on every arrow of a closed
   select). A page turn whose read fails focuses the failure (`StatePanel.FocusFailureAfterRender`) (T350 build review,
   A1, A3).
+- **Run history and the audit log** (2026-11-11, T400, flow 18, M2, N1): `PagerControls` in its own order (info, Previous
+  and Next, Per page), 50 a page, drawn whenever the list has a row (Run history's "Showing 1–21 of 21"); a page turn goes
+  to the page's own address and focuses the list's `h2.list-section-title` ("Runs", "Actions"), and Show focuses the count
+  line under it (`p[tabindex="-1"]`, no live region, N2). Lane C builds the audit log's to the same rule.
 - **Its name.** Given `Label`, the pager is a `nav` landmark by that name: the Activity inbox's is "Decided by you,
   pages"; Decisions due's is "Decisions, pages" (T364). Without one it is a plain block, as on My activities (D2).
 
@@ -3806,6 +3851,70 @@ empty card "No one matches “zzz”" over "Nobody at ‹institution› has “z
 10 people." **The pager is drawn only when the matches run past one page** (`MatchCount > PageSize`; round-3-check Left
 2), so a list of ten or fifteen at 20 a page has none; `PagerControls` itself is unchanged.
 
+**Scheduled jobs** (`/admin/jobs`, 2026-11-11, T400, flow 18, lane B; R3-J01–J10, R2-J11, J12; the fix pass, S4):
+`.people-page.jobs-page` under the subtitle "The eight jobs Wombat runs on a schedule. Run one now, disable or enable one,
+or read every run in Run history.", Run history the header action (it needs no data). The one result region
+(`ActionResult`) stands **above the list** (Run now's unavailable rule above). The table is `StackWide` in the 1150px stack
+(C1), captioned "Scheduled jobs", no pager: Job the row header, the key over its description in `.person-cell` (S7);
+Schedule in words in South African time (`ScheduleWords`: "Daily at 09:00 SAST", "Hourly, on the hour", "Tuesdays at
+01:00 SAST", a UTC hour of 22 or 23 moving the day) over its cron as the scheduler reads it, "cron 0 7 * * *, UTC", any
+other cron that line alone; Last run the South African day and the hour (`ClockToMinute`, "21:39 SAST"), each `.nowrap`,
+its status badge under it (Running, Succeeded, Failed, never an enum's name read through; "Unknown" otherwise) and a
+failed run's first error line under that, or "Not run yet" muted; Next run by the host's own rule (`JobSchedule`, K5):
+"None while disabled" muted, "None: the schedule cannot be read" muted for a cron that does not parse, "At the next check,
+within 30 seconds" for a job already due, else the day and the hour as Last run's. The actions cell holds Run now (named
+"Run now: ‹key›") and Disable or Enable (named "Disable ‹key›", "Enable ‹key›"), outline and small, and "Enable it to run
+it." beside them on a disabled job.
+
+**Run history** (`/admin/jobs/runs`, 2026-11-11, T400, flow 18, lane B; R3-R01–R09, R2-R03, R08, R10, R11; the fix pass,
+S4): `.people-page.job-runs-page` under "Every run of the eight jobs, newest first, kept for 90 days.", no Back (the
+trail). Its filter is the audit log's form (`form.search-container.people-filter`, `role="search"`, "Filter the runs"):
+Job a select of the stored jobs' keys with "All jobs" first, so it cannot miss (a key the address names but no job
+stores is added, shown selected); Status (All, Running, Succeeded, Failed); From and To as South African days (`type="date"`,
+labelled "From (a South African day)", "To (a South African day)": a day runs from its 00:00 SAST, 22:00 UTC the day
+before, K7); then `.filter-actions`: Show, `aria-disabled` until the first read is in, and Clear filters only while a
+filter is applied. **Nothing filters until Show**, and Show writes the page's own address, which is the page's state:
+`?job=&status=&from=&to=&page=`, with `size=` only where the page size is not 50 (`RunHistoryAddress`), so Home's and a
+failed run's "Its runs" (`JobLinks.RunsOf(key, "Failed")`) and the way back open the same rows; the page reads its address
+whenever it changes, and a value it cannot read (a status that is none of the three, a day not `yyyy-MM-dd`, a page below
+1, a size the pager does not offer) is left out. Under the filter, always drawn, is `h2.list-section-title` "Runs"
+(`tabindex="-1"`), then **the count line** (`p[tabindex=-1]`, "21 runs.", "1 run.", "2,800 runs.", "No runs match these
+filters."), no live region, which takes the focus after Show; a page turn focuses "Runs", Clear filters and "Clear the
+filters" focus Job, a change of page size leaves the focus on its select. The table is `StackWide` in the 1024px stack
+(C1), captioned "Runs, newest first": Job the row header (the key alone), Started (the day and the hour to the second,
+each `.nowrap`), Duration (`.col-fit--wide`: "7 ms", "1.2 s", "2 min 5 s", "—" while it runs), Status (the badge, a
+failed run's error whole under it, T1) and Ran by (the person's name now, an erased person's pseudonym, or "Scheduler").
+`PagerControls` follows at 50 a page in its own order; a page past the last (a hand-made address) reads the last. No match
+is the card "No runs match" / "The filters are kept above. Clear them to see all 21." with "Clear the filters"; no run
+held at all is "No job has run yet" / "The scheduler runs each job at its time; Scheduled jobs shows when each runs
+next." with no count line and no pager, and Show then focuses "Runs". A failed read is the house sentence with Try again,
+which focuses the h1 once it reads.
+
+**The audit log** (`/admin/audit`, 2026-11-11, T400, flow 18, lane C; R3-L01–L13, R2-L14, L15): `.people-page.audit-page`,
+headed "Audit log" under the subtitle by role ("Every consequential action at ‹institution›, newest first." / "… across
+the institutions, and those with no institution, newest first."), no header action. Its filter is Users' card pattern
+without the card (`form.search-container.people-filter`, `role="search"`, "Filter the audit log"): Category by label
+(`AuditWords`, never the enum's name), Action (part of a name, with its hint), Person's user id, Subject type, From (SAST)
+and To (SAST) as `datetime-local` on the South African clock (To's hint "Empty: up to when you press Show."), Result, and
+Institution for the Administrator alone (All institutions, No institution, then each by name); then `.filter-actions`:
+Show and, once a filter is applied, Clear filters. Show is `aria-disabled` until the first read is in. **The window is
+fixed and said** (T21, T277): on arrival the last 24 hours to the moment the page opened, after Show from From to To or
+to the moment Show was pressed; the moment rides in the address (`opened=` or `shown=`, beside `category=`, `action=`,
+`person=`, `subject=`, `from=`, `to=`, `result=`, `institution=`, `page=`, `size=`; `AuditLinks`, `AuditLogAddress`), so
+a page turn and the trail back from an entry read between the same two moments. Under `h2.list-section-title` "Actions"
+come **the count line** (`p[tabindex=-1]`, "166 actions.", "1 action.", "No actions match these filters."), which takes
+the focus after Show and **is no live region**, and the window line (`p.muted.text-sm`, "Read from 2026-11-10 18:58 SAST
+to 20:24 SAST, when you pressed Show. Turning a page keeps this window."), a standing notice. The table is `StackWide`
+in the 1150px stack (C1) with the caption "Actions, newest first": When (the day and the hour each `.nowrap`, so a time
+breaks only between them), Person (the name read now, an erased person's pseudonym; "MSF respondent (no account)", "No
+signed-in person"; for the Administrator `.person-cell` with the institution under it, "No institution" for none), Category,
+Action (`.col-wrap`), Result (the badge, a failure's stored words under it) and Detail (`.col-fit--wide`, its header
+visually hidden), named "Detail: ‹action› at ‹YYYY-MM-DD hh:mm:ss› SAST" and made distinct by `RowNames`; no row header.
+`PagerControls` is drawn whenever a row is, 50 a page; a page turn focuses "Actions", Clear filters and "Clear the
+filters" focus Category, and arriving back by an entry's trail (`entry=`) focuses that entry's Detail. Nothing matching is
+the card "No actions match" / "Nothing matches these filters between these times. Widen From and To, or clear the
+filters." with "Clear the filters" while a filter is applied (K16).
+
 **Curricula's "An institution's curricula"** (2026-11-02, T392, flow 15, Q18, P4; build review P8, P9): the
 Administrator's section under All curricula. Institution (a real `label`, its first option "— Select an institution —") and
 Show (outline) sit on `form.search-container`'s `.search-grid`; the choice is the page's state, not the address, and is kept
@@ -3864,6 +3973,20 @@ the page, so a turn reads nothing.
   <section class="detail-card"> main body </section>
 </div>
 ```
+
+**An audit entry** (`/admin/audit/{id}`, 2026-11-11, T400, flow 18, lane C; R3-E02–E09, R2-E01–E11): a `.user-page` of
+`section.detail-card.user-section`s, each named by its `h2`: What happened (When to the millisecond in SAST with "Stored
+as ‹…› UTC" under it, Category by label, Action, Institution by name or "No institution", Result with a failure's stored
+words), Who (Name: the name read now, "No person: an MSF respondent answers by link, with no account.", or "No signed-in
+person"; User id, "None" for none; Address with "Cut to its first 48 bits when stored." or "… 24 bits …" by its prefix),
+What it was done to (Type, Id, and the institution and speciality by name, or "No subject"), and Payload, the
+Administrator's alone (the query withholds it from anyone else). The payload is laid out one property a line, two spaces
+an indent, in its stored key order (parsed and written again, never compared as text), in
+`pre.code-block.code-block--region` (`tabindex="0"`, `role="region"`, `aria-labelledby` its h2): its own focusable region
+with a ceiling of 28rem of content (`max-height: 28rem` on a `content-box`, so the box is 30rem with its padding and
+border) and its own scroll, **named once**, by the h2, so its section carries no name (S4). The subtitle is
+"‹action› by ‹person›, ‹YYYY-MM-DD hh:mm:ss› SAST · ‹result›". No Back to log: the trail's Audit log returns to the rows
+it was opened from (`back=`, rebuilt by `AuditLinks.SafeLogReturn`).
 
 **A curriculum item's record** (2026-11-02, T392, flow 15, P2): an item the caller reads and may not change (a national
 item read by an Institutional admin) opens at its own address as its record, not a form: one `section.detail-card` holding
@@ -4374,10 +4497,37 @@ changes". **There is no `ValidationSummary`** (S22): the page's own checks and t
 what was typed kept), and the built "An institution with the same name or short code already exists." under Short code or
 Name (I08). Saved, the result above the form takes the focus: "**‹name› saved.** Its contact email is now ‹address›."
 (`<wbr>` after the @) or "… It has no contact email now." (I07). A failed read is `StatePanel`'s Alert, "Could not load the
-institution. Nothing has changed. …", with Try again; an id outside her scope is Page not found (1.23). The Administrator's
-view of the same route (Edit institution, Back to institutions, the Active box and Deactivate, T302) is flow 18's, kept as
-built. **`/admin/institutions/new` is the Administrator's alone** (S12): `InstitutionCreate`, a page of its own under the
-`Administrator` policy, so hers is Access denied; the create form is as built, its refusals in Wombat's words.
+institution. Nothing has changed. …", with Try again; an id outside her scope is Institution unavailable with Go to Home (T400, Q17; until then Page not found). The
+Administrator's view of the same route is below. **`/admin/institutions/new` is the Administrator's alone** (S12):
+`InstitutionCreate`, a page of its own under the `Administrator` policy, so hers is Access denied.
+
+#### The institutions (`/admin/institutions`, `/new`, `/{Id}`, the Administrator's; T400, flow 18, Q5, R2-I01–I06, R3-I07–I16, I22)
+
+- **The list** (`.people-page.institutions-page`, `StackWide`, stacked from 1150px, C1): subtitle "The institutions that
+  hold Wombat's people and records."; by name, no pager (institutions are few); Name the row's header, Short code, Contact
+  email ("None" muted where there is none), Status a badge (Active green, Inactive on the neutral `.badge-withdrawn`),
+  Created the South African day (T24), Edit named for its row by `aria-label="Edit ‹name›"` (the visible word first, as
+  `RowActionMarkupTests` holds every row action to an aria-label). Create institution is the header
+  action once the rows have loaded (R2-I04); loading is "Loading the institutions." and a failed read the house sentence
+  with Try again, focusing the h1 after it (S3).
+- **Create institution** (`.record-page`): subtitle "A new institution is active from the moment it is saved, so its
+  people can be invited."; no Back (the trail and Cancel). The mark line, then Name * and Short code *, each
+  `aria-required="true"` with a visually hidden " required" after the mark, **never `required` and no `maxlength`** (S6,
+  K14), and Contact email; each field's help under it ("Up to 200 characters.", "Up to 32 characters.", "Optional.").
+  The page checks before anything is sent; each refusal is a `p.validation-message` under its field, **first in its
+  `aria-describedby`** before the help, the first refused field focused (T378). A name or short code another institution
+  holds is the command's field-tied refusal (`InstitutionUpdateRefusedException`, asked before anything is staged) under
+  Short code or Name, naming no institution (R3-I09). Save lands on `CatalogueLinks.InstitutionCreated(id)`: the record,
+  read in the caller's scope, writes "‹name› created.", focuses it and replaces its address without the token (K13).
+- **The Administrator's record** (`.record-page`): h1, tab and last crumb the name; subtitle "KGK · Active" / "DEMO ·
+  Inactive" (N2); no Back. The three fields with their help; Cancel (to Institutions) and Save, which **never asks**:
+  there is no Active box. Then a **Status section of its own** (`section.user-section`, `h2` "Status", N4): the state on
+  its badge and its sentence ("A new invitation can name it." / "No new invitation can name it. Its people, their records
+  and the invitations already sent are kept."), and the one trigger the stored state allows, Deactivate… or Reactivate…
+  (§ Button system). The results by name, in the result region above the form, focused: "‹name› saved. Its contact
+  email is now ‹address›." (flow 12's words, T11), "‹name› deactivated. A new invitation can no longer name it.", "‹name›
+  reactivated. A new invitation can name it again."; a failure is T23's fixed sentence, its first sentence bold. Typing
+  not yet saved stays in the fields when the status changes (K17).
 
 #### SSO mappings (`/admin/sso/group-mappings`, T376, flow 12, O01–O10)
 
@@ -4761,7 +4911,7 @@ bar fill — never for layout a class names: a row is `.list-row`, a row of butt
 `.dashboard-metric-row` (T328; 2026-09-27, T335, flow 01, which promoted the badge-row that had spread to four
 dashboards).
 
-Every dashboard uses `.dashboard-grid` + `DashboardCard` + the `.dashboard-metric` / `.progress-bar` / `.status-dot` primitives. Role-specific content lives inside the cards; the grid and card shapes do not.
+Every dashboard uses `.dashboard-grid` + `DashboardCard` + the `.dashboard-metric` / `.progress-bar` primitives (the status dots retired, T400). Role-specific content lives inside the cards; the grid and card shapes do not.
 
 A dashboard that reads nothing (the CollegeAdmin's, a card of links to the national catalogue it authors) has no query,
 no `DashboardFrame` and no `@rendermode`: the grid and its cards are the whole file.
@@ -4779,6 +4929,29 @@ Curriculum (11.1).", or "Nothing is adopted yet. …"). Your institution: a `.de
 and Status over "Set by a Wombat administrator.", which wraps inside the card (M7: her card's `.dashboard-grid .home-institution-list`, not the Trainee's lists, is
 `minmax(0, max-content) minmax(0, 1fr)`, its `dd` breaking anywhere), and Open ‹institution›. Below 641px the metric links
 and the footer links are 44px.
+
+**The Administrator's Home** (2026-11-11, T400, flow 18, lane A; R3-H01–H12; Q1–Q4, Q13, Q14, Q18, T8, T9, T13, T14, S1,
+S2, S5): two cards in `DashboardCard`'s markup, each a section named by its `h2`; no System page (Q1).
+- **System health** (`Span="2"`): `ul.health-list` of three `li.health-line` in fixed order, Database, Mail, Scheduled
+  jobs (T8). Each is `span.health-line-name` (the name, a visually hidden ":" so it reads "Database: OK", N7, then its
+  badge) beside `div.health-line-text` (its sentences as paragraphs; the jobs that need the Administrator as a list under
+  "Three jobs need you:"). The state is a word on a badge, never a dot (S5): OK green; Failing and Unreachable red; Not
+  configured and Disabled amber (N3); Overdue `.badge-overdue`; Not read grey. The jobs' badge takes the worst word,
+  Failing, then Overdue, then Disabled. No line is a live region, and no sentence holds a link: the card's links are
+  outline buttons in its `.dashboard-card-footer` (S1), "Its runs" (to Run history filtered to the one failed job,
+  `JobLinks.RunsOf`, with a visually hidden ": ‹key›, failed") only when one job has failed, then "Scheduled jobs".
+  The Mail line reads the mail outcomes table (Q18), so a restart keeps it; the jobs line judges each job by the
+  scheduler's own rule (`JobSchedule`; a job still running is neither failing nor overdue, K4).
+- **Accounts** (`Emphasis`): `.dashboard-metric` "24" / "accounts", "Every account Wombat holds but an erased one." and
+  "None is locked." or "‹n› are locked and cannot sign in now."; no breakdown (Q14); Users in its footer.
+- **Each part is read on its own** (K11, T9): with the database down the Database line reads Unreachable with the moment,
+  and every part that needs the database reads Not read, "Not read: the database did not answer.", **with no footer on
+  a card or line that reads Not read** (R3-H08); the Mail line with no mail server is configuration and still answers.
+- **Widths** (S2): one column to 900px; two tracks from 901 to 1099px; three from 1100px, System health spanning two. Its
+  list is under 30rem (the `health` container) from 1100 to **1112px**, so there the name and badge sit on one row over
+  the sentences, and from 1113px each line is the name and badge in a 10rem column beside the sentences; from 900px down
+  the card is the column's width and the list wide again where the card allows. Below 641px the footer's buttons are
+  44px and the footer wraps.
 
 ### Acting role
 
@@ -5471,6 +5644,12 @@ fieldset, fieldset legend, fieldset.form-group > legend, fieldset.form-group fie
 "Flow 16: EPAs, the items and an item's page (T394)": (no rule of its own: the College's items notice bolds its reach with the Alert's own `<strong>`, R3-F05; "Edit this version" is a header action, placed by § 0's Q20 rule; Q14's line and Go to EPAs are a `.detail-card--empty`; EV2's reach line is an info `Alert Role=""` under the result region; the stacks and the checkbox rows are the shared part's)
 "Flow 17: the list and the read (T398)": (.workflow-readout, .credit-readout and .versions-readout: a flex column 16px apart with no part's own margin, as .user-section spaces its parts, so the read in words sits in a builder panel as R2-B03–B05, R2-D02 and R2-E03 draw it; the list needs nothing of its own: its release line is one more .person-cell span, and its 1150px stack is the shared part's, C3 (1024px until the replay), as is the moves table's 1024px one, the sweep's)
 "Flow 17: the builder (T398)": the owner line and the strip, R1 (a tab's count), S2 (the outline and its stripes); C1's `.tab-bar` and C2's `.builder-two-col` and Show choice are under Builder, in place
+
+/* ── Platform operations ────────────────────────── */
+C1 (T400, § 0): no rule of its own; .institutions-page, .jobs-page and .audit-page join the seven selector lists of flow 16's shared ≤1150px stack, .job-runs-page those of its ≤1024px stack, a readability choice (S8)
+"Flow 18: Home and the institutions (T400). Lane A.": R1, System health's lines (.health-list, a 30rem `health` container; .health-line, the name and badge in a 10rem column beside the sentences; .health-line-name; .health-line-text with its p and ul; under 30rem the name and badge on one row over the sentences, which is so from 1100 to 1112px, S2); the institutions need no rule of their own (the list's 1150px stack is C1's, the record and the create page are .record-page)
+"Flow 18: the jobs and run history (T400). Lane B.": .jobs-page td[data-label="Last run"] .text-sm, .job-runs-page td[data-label="Status"] .text-sm (a run's error, drawn whole, breaks anywhere rather than widen the table, T1); the error's column asks for a share while a row shows one (Last run 25%, Status 30%, the build sweep) (the row headers are .people-page's .person-cell rules, S7; the stacks are C1's)
+"Flow 18: the audit log and an entry (T400). Lane C.": R2, `.code-block--region` (an entry's payload: a 28rem ceiling and its own scroll, its ring the page's); the build sweep's two: Action's `.col-wrap` header asks for no share, and Result asks for 20% while a row shows a failure's words (the rest of the log is `.people-filter`, the 1150px stack (C1) and `.col-fit--wide`)
 ```
 
 The Progress section replaced the Trajectory chart section that held T123's chart (2026-10-04, T355): every flow 05
@@ -5487,7 +5666,9 @@ under Badges and the `.details-list` value column's `minmax(0, 1fr)` under Detai
 rights sections hold every flow 14 rule but one: the shared one first, then one per page lane; the list selects' 44px on
 a phone is a system rule for every list, written beside `.filter-actions`' phone rule (T387). The four catalogue sections hold every flow 15
 rule, one per build lane, each scoped to its page's own class; the one rule two lanes share is the 1024px stack, written
-in a curriculum's items' section for the items list and the EPA list (`.epas-page`) alike (T392, `e10a5f22`, `50ca6470`).
+in a curriculum's items' section for the items list and the EPA list (`.epas-page`) alike (T392, `e10a5f22`, `50ca6470`). The
+three Platform operations sections hold every flow 18 rule, one per build lane; the four lists' stacks are C1's
+selector-list additions to flow 16's shared stacks, written there (T400, § 0).
 
 When a new section is needed (say `/* ── Badges ── */`), add its heading in alphabetical-ish order inside the existing block and keep the rest of the file untouched.
 

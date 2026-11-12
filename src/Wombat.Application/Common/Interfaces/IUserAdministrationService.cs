@@ -22,6 +22,22 @@ public interface IUserAdministrationService
     Task<IReadOnlyList<UserIdentityDetails>> ListAllUsersAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// The accounts Wombat holds but an erased one, and how many of them cannot sign in at <paramref name="nowUtc" />
+    /// (T400, flow 18, K2, Q4, T14): every account no <c>DataRightsErasureRecord</c> names, and among them those whose
+    /// lockout is still running, an administrator's indefinite lock or a sign-in lockout alike. An erased account is in
+    /// neither figure. Home's Accounts card reads it.
+    /// </summary>
+    /// <remarks>
+    /// The default implementation reads every user and knows no erasure, so hand-built directories compile; the real
+    /// service overrides it with one query that leaves the erased out.
+    /// </remarks>
+    async Task<AccountCount> CountAccountsAsync(DateTime nowUtc, CancellationToken cancellationToken = default)
+    {
+        var users = await ListAllUsersAsync(cancellationToken);
+        return new AccountCount(users.Count, users.Count(user => user.IsLockedOut || user.IsDeactivated));
+    }
+
+    /// <summary>
     /// "First Last" for exactly the users asked about, whatever roles they hold. A user who does not exist is
     /// left out. The default implementation reads every user; the real service overrides it with one query by id.
     /// </summary>
@@ -196,6 +212,11 @@ public sealed record UserIdentityDetails(
     bool IsLockedOut = false,
     bool IsDeactivated = false,
     int? CollegeId = null);
+
+/// <summary>Home's Accounts card (T400, flow 18, K2): the accounts but the erased, and the locked among them.</summary>
+/// <param name="Accounts">Every account no erasure record names.</param>
+/// <param name="Locked">Those of <paramref name="Accounts" /> whose lockout is still running: they cannot sign in now.</param>
+public sealed record AccountCount(int Accounts, int Locked);
 
 /// <summary>What a picker labels a person by: their name and email, and nothing about their roles or scope. (T248)</summary>
 public sealed record UserContact(string UserId, string FirstName, string LastName, string Email);

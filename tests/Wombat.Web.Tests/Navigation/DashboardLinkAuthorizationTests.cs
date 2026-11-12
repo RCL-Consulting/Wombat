@@ -447,7 +447,7 @@ public sealed class DashboardLinkAuthorizationTests
                 new Wombat.Application.Features.Dashboards.FormerTrainee.FormerTraineeHomeDto(
                     new DateOnly(2026, 10, 26), Completed: true, TrainingYearAtEnd: 4,
                     new Wombat.Application.Features.EntrustmentDecisions.RecordStarsDto(starsIssued, starsIssued ? 15 : 0)),
-            GetAdministratorDashboardSummaryQuery => new AdministratorDashboardSummaryDto(DatabaseHealthy: true, TotalUserCount: 12),
+            GetAdministratorDashboardSummaryQuery => AdministratorHomeFixtures.WithAFailedJob(),
             GetInstitutionalAdminDashboardSummaryQuery => new InstitutionalAdminDashboardSummaryDto(
                 // T376, flow 12: every role a link to Users filtered by it, the waiting line's Open Trainees, and Your
                 // institution's Open ‹institution›.

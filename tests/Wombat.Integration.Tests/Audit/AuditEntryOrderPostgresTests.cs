@@ -12,6 +12,7 @@ using Wombat.Domain.Audit;
 using Wombat.Domain.Identity;
 using Wombat.Infrastructure;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Integration.Tests.Audit;
 
@@ -119,7 +120,7 @@ public sealed class AuditEntryOrderPostgresTests : IAsyncLifetime
                         "SET enable_indexscan = off; SET enable_indexonlyscan = off; SET enable_bitmapscan = off;");
                 }
 
-                var result = await new ListAuditEntriesQueryHandler(db).Handle(
+                var result = await new ListAuditEntriesQueryHandler(db, FakeUserDirectory.Empty, TimeProvider.System).Handle(
                     new ListAuditEntriesQuery(
                         Administrator(), ActorUserId: Actor, From: Tie.AddHours(-1), To: Tie.AddHours(1), Page: page, PageSize: 50),
                     CancellationToken.None);

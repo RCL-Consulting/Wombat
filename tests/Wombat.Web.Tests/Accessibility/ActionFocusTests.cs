@@ -56,6 +56,8 @@ using Wombat.Application.Features.Scheduling;
 using Wombat.Application.Features.Scheduling.Commands.DisableScheduledJob;
 using Wombat.Application.Features.Scheduling.Commands.RunScheduledJobNow;
 using Wombat.Application.Features.Scheduling.Queries.GetScheduledJobStatus;
+using Wombat.Application.Scheduling;
+using Wombat.Domain.Scheduling;
 using Wombat.Application.Features.Sso;
 using Wombat.Application.Features.Users;
 using Wombat.Application.Features.Users.Commands.AddRoleToUser;
@@ -546,9 +548,8 @@ public sealed class ActionFocusTests : TestContext
             // InstitutionEditRecordTests holds both.
             CanBeRefused: false),
 
-        // T302, T264: Deactivate is offered to those the Administrator policy admits, and asks first. The dialog's confirm
-        // button has the focus while the deactivation runs, so it is the button held to the rule; the page's Deactivate,
-        // which the deactivation removes, is disabled then, as every button that would race it is.
+        // T302, T264: Deactivate… is offered to those the Administrator policy admits, and asks first. The dialog's confirm
+        // button has the focus while the deactivation runs, so it is the button held to the rule.
         ["InstitutionEdit Deactivate"] = new(
             (test, hold) =>
             {
@@ -561,16 +562,11 @@ public sealed class ActionFocusTests : TestContext
                     }),
                     parameters => parameters.Add(page => page.Id, 4));
             },
-            cut => cut.FindAll("dialog button").Single(button => button.TextContent.Trim() == "Deactivate"),
-            cut =>
-            {
-                if (Named(cut, "Deactivate") is { } opener && !opener.HasAttribute("disabled"))
-                {
-                    opener.Click();
-                }
-
-                cut.FindAll("dialog button").Single(button => button.TextContent.Trim() == "Deactivate").Click();
-            }),
+            // T400 (flow 18, M1): Deactivate… in the record's Status section asks in the action mode; its confirm runs the
+            // deactivation. A failure is T23's fixed words, never a refusal's (InstitutionEditStatusTests holds it).
+            cut => InDialog(cut, "Deactivate"),
+            cut => Confirm(cut, "Deactivate…", "Deactivate"),
+            CanBeRefused: false),
 
         // T394 (flow 16, S13): a speciality's and a sub-speciality's Save returns to the College's tree by its token, which
         // writes and focuses the result there (CollegeTreePageTests). A refusal is a field's or fixed words (T272):
@@ -987,12 +983,15 @@ public sealed class ActionFocusTests : TestContext
                 {
                     GetScheduledJobStatusQuery => new[]
                     {
-                        new ScheduledJobDto(1, "digest", "0 6 * * *", true, "Sends the daily digest.", null, null, null)
+                        new ScheduledJobDto(1, "digest", "0 6 * * *", true, "Sends the daily digest.", null, null, null, null, null, null, false)
                     },
                     _ => null
                 })),
             cut => Named(cut, "Disable"),
-            cut => Named(cut, "Disable").Click()),
+            cut => Named(cut, "Disable").Click(),
+            // T400 (flow 18, T23): a failure is fixed words, never the exception's, and it takes the focus (N7);
+            // ScheduledJobsPageTests holds the refusal, the failure and their focus.
+            CanBeRefused: false),
 
         // T379, flow 13: the staff route is its own component, read through the export subject before its form (S2, M4).
         ["ExportTraineePortfolio Export PDF"] = new(
@@ -1322,12 +1321,17 @@ public sealed class ActionFocusTests : TestContext
                 {
                     GetScheduledJobStatusQuery => new[]
                     {
-                        new ScheduledJobDto(1, "digest", "0 6 * * *", true, "Sends the daily digest.", null, null, null)
+                        new ScheduledJobDto(1, "digest", "0 6 * * *", true, "Sends the daily digest.", null, null, null, null, null, null, false)
                     },
+                    RunScheduledJobNowCommand => new ScheduledJobRunOutcome(ScheduledJobRunStatus.Succeeded, Created, Created, null),
                     _ => null
                 })),
-            cut => Named(cut, "Run now"),
-            cut => Named(cut, "Run now").Click()),
+            // T400 (flow 18, T16): "Running…" while its run goes.
+            cut => Named(cut, "Run now", "Running…"),
+            cut => Named(cut, "Run now", "Running…").Click(),
+            // T400 (flow 18, K6, T23): a refusal is ScheduledJobRefusal's words in a warning, anything else fixed words,
+            // and both take the focus (N7); ScheduledJobsPageTests holds them.
+            CanBeRefused: false),
 
         // ---- T234 review: the committee review page, which the sweep missed ----
         //

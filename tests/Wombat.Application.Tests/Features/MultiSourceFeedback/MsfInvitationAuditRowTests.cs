@@ -71,7 +71,7 @@ public sealed class MsfInvitationAuditRowTests
     [Fact]
     public async Task AnInvitationRefusedByItsValidator_IsAuditedWithoutTheAddress()
     {
-        // Longer than the 320 the validator allows. The refusal's message is what the audit row records as its error,
+        // Longer than the 320 the validator allows. The refusal's words are what the audit row records as its error,
         // so it must name the field without repeating the value.
         var tooLong = new string('a', 320) + "@example.test";
         var campaignId = await SeedCampaignAsync(MsfCampaignState.Draft);
@@ -85,7 +85,9 @@ public sealed class MsfInvitationAuditRowTests
         await using var read = CreateDb();
         var row = await read.AuditEntries.AsNoTracking().SingleAsync();
         row.Success.Should().BeFalse();
-        row.ErrorMessage.Should().Contain(nameof(AddMsfInvitationCommand.RespondentEmail));
+        // Since T400 (K10, P1) the row stores the validator's message alone, not FluentValidation's text with the
+        // property's name: the refusal as the person read it, still without the value.
+        row.ErrorMessage.Should().Be("Enter a valid email address, for example name@example.org.");
         ShouldHoldNoAddress(row.SummaryJson, row.ErrorMessage, campaignId, tooLong);
     }
 

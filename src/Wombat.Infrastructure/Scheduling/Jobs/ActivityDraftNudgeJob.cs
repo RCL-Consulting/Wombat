@@ -38,7 +38,7 @@ public sealed class ActivityDraftNudgeJob : IScheduledJob
 
     public string Key => "activity-draft-nudge";
     public string CronExpression => "0 7 * * *";
-    public string Description => "Reminds trainees about draft activities older than 14 days (daily at 07:00 UTC).";
+    public string Description => "Reminds trainees about draft activities older than 14 days.";
 
     public async Task ExecuteAsync(ScheduledJobContext context, CancellationToken cancellationToken)
     {

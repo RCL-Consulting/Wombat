@@ -143,6 +143,10 @@ crosses a lane**: each lane owns its pages' DTOs and queries whole.
 ## § 3: lane C (the audit log and an entry) provides
 
 - `AuditPipelineBehavior`'s failure text (K10, P1): a refusal's words, else "The action failed.", the text to the log.
+  A refusal is a `ValidationException`, or an `UnauthorizedAccessException` or `InvalidOperationException` **thrown by
+  Wombat's own code** (its throw site in a `Wombat.` assembly; the fix pass applied the test to
+  `UnauthorizedAccessException` too, the operator's F1, 2026-11-12: the framework throws it for file access with a path
+  in its text, which stores "The action failed." and goes to the log whole).
   Every command's failed row changes with it, every flow's: lane C's tests and the review say so.
 - The audit DTOs and queries (the resolved window; the Institution filter of three kinds, K15; names through § 0's
   reader; the institution's name per row; `ActorKind`, K8). Read by no other lane.
@@ -194,7 +198,9 @@ crosses a lane**: each lane owns its pages' DTOs and queries whole.
 
 Rows 1–8 are round 3's NEW sentences, given here the "replaces" cell the check found missing (`round-3-check.md` C5,
 T400's Notes: carried into the build). The fix pass appends the words the lanes ship that no board draws (rows 9 on),
-from the lanes' reports and the pages review, as flow 17's § 5 did.
+from the lanes' reports and the pages review, as flow 17's § 5 did. Rows 9–34 are the pages review's 26 groups
+(`build-review-pages.md`, the last section), in its order; rows 35 and 36 are the fix pass's own. Not NEW though the lanes
+listed them: "Set by a Wombat administrator.", "Save changes" and " It has no contact email now." are flow 12's.
 
 | # | Words | Where | Replaces |
 |---|---|---|---|
@@ -207,3 +213,31 @@ from the lanes' reports and the pages review, as flow 17's § 5 did.
 | 7 | "1 run." and "1 action." (K19) | lane B and lane C, the count lines | nothing: the singulars of T17's "21 runs." and "166 actions.", which replace the pager's count alone |
 | 8 | "Nothing sent since ‹YYYY-MM-DD hh:mm› SAST; none waiting; none dropped in the last 24 hours." (a mail server set and nothing sent in the 90 days the table holds; Q18, R3-H12) | lane A, Home's mail line | nothing: no line says anything of mail today (as row 1) |
 | — | "Deletes job run records and mail outcomes older than 90 days." (Q18; listed for completeness, its board is every R3-J) | lane B, the retention job's Description | "Deletes ScheduledJobRun records older than 90 days (daily at 04:00 UTC)." (`ScheduledJobRunRetentionJob.cs:20`), whose T15 form would have been "Deletes job run records older than 90 days." |
+| 9 | "1 mail was dropped in the last 24 hours, the last at ‹time›…" (n = 1) | lane A, Home's mail line (`AdministratorHomeWords`) | R3-H04's "‹n› mails were dropped …" at n = 1 |
+| 10 | "1 is locked and cannot sign in now." | lane A, Home's Accounts | R3-H10's "‹n› are locked …" at n = 1 |
+| 11 | "‹n› waiting" in the Mail sentences | lane A, Home's mail line | "none waiting" (R3-H03, H12) when the queue holds mail |
+| 12 | "‹key› has not run since it was due: the scheduler did not start it. The application log says why; Run now runs it." (no time) | lane A, Home's jobs line | R3-H07's "… due at ‹time› SAST: …" for a job with no next occurrence |
+| 13 | "‹key› has not run yet." | lane A, Home's jobs line | R3-H02's "… has not run yet: its first run is ‹time› SAST." when no first run is known |
+| 14 | "Two / Four … Ten jobs need you:" (a number in numerals above ten) | lane A, Home's jobs line | R3-H09's "Three jobs need you:" |
+| 15 | "‹n› job last succeeded." and "All 1 job last succeeded." | lane A, Home's jobs line | R3-H01/H02's "7 jobs …" / "All 8 jobs …" at n = 1 |
+| 16 | "account" (the singular label) | lane A, Home's Accounts | "accounts" (R3-H01) at 1 |
+| 17 | "No institutions yet" and "Create the first institution to start configuring scope and onboarding." (kept from master; no board draws an empty list) | lane A, the institutions list (`InstitutionWords`) | nothing |
+| 18 | "Could not deactivate the institution. Nothing has changed. Try again, or come back in a few minutes." | lane A, the record's Status section | nothing; the twin of R3-I22 for the Status section |
+| 19 | "Could not reactivate the institution. …" | lane A, the record's Status section | nothing; as row 18 |
+| 20 | "Could not save the institution. …" on the create page (R3-I22 draws it on the record) | lane A, Create institution | master's create-page failure text |
+| 21 | "None: the schedule cannot be read" (Next run, an unreadable cron) | lane B, Scheduled jobs (`JobWords`) | "—" (K4's note; the Home sentence is row 2) |
+| 22 | "Enabled ‹key›." (no next run known) | lane B, the jobs page's result | R3-J03's "Enabled ‹key›. Its next run is ‹time› SAST." |
+| 23 | "‹key› could not be enabled." and "‹key› could not be started." | lane B, the jobs page's failure | nothing; twins of R3-J10's "could not be disabled" |
+| 24 | "The filters are kept above. Clear them to see the one run." | lane B, Run history's no-match card | R3-R03's "… see all ‹n›." at n = 1 |
+| 25 | Durations "1.2 s" and "2 min 5 s" (R3-R07 draws "7 ms") | lane B, Run history's Duration | the old page's Finished column |
+| 26 | "Unknown" (a status that is none of the three) | lane B, both job pages | an enum name read through |
+| 27 | "2,800 runs." (a thousands separator) | lane B, Run history's count line | extends R3-R01's "21 runs." |
+| 28 | "Run now needs a signed-in person." (audit text only, never on a page) | lane B, `RunScheduledJobNowCommandHandler` | nothing |
+| 29 | "Read from ‹From› SAST to ‹To› SAST. Turning a page keeps this window." (a To typed) | lane C, the audit log's window line (`AuditWords`) | R3-L01's "… to ‹hh:mm› SAST, when you pressed Show. …" |
+| 30 | "Read from ‹From› SAST to ‹hh:mm› SAST, when you opened the page. …" (a From typed, the address opened) | lane C, the audit log's window line | R3-L's "… : the last 24 hours, when you opened the page. …" |
+| 31 | " by ‹person›" in a Detail's name when two rows share action and second | lane C, the audit log's Detail | nothing; extends C7's "Login at ‹time›" |
+| 32 | "None" for a missing address, subject type or subject id (R3-E02 draws it for User id only) | lane C, the entry | "—" (master) |
+| 33 | The category "Other" (a value the label map does not know) | lane C, the audit log and the entry | an enum name |
+| 34 | The entry's subtitle for an actor with no name ("‹action› by No signed-in person, …"), which composes two board phrases | lane C, the entry | nothing |
+| 35 | "No scheduled job is stored yet: the scheduler stores them as it starts." (badge Not configured; no job definition stored, which only a host whose scheduler never started reaches) | the fix pass (N7), Home's jobs line | "All 0 jobs last succeeded." on an OK badge |
+| 36 | "Only a Wombat administrator may read the system's health." and "Only a Wombat administrator may run a scheduled job." (audit text only, never on a page: the pages are the Administrator's) | the fix pass (N-3), the Home query and Run now | nothing: the handlers checked no role |

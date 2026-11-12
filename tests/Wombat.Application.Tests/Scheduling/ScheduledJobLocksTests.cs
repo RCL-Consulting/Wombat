@@ -41,8 +41,8 @@ public sealed class ScheduledJobLocksTests
             var runNow = () => Dispatcher(provider, locks)
                 .DispatchNowAsync(job, "admin-1", CancellationToken.None)
                 .WaitAsync(Patience);
-            (await runNow.Should().ThrowAsync<InvalidOperationException>())
-                .WithMessage(ScheduledJobDispatcher.AlreadyRunning(job.Key));
+            (await runNow.Should().ThrowAsync<ScheduledJobRefusal>())
+                .WithMessage(ScheduledJobRefusal.AlreadyRunningSentence(job.Key));
         }
         finally
         {
@@ -72,8 +72,8 @@ public sealed class ScheduledJobLocksTests
         {
             // Bounded, as above.
             var second = () => dispatcher.DispatchNowAsync(job, "admin-2", CancellationToken.None).WaitAsync(Patience);
-            (await second.Should().ThrowAsync<InvalidOperationException>())
-                .WithMessage(ScheduledJobDispatcher.AlreadyRunning(job.Key));
+            (await second.Should().ThrowAsync<ScheduledJobRefusal>())
+                .WithMessage(ScheduledJobRefusal.AlreadyRunningSentence(job.Key));
         }
         finally
         {

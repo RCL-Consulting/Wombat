@@ -3,63 +3,89 @@
 @inject IScopedSender Sender
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IJSRuntime JS
+@inject ILogger<InstitutionCreate> Logger
+@using Wombat.Web.Components.Pages.Admin.Invitations
 
 <PageTitle>Create institution · Wombat</PageTitle>
 
 @*
-  T376 (flow 12, S12): creating an institution is the Administrator's alone, as the command is (CreateInstitutionCommand
-  refuses anyone else), so the route is a page of its own with the Administrator policy, and an Institutional admin's
-  /admin/institutions/new is Access denied, not a form whose save she is then refused. Until T376 it was InstitutionEdit's
-  second route, admitted by AdministratorOrInstitutionalAdmin. The form is as built (flow 18's to redesign), its refusals
-  in Wombat's words (T324).
+  T400 (flow 18, lane A; boards R3-I07–I10; T378). Creating an institution is the Administrator's alone, as the command is
+  (T376, S12: an Institutional admin's /admin/institutions/new is Access denied).
+
+  - The subtitle says what a save does (T12); no Back: the trail and Cancel are the ways back.
+  - Name and Short code are starred and aria-required, never required, and carry no maxlength (S6, K14): the page refuses
+    in its own words. Each field has its help under it (T12).
+  - The page checks before anything is sent; each refusal sits under its field, first in its aria-describedby, and the
+    first refused field takes the focus (T378). A name or short code another institution holds comes back from the
+    command as a field-tied refusal and lands under its field the same way (R3-I09), naming no institution. Anything else
+    is the fixed sentence in the result, logged (T23, T329), never the exception's text.
+  - Save lands on the new record by CatalogueLinks.InstitutionCreated, which writes "‹name› created." (K13).
 *@
-<PageHeader Title="Create institution" Subtitle="Maintain the institution record used for scoping and onboarding.">
-  <Actions>
-    <a class="btn btn-outline btn-sm" href="/admin/institutions">Back to institutions</a>
-  </Actions>
-</PageHeader>
+<PageHeader Title="Create institution" Subtitle="@InstitutionWords.CreateSubtitle" />
 
-<ActionResult @ref="_result">
-  @if (!string.IsNullOrWhiteSpace(_errorMessage))
-  {
-    <Alert Kind="danger">@_errorMessage</Alert>
-  }
-</ActionResult>
+<div class="record-page">
+  <ActionResult @ref="_result">
+    @if (_failed)
+    {
+      var (lead, rest) = InstitutionWords.SplitFirstSentence(InstitutionEdit.SaveFailed);
+      <Alert Kind="danger"><strong>@lead</strong> @rest</Alert>
+    }
+  </ActionResult>
 
-<div class="form-container">
-  <EditForm Model="_model" OnValidSubmit="SaveAsync" FormName="institution-create">
-    <DataAnnotationsValidator />
+  @* novalidate: the browser stays quiet and the page refuses in its own words under each field (T324). *@
+  <EditForm Model="_model" OnSubmit="SaveAsync" FormName="institution-create" class="form-container" novalidate>
+    <p class="field-help">@InvitationText.RequiredMarkLine</p>
 
     <div class="form-grid">
-      <FormField Label="Name" InputId="institution-name" Required="true">
-        <InputText id="institution-name" class="form-control" @bind-Value="_model.Name" />
-        <ValidationMessage For="() => _model.Name" />
-      </FormField>
+      <div class="form-group">
+        <label for="@InstitutionEdit.NameId">Name<span class="required-mark" aria-hidden="true"> *</span><span class="visually-hidden"> required</span></label>
+        <input id="@InstitutionEdit.NameId" type="text" class="@InputClass(InstitutionEdit.NameId)" aria-required="true" autocomplete="off"
+               aria-invalid="@Invalid(InstitutionEdit.NameId)" aria-describedby="@DescribedBy(InstitutionEdit.NameId)"
+               @bind="_model.Name" @bind:after="() => ClearField(InstitutionEdit.NameId)" />
+        @FieldMessage(InstitutionEdit.NameId)
+        <p class="field-help" id="@FieldHelp.Id(InstitutionEdit.NameId)">@InstitutionWords.NameHelp</p>
+      </div>
 
-      <FormField Label="Short code" InputId="institution-short-code" Required="true">
-        <InputText id="institution-short-code" class="form-control" @bind-Value="_model.ShortCode" />
-        <ValidationMessage For="() => _model.ShortCode" />
-      </FormField>
+      <div class="form-group">
+        <label for="@InstitutionEdit.ShortCodeId">Short code<span class="required-mark" aria-hidden="true"> *</span><span class="visually-hidden"> required</span></label>
+        <input id="@InstitutionEdit.ShortCodeId" type="text" class="@InputClass(InstitutionEdit.ShortCodeId)" aria-required="true" autocomplete="off"
+               aria-invalid="@Invalid(InstitutionEdit.ShortCodeId)" aria-describedby="@DescribedBy(InstitutionEdit.ShortCodeId)"
+               @bind="_model.ShortCode" @bind:after="() => ClearField(InstitutionEdit.ShortCodeId)" />
+        @FieldMessage(InstitutionEdit.ShortCodeId)
+        <p class="field-help" id="@FieldHelp.Id(InstitutionEdit.ShortCodeId)">@InstitutionWords.ShortCodeHelp</p>
+      </div>
 
-      <FormField Label="Contact email" InputId="institution-email">
-        <InputText id="institution-email" type="email" class="form-control" @bind-Value="_model.ContactEmail" />
-        <ValidationMessage For="() => _model.ContactEmail" />
-      </FormField>
+      <div class="form-group">
+        <label for="@InstitutionEdit.EmailId">Contact email</label>
+        <input id="@InstitutionEdit.EmailId" type="email" class="@InputClass(InstitutionEdit.EmailId)" autocomplete="off" spellcheck="false"
+               aria-invalid="@Invalid(InstitutionEdit.EmailId)" aria-describedby="@DescribedBy(InstitutionEdit.EmailId)"
+               @bind="_model.ContactEmail" @bind:after="() => ClearField(InstitutionEdit.EmailId)" />
+        @FieldMessage(InstitutionEdit.EmailId)
+        <p class="field-help" id="@FieldHelp.Id(InstitutionEdit.EmailId)">@InstitutionWords.ContactEmailHelp</p>
+      </div>
     </div>
 
     <FormActions>
-      <a class="btn btn-outline" href="/admin/institutions">Cancel</a>
+      <a class="btn btn-outline" href="@CatalogueLinks.Institutions">@InstitutionWords.Cancel</a>
       @* Not disabled while its own save runs (T234): it has the focus. A second press sends nothing. *@
-      <button type="submit" class="btn btn-primary" aria-disabled="@InFlight.AriaDisabled(_saving)">@(_saving ? "Saving..." : "Save")</button>
+      <button type="submit" class="btn btn-primary" aria-disabled="@InFlight.AriaDisabled(_saving)">@(_saving ? InstitutionWords.Saving : InstitutionWords.Save)</button>
     </FormActions>
   </EditForm>
 </div>
 
 @code {
-  private InstitutionFormModel _model = new();
-  private string? _errorMessage;
+
+  private readonly InstitutionFields _model = new();
+  private readonly Dictionary<string, string> _fieldErrors = new(StringComparer.Ordinal);
+  private string? _focusFieldId;
+  private bool _failed;
+  private bool _focusResult;
   private bool _saving;
   private ActionResult? _result;
+
+  /// <summary>The result region, which a failure focuses. A test matches a focus call to it.</summary>
+  internal ElementReference ResultRegion => _result?.Element ?? default;
 
   private async Task SaveAsync()
   {
@@ -68,20 +94,35 @@
       return;
     }
 
-    _saving = true;
-    _errorMessage = null;
+    _failed = false;
+    _fieldErrors.Clear();
+    if (_model.Check(_fieldErrors) is { } firstInvalid)
+    {
+      _focusFieldId = firstInvalid;
+      return;
+    }
 
+    _saving = true;
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      var contactEmail = string.IsNullOrWhiteSpace(_model.ContactEmail) ? null : _model.ContactEmail.Trim();
-      var created = await Sender.Send(new CreateInstitutionCommand(_model.Name, _model.ShortCode, contactEmail, authState.User));
-      Navigation.NavigateTo($"/admin/institutions/{created.Id}", forceLoad: true);
+      var created = await Sender.Send(new CreateInstitutionCommand(
+        _model.Name, _model.ShortCode, InstitutionFields.EmptyToNull(_model.ContactEmail), authState.User));
+      Navigation.NavigateTo(CatalogueLinks.InstitutionCreated(created.Id));
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      _errorMessage = RefusalText.Of(exception);
-      _result?.FocusAfterRender();
+      if (InstitutionFields.FieldOf(exception, _fieldErrors) is { } refused)
+      {
+        _focusFieldId = refused;
+      }
+      else
+      {
+        // T23, T329: anything that is no refusal of a field is the fixed sentence, the failure logged.
+        Logger.LogError(exception, "An institution could not be created.");
+        _failed = true;
+        _focusResult = true;
+      }
     }
     finally
     {
@@ -89,18 +130,37 @@
     }
   }
 
-  private sealed class InstitutionFormModel
+  protected override async Task OnAfterRenderAsync(bool firstRender)
   {
-    // T324: in Wombat's words, never a property's name; the record page's words (UpdateInstitutionCommandValidator).
-    [Required(ErrorMessage = UpdateInstitutionCommandValidator.NameMissing)]
-    [StringLength(200, ErrorMessage = UpdateInstitutionCommandValidator.NameTooLong)]
-    public string Name { get; set; } = string.Empty;
+    if (_focusResult && _result is not null)
+    {
+      _focusResult = false;
+      await _result.Element.FocusAsync();
+    }
 
-    [Required(ErrorMessage = UpdateInstitutionCommandValidator.ShortCodeMissing)]
-    [StringLength(32, ErrorMessage = UpdateInstitutionCommandValidator.ShortCodeTooLong)]
-    public string ShortCode { get; set; } = string.Empty;
-
-    [StringLength(320, ErrorMessage = UpdateInstitutionCommandValidator.ContactEmailMalformed)]
-    public string? ContactEmail { get; set; }
+    if (_focusFieldId is { } fieldId)
+    {
+      _focusFieldId = null;
+      await PageFocus.FocusByIdAsync(JS, fieldId);
+    }
   }
+
+  private void ClearField(string fieldId) => _fieldErrors.Remove(fieldId);
+
+  private RenderFragment FieldMessage(string fieldId) => __builder =>
+  {
+    if (_fieldErrors.TryGetValue(fieldId, out var message))
+    {
+      <p id="@InstitutionFields.MessageId(fieldId)" class="validation-message">@message</p>
+    }
+  };
+
+  /// <summary>The refusal first, then the field's help (T378).</summary>
+  private string DescribedBy(string fieldId) => _fieldErrors.ContainsKey(fieldId)
+    ? $"{InstitutionFields.MessageId(fieldId)} {FieldHelp.Id(fieldId)}"
+    : FieldHelp.Id(fieldId);
+
+  private string? Invalid(string fieldId) => _fieldErrors.ContainsKey(fieldId) ? "true" : null;
+
+  private string InputClass(string fieldId) => _fieldErrors.ContainsKey(fieldId) ? "form-control input-validation-error" : "form-control";
 }

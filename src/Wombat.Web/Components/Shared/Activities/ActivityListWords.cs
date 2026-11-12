@@ -1,4 +1,3 @@
-using System.Globalization;
 using Wombat.Application.Features.Activities.Dtos;
 
 namespace Wombat.Web.Components.Shared.Activities;
@@ -10,8 +9,6 @@ namespace Wombat.Web.Components.Shared.Activities;
 /// </summary>
 public static class ActivityListWords
 {
-    private static readonly TimeSpan SouthAfricanOffset = TimeSpan.FromHours(2);
-
     /// <summary>
     /// The link's second line: "to David Naidoo" for work that goes to its nominee (a rated request), "with Sarah Botha" for
     /// work talked over with them (a reflection, a portfolio review: <see cref="ActivityTypeShape.DiscussedOrReviewed" />).
@@ -88,9 +85,5 @@ public static class ActivityListWords
     public static string ItemCount(int count) => count == 1 ? "1 item" : $"{count} items";
 
     /// <summary>A UTC moment's day on the South African calendar, "2026-09-29".</summary>
-    public static string DateOf(DateTime utc)
-    {
-        var moment = new DateTimeOffset(DateTime.SpecifyKind(utc, DateTimeKind.Utc));
-        return moment.ToOffset(SouthAfricanOffset).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-    }
+    public static string DateOf(DateTime utc) => SastTime.Day(utc);
 }

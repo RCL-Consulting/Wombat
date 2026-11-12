@@ -5,6 +5,7 @@ using Wombat.Application.Features.Audit.Queries.ListAuditEntries;
 using Wombat.Application.Tests.TestHelpers;
 using Wombat.Domain.Audit;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Application.Tests.Audit;
 
@@ -42,7 +43,7 @@ public sealed class AuditScopeGuardTests
         db.Set<AuditEntry>().AddRange(entries);
         await db.SaveChangesAsync();
 
-        var handler = new ListAuditEntriesQueryHandler(db);
+        var handler = new ListAuditEntriesQueryHandler(db, FakeUserDirectory.Empty, TimeProvider.System);
         var result = await handler.Handle(
             new ListAuditEntriesQuery(TestPrincipals.InstitutionalAdmin(institutionId: 1)),
             CancellationToken.None);
@@ -59,7 +60,7 @@ public sealed class AuditScopeGuardTests
             AuditEntry.Create(occ, AuditCategory.Authentication, "UnscopedEvent", true));
         await db.SaveChangesAsync();
 
-        var handler = new ListAuditEntriesQueryHandler(db);
+        var handler = new ListAuditEntriesQueryHandler(db, FakeUserDirectory.Empty, TimeProvider.System);
         var result = await handler.Handle(
             new ListAuditEntriesQuery(TestPrincipals.Administrator()),
             CancellationToken.None);
@@ -75,7 +76,7 @@ public sealed class AuditScopeGuardTests
         db.Set<AuditEntry>().Add(entry);
         await db.SaveChangesAsync();
 
-        var handler = new GetAuditEntryByIdQueryHandler(db);
+        var handler = new GetAuditEntryByIdQueryHandler(db, FakeUserDirectory.Empty);
         var result = await handler.Handle(
             new GetAuditEntryByIdQuery(entry.Id, TestPrincipals.InstitutionalAdmin(institutionId: 1)),
             CancellationToken.None);
@@ -95,7 +96,7 @@ public sealed class AuditScopeGuardTests
         db.Set<AuditEntry>().Add(entry);
         await db.SaveChangesAsync();
 
-        var handler = new GetAuditEntryByIdQueryHandler(db);
+        var handler = new GetAuditEntryByIdQueryHandler(db, FakeUserDirectory.Empty);
         var result = await handler.Handle(
             new GetAuditEntryByIdQuery(entry.Id, TestPrincipals.InstitutionalAdmin(institutionId: 1)),
             CancellationToken.None);
@@ -111,7 +112,7 @@ public sealed class AuditScopeGuardTests
         db.Set<AuditEntry>().Add(entry);
         await db.SaveChangesAsync();
 
-        var handler = new GetAuditEntryByIdQueryHandler(db);
+        var handler = new GetAuditEntryByIdQueryHandler(db, FakeUserDirectory.Empty);
         var result = await handler.Handle(
             new GetAuditEntryByIdQuery(entry.Id, TestPrincipals.Administrator()),
             CancellationToken.None);

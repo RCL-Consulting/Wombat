@@ -98,6 +98,16 @@ scale by its name), F-1.27a (T291 item 6: the preview's EPAs), F-1.27b (T324: ty
 F-6.14aa (T291 item 3: "Draft saved." after the first save), F-1.31b (T326: a search that matches nothing says so),
 F-6.14ab (T334: a system-managed type is written by its release alone) and F-A.7.9a (T280: the builder's tabs are
 tabs); and the flow's halves of T300 and T329.
+T400 (flow 18, 2026-11-11) rebuilt the platform's operations pages (the Administrator's Home, Institutions and an
+institution's record, Scheduled jobs and Run history, the audit log and an entry), with no new page or template: still
+332 steps, 80 page files and 90 templates. An institution outside the caller's scope now reads "Institution
+unavailable" on its own page, for both roles, so 1.23 and A.5.5 no longer reach `/not-found` (Q17). Its build closes,
+for its replay to confirm, the gaps the steps record: F-1.1a, F-A.6.2a and F-A.6.2c (T327: System health's three lines
+read their state as words, with no stub and no task id, 1.1, A.6.2), F-A.6.2b (T327: Accounts counts every account but
+an erased one), F-1.6a and F-A.6.1a (T326: the Institutions subtitle promises no drill-down), F-3.55a and F-3.56a
+(T286: the person by name, never an email), F-3.56b (T277: the trail returns to the rows the entry was opened from),
+F-A.2.10a (T324: Ran by a name), F-A.2.10b (T327: Job a select of the keys) and F-A.2.10c (T325: From a South African
+day); and the flow's halves of T324, T325, T326, T327 and T329.
 
 ## Pages
 
@@ -145,7 +155,7 @@ institution, speciality or the record's own people; where that decides what a pe
 | `/admin/epas/new`, `/admin/epas/{Id:int}` | Admin/Epas/EpaEdit.razor | Administrator, CollegeAdmin, InstitutionalAdmin | 6.14, 6.17, 6.23, 6.25, 6.28 |
 | `/admin/institutions` | Admin/Institutions/InstitutionsList.razor | Administrator | 1.6, A.5.2, A.6.1, A.7.11 |
 | `/admin/institutions/new` | Admin/Institutions/InstitutionCreate.razor | Administrator; an InstitutionalAdmin is refused as access denied (T376, S12) | 1.6, 1.23 |
-| `/admin/institutions/{Id:int}` | Admin/Institutions/InstitutionEdit.razor | Administrator, InstitutionalAdmin; only an Administrator deactivates one, and an InstitutionalAdmin edits her own, another's reading as not found | 1.6, 1.23, A.5.5, A.6.1, A.6.3 |
+| `/admin/institutions/{Id:int}` | Admin/Institutions/InstitutionEdit.razor | Administrator, InstitutionalAdmin; only an Administrator deactivates one, and an InstitutionalAdmin edits her own, another's reading as Institution unavailable (T400, Q17) | 1.6, 1.23, A.5.5, A.6.1, A.6.3 |
 | `/admin/invitations` | Admin/Invitations/InvitationsList.razor | Administrator, InstitutionalAdmin | 1.5, 1.7, 1.11, 2.1, 2.7, 2.12, 2.16, 2.17, 2.26, 2.28, 2.32 |
 | `/admin/invitations/new` | Admin/Invitations/InviteAPerson.razor | Administrator, InstitutionalAdmin; College admin is offered to the Administrator only | 1.5, 1.7, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.16, 2.17, 2.44 |
 | `/admin/jobs` | Admin/Jobs/ScheduledJobsList.razor | Administrator | 3.32, A.2.1, A.2.2, A.2.4, A.2.6, A.2.8, A.2.9, A.2.10, A.5.1, A.5.2, A.7.11 |
@@ -176,7 +186,7 @@ institution, speciality or the record's own people; where that decides what a pe
 | `/msf/my-reports/{CampaignId:int}` | MultiSourceFeedback/MyMsfReport.razor | Trainee, Coordinator, Administrator; only the subject's own released report, any other id goes to her list with one alert | 3.47 |
 | `/msf/reports/{CampaignId:int}` | MultiSourceFeedback/CampaignReport.razor | Coordinator, Administrator | 3.41, 3.44, 3.46 |
 | `/msf/respond` | MultiSourceFeedback/MsfRespond.razor | Anyone, signed in or not (a static page) | 3.39, 3.40, 3.42, 3.45 |
-| `/not-found` | NotFound.razor | Anyone, signed in or not | 1.23, 3.31, A.5.4, A.5.5 |
+| `/not-found` | NotFound.razor | Anyone, signed in or not | 3.31, A.5.4 |
 | `/portfolio/authorisations` | Portfolio/MyAuthorisations.razor | Trainee, or a former trainee (trainee record; T379, Q3) | 4.39, 4.42, 5.8, 5.22 |
 | `/portfolio/export` | Portfolio/ExportPortfolio.razor | Any signed-in user; the person's own portfolio, a Trainee's menu item and a former trainee's personal link (T379, Q2); with no trainee profile, "Portfolio unavailable" (Q19) | 5.9, 5.23 |
 | `/portfolio/export/{TraineeUserId}` | Portfolio/ExportTraineePortfolio.razor | Any signed-in user; staff who oversee the registrar (the export command's own check, `MayExport`), reached from "Export ‹name›'s portfolio" in the header of the trainee profile, the committee review and the registrar's programme page (T379, F1); anyone else, an unknown id or an erased person "Portfolio unavailable" (Q19) | 5.10, 5.12 |
@@ -298,7 +308,7 @@ and Assessor) appears under each role for the jobs done in it.
 
 | Job | Steps | Pages |
 |---|---|---|
-| See the platform at a glance: database health, how many users, the maintenance links | 1.1, 1.11, A.6.2 | `/account/login`, `/` |
+| See the platform at a glance: the database, mail and the scheduled jobs, and how many accounts | 1.1, 1.11, A.6.2 | `/account/login`, `/` |
 | Confirm a College's record | 1.2, 1.3 | `/admin/colleges`, `/admin/colleges/{Id:int}` |
 | Add a second national College, and correct a College's description | 6.1, 6.2 | `/admin/colleges`, `/admin/colleges/new`, `/admin/colleges/{Id:int}` |
 | Give a College with no CollegeAdmin its first speciality and sub-speciality | 6.3, 6.4 | `/admin/colleges`, `/admin/colleges/{CollegeId:int}/specialities`, `/admin/colleges/{CollegeId:int}/specialities/new`, `/admin/specialities/{SpecialityId:int}/sub-specialities/new` |
@@ -348,7 +358,7 @@ and Assessor) appears under each role for the jobs done in it.
 | Adopt the College's curriculum so that we can admit registrars, under Curricula's Open for adoption | 1.19, 1.20, 1.21 | `/admin/curricula`, `/admin/epas`, `/admin/adoptions` (typed: it lands on Curricula), `/admin/curricula/{Id:int}/items`, `/` |
 | Adopt a newer curriculum version, under Curricula's Open for adoption | 6.32 | `/admin/curricula` |
 | Read the entrustment ladders | 1.22, 6.9 | `/admin/entrustment-scales` |
-| Keep my institution's own record, and nobody else's | 1.23, A.5.5, A.6.3 | `/`, `/admin/institutions/{Id:int}`, `/admin/institutions/new`, `/access-denied`, `/not-found`, `/admin/users/{UserId}` |
+| Keep my institution's own record, and nobody else's | 1.23, A.5.5, A.6.3 | `/`, `/admin/institutions/{Id:int}`, `/admin/institutions/new`, `/access-denied`, `/admin/users/{UserId}` |
 | Check the College's assessment instruments | 1.24, 1.25 | `/admin/activity-types`, `/admin/activity-types/{ActivityTypeId:int}` |
 | Build and publish an activity type of our own | 1.26, 1.27, 1.28, 1.29, 1.30, 1.31 | `/admin/activity-types`, `/admin/activity-types/new`, `/admin/activity-types/{ActivityTypeId:int}` |
 | Invite staff, each with the right role and scope | 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7 | `/admin/invitations`, `/admin/invitations/new` |

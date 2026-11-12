@@ -1442,6 +1442,33 @@ namespace Wombat.Infrastructure.Persistence.Migrations
                     b.ToTable("DataRightsRequests", (string)null);
                 });
 
+            modelBuilder.Entity("Wombat.Domain.Email.EmailOutcome", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("OccurredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Refusal")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OccurredAt");
+
+                    b.HasIndex("Kind", "OccurredAt");
+
+                    b.ToTable("EmailOutcomes", (string)null);
+                });
+
             modelBuilder.Entity("Wombat.Domain.EntrustmentDecisions.EntrustmentDecision", b =>
                 {
                     b.Property<int>("Id")

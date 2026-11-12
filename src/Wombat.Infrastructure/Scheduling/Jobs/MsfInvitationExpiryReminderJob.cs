@@ -39,7 +39,7 @@ public sealed class MsfInvitationExpiryReminderJob : IScheduledJob
     public string Key => "msf-invitation-expiry-reminder";
     public string CronExpression => "0 8 * * *";
     public string Description =>
-        "Reminds MSF respondents who have not responded, once, two days before their last day to respond (daily at 08:00 UTC).";
+        "Reminds MSF respondents who have not responded, once, two days before their last day to respond.";
 
     public async Task ExecuteAsync(ScheduledJobContext context, CancellationToken cancellationToken)
     {

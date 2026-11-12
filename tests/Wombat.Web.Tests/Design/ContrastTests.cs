@@ -106,9 +106,6 @@ public sealed partial class ContrastTests
              Measure.Solid("--danger-color", "--danger-bg", Mark), Measure.Solid("--secondary-color", "--info-bg", Mark)]);
         yield return new Row("Neutral badge: text · edge on header-bg",
             [Measure.Solid("--text-color", "--header-bg", Text), Measure.Solid("--input-border", "--header-bg", Mark)]);
-        yield return new Row("Status dots on surface: success · warning · danger",
-            [Measure.Solid("--success-color", "--surface-color", Mark), Measure.Solid("--warning-color", "--surface-color", Mark),
-             Measure.Solid("--danger-color", "--surface-color", Mark)]);
         yield return new Row("Progress fill on its hover-bg track: secondary · success (complete)",
             [Measure.Solid("--secondary-color", "--hover-bg", Mark), Measure.Solid("--success-color", "--hover-bg", Mark)]);
         yield return On("Reconnect bar: secondary on its header-bg track", "--secondary-color", ["--header-bg"], Mark);
@@ -309,17 +306,8 @@ public sealed partial class ContrastTests
         palette.Ratio(edge, palette.Token("--background-color")).Should().BeGreaterThanOrEqualTo(Mark);
     }
 
-    [Theory]
-    [InlineData("ok")]
-    [InlineData("warn")]
-    [InlineData("err")]
-    public void AStatusDot_ShowsOnSurface(string state)
-    {
-        var palette = Palette.FromAppCss();
-        var dot = palette.Resolve(Background(Stylesheet.AppCss().Computed($".status-dot.{state}")));
-
-        palette.Ratio(dot, palette.Token("--surface-color")).Should().BeGreaterThanOrEqualTo(Mark);
-    }
+    // T400 (flow 18, S5): the status dots are retired, Home's three their only users; a state is a word on a badge. Their
+    // row and this check went with them.
 
     [Theory]
     [InlineData(".progress-bar-fill")]

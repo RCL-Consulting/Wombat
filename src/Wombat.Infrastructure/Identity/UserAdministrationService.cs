@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Common.Options;
+using Wombat.Domain.DataRights;
 using Wombat.Domain.Identity;
 using Wombat.Infrastructure.Persistence;
 
@@ -96,6 +97,30 @@ public sealed class UserAdministrationService : IUserAdministrationService
             .OrderBy(user => user.LastName)
             .ThenBy(user => user.FirstName)
             .ToArray();
+    }
+
+    /// <summary>
+    /// The accounts but the erased, and the locked among them, in one query (T400, flow 18, K2). An erased account is the
+    /// one a <see cref="DataRightsErasureRecord" /> names (its row is kept with its names blanked, and its lockout is the
+    /// indefinite one, <see cref="UserDeactivation" />), so it is in neither figure. A lockout is running while it ends
+    /// after <paramref name="nowUtc" />: an administrator's lock (stored as PostgreSQL's <c>infinity</c>) and a sign-in
+    /// lockout alike; one that has lapsed is not.
+    /// </summary>
+    public async Task<AccountCount> CountAccountsAsync(DateTime nowUtc, CancellationToken cancellationToken = default)
+    {
+        var now = new DateTimeOffset(DateTime.SpecifyKind(nowUtc, DateTimeKind.Utc));
+        var counts = await _dbContext.Users
+            .AsNoTracking()
+            .Where(entity => !_dbContext.Set<DataRightsErasureRecord>().Any(record => record.UserId == entity.Id))
+            .GroupBy(_ => 1)
+            .Select(group => new
+            {
+                Accounts = group.Count(),
+                Locked = group.Count(entity => entity.LockoutEnd != null && entity.LockoutEnd > now)
+            })
+            .SingleOrDefaultAsync(cancellationToken);
+
+        return counts is null ? new AccountCount(0, 0) : new AccountCount(counts.Accounts, counts.Locked);
     }
 
     public async Task<IReadOnlyDictionary<string, string>> GetDisplayNamesAsync(

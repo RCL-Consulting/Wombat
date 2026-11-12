@@ -1,108 +1,195 @@
 @page "/admin/audit/{Id:guid}"
 @attribute [Authorize(Policy = "AdministratorOrInstitutionalAdmin")]
+@using Wombat.Application.Features.Audit.Queries.GetAuditEntryById
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IJSRuntime JS
+@inject ILogger<AuditDetail> Logger
 
-<PageTitle>Audit entry · Wombat</PageTitle>
+<PageTitle>@Heading · Wombat</PageTitle>
 
-<PageHeader Title="Audit entry" Subtitle="Full audit record for a single action.">
-  <Actions>
-    <a class="btn btn-outline" href="/admin/audit">
-      <Icon Name="arrow-left" />
-      Back to log
-    </a>
-  </Actions>
-</PageHeader>
+@*
+  An audit entry (T400, flow 18, lane C; boards R3-E02–E09, R2-E01–E11). One action, in four h2 sections (Q9, T4).
 
-@* StatePanel's three states (DESIGN.md § Alerts, validation, empty states): skeletons while the entry is read, its danger
-   alert when the read fails, and its empty card for an id that names no entry the caller can view. Until T266 the page
-   said "Loading…" as text. *@
-<StatePanel IsLoading="@(!_loaded)" LoadError="@_errorMessage" IsEmpty="@(_entry is null)"
-            EmptyTitle="Audit entry not found" EmptyBody="No audit entry with this id is among those you can view.">
-  @if (_entry is not null)
-  {
-    <div class="details-grid">
-      <div class="detail-card">
-        <h3>Event</h3>
-        <dl class="detail-list">
-          <dt>When (UTC)</dt><dd><code>@_entry.OccurredAt.ToString("yyyy-MM-dd HH:mm:ss.fff")</code></dd>
-          <dt>Category</dt><dd>@_entry.Category</dd>
-          <dt>Action</dt><dd><code>@_entry.Action</code></dd>
-          <dt>Result</dt>
-          <dd>
-            <span class="badge @BadgeFor.AuditResult(_entry.Success)">@(_entry.Success ? "Success" : "Failed")</span>
-            @if (!_entry.Success && _entry.ErrorMessage is not null)
-            {
-              <div class="text-sm text-muted mt-1">@_entry.ErrorMessage</div>
-            }
-          </dd>
-        </dl>
+  - The subtitle says it in a line: "‹action› by ‹person›, ‹time› SAST · ‹result›".
+  - What happened: the time in SAST to the millisecond with the stored UTC under it (Q7, T4); the category by label
+    (K15); the action; the row's institution by name; the result, a failure's stored words under its badge (K10).
+  - Who: the person by the name read now, an erased person by their pseudonym (Q15, M3), the MSF respondent's sentence
+    or "No signed-in person" by kind (K8, T20); the user id (the audit pages show ids on purpose); the address with
+    how much of it was kept (K9).
+  - What it was done to: the subject's type and id, its institution and speciality by name, or "No subject".
+  - Payload, the Administrator's alone (R2-E01): laid out one property a line in its stored key order, in its own
+    focusable scrolling region named once by its h2; the section itself carries no name (S4, R2).
+  - The trail's Audit log returns to the rows the entry was opened from (T277), naming the entry so its Detail takes the
+    focus there (R3-L13); there is no Back to log.
+  - An unknown or out-of-scope id is "Audit entry unavailable", never which (CLAUDE.md § Roles); a failed read is the
+    house sentence with Try again (T329), never the exception's text.
+*@
+<PageHeader Title="@Heading" Subtitle="@Subtitle" OwnerHref="@(IsUnavailable ? LogReturn : AuditLinks.ReturnFrom(Back, Id))" />
+
+<div class="user-page" aria-busy="@(_loading ? "true" : null)">
+  <StatePanel IsLoading="_loading" LoadError="@_loadError" OnRetry="LoadAsync" FocusAfterRetry="FocusHeadingAsync">
+    <LoadingContent>
+      <p class="loading-line" role="status">@AuditWords.EntryLoading</p>
+      <div class="detail-card" aria-hidden="true">
+        <div class="skeleton skel-title"></div>
+        <div class="skeleton skel-line"></div>
+        <div class="skeleton skel-line"></div>
+        <div class="skeleton skel-line skel-short"></div>
       </div>
-
-      <div class="detail-card">
-        <h3>Actor</h3>
-        <dl class="detail-list">
-          <dt>User ID</dt><dd>@(_entry.ActorUserId ?? "—")</dd>
-          <dt>Display name</dt><dd>@(_entry.ActorDisplay ?? "—")</dd>
-          <dt>IP address</dt><dd>@(_entry.ActorIpAddress ?? "—")</dd>
-        </dl>
-      </div>
-
-      @if (_entry.SubjectType is not null)
+    </LoadingContent>
+    <ChildContent>
+      @if (_entry is { } entry)
       {
-        <div class="detail-card">
-          <h3>Subject</h3>
-          <dl class="detail-list">
-            <dt>Type</dt><dd>@_entry.SubjectType</dd>
-            <dt>ID</dt><dd>@(_entry.SubjectId?.ToString() ?? "—")</dd>
-            @if (_entry.InstitutionId is not null)
-            {
-              <dt>Institution ID</dt><dd>@_entry.InstitutionId</dd>
-            }
-            @if (_entry.SpecialityId is not null)
-            {
-              <dt>Speciality ID</dt><dd>@_entry.SpecialityId</dd>
-            }
-          </dl>
+        @Entry(entry)
+      }
+      else if (_read)
+      {
+        <div class="detail-card detail-card--empty">
+          <div class="state-panel-copy">@AuditWords.EntryUnavailableBody</div>
+          <div class="form-actions">
+            <a class="btn btn-primary" href="@LogReturn">@AuditWords.GoToAuditLog</a>
+          </div>
         </div>
       }
-    </div>
-
-    @if (_isAdmin)
-    {
-      <div class="detail-card mt-4">
-        <h3>Payload (raw JSON)</h3>
-        <pre class="code-block">@_entry.SummaryJson</pre>
-      </div>
-    }
-  }
-</StatePanel>
+    </ChildContent>
+  </StatePanel>
+</div>
 
 @code {
+  private RenderFragment Entry(AuditEntryDetailDto entry) => __builder =>
+  {
+    var cut = AuditWords.AddressCut(entry.ActorIpAddress);
+    <section class="detail-card user-section" aria-labelledby="e-wh">
+      <h2 id="e-wh">@AuditWords.WhatHappened</h2>
+      <dl class="detail-list">
+        <dt>When</dt>
+        <dd>@AuditWords.Millisecond(entry.OccurredAt)<br /><span class="muted text-sm">@AuditWords.StoredAs(entry.OccurredAt)</span></dd>
+        <dt>Category</dt>
+        <dd>@AuditWords.Category(entry.Category)</dd>
+        <dt>Action</dt>
+        <dd><code>@entry.Action</code></dd>
+        <dt>Institution</dt>
+        <dd>@(entry.InstitutionName ?? AuditWords.NoInstitution)</dd>
+        <dt>Result</dt>
+        <dd>
+          <span class="badge @BadgeFor.AuditResult(entry.Success)">@AuditWords.Result(entry.Success)</span>
+          @if (!entry.Success && !string.IsNullOrWhiteSpace(entry.ErrorMessage))
+          {
+            <br /><span class="text-sm">@entry.ErrorMessage</span>
+          }
+        </dd>
+      </dl>
+    </section>
+    <section class="detail-card user-section" aria-labelledby="e-who">
+      <h2 id="e-who">@AuditWords.Who</h2>
+      <dl class="detail-list">
+        <dt>Name</dt>
+        <dd>@(entry.ActorKind == AuditActorKind.MsfRespondent ? AuditWords.MsfRespondentWho : AuditWords.Person(entry.ActorKind, entry.PersonName))</dd>
+        <dt>User id</dt>
+        <dd>@if (entry.ActorUserId is { } userId){<code>@userId</code>}else{@AuditWords.None}</dd>
+        <dt>Address</dt>
+        <dd>
+          @(entry.ActorIpAddress ?? AuditWords.None)
+          @if (cut is not null)
+          {
+            <br /><span class="muted text-sm">@cut</span>
+          }
+        </dd>
+      </dl>
+    </section>
+    <section class="detail-card user-section" aria-labelledby="e-su">
+      <h2 id="e-su">@AuditWords.WhatItWasDoneTo</h2>
+      @if (entry.SubjectType is null && entry.SubjectId is null)
+      {
+        <p>@AuditWords.NoSubject</p>
+      }
+      else
+      {
+        <dl class="detail-list">
+          <dt>Type</dt>
+          <dd>@(entry.SubjectType ?? AuditWords.None)</dd>
+          <dt>Id</dt>
+          <dd>@if (entry.SubjectId is { } subjectId){<code>@subjectId</code>}else{@AuditWords.None}</dd>
+          @if (entry.InstitutionName is { } institution)
+          {
+            <dt>Institution</dt>
+            <dd>@institution</dd>
+          }
+          @if (entry.SpecialityName is { } speciality)
+          {
+            <dt>Speciality</dt>
+            <dd>@speciality</dd>
+          }
+        </dl>
+      }
+    </section>
+    @if (entry.SummaryJson is { } payload)
+    {
+      @* S4: the section carries no name; its region is named once, by the h2. Its ceiling and scroll are R2's. *@
+      <section class="detail-card user-section">
+        <h2 id="e-pl">@AuditWords.Payload</h2>
+        <p class="muted text-sm">@AuditWords.PayloadNote</p>
+        <pre class="code-block code-block--region" tabindex="0" role="region" aria-labelledby="e-pl">@AuditWords.LaidOut(payload)</pre>
+      </section>
+    }
+  };
+
   [Parameter]
   public Guid Id { get; set; }
 
-  private AuditEntryDto? _entry;
-  private string? _errorMessage;
-  private bool _isAdmin;
-  private bool _loaded;
+  /// <summary>The log's address the entry was opened from (T277), allow-listed by <see cref="AuditLinks.SafeLogReturn" />.</summary>
+  [SupplyParameterFromQuery(Name = AuditLinks.BackParameter)]
+  public string? Back { get; set; }
 
-  protected override async Task OnInitializedAsync()
+  private AuditEntryDetailDto? _entry;
+  private string? _loadError;
+  private bool _loading = true;
+  private bool _read;
+  private Guid? _readId;
+
+  private string LogReturn => AuditLinks.SafeLogReturn(Back);
+
+  private bool IsUnavailable => !_loading && _loadError is null && _read && _entry is null;
+
+  /// <summary>The h1, the tab and the crumb: "Audit entry", or "Audit entry unavailable" (T4).</summary>
+  private string Heading => IsUnavailable ? AuditWords.EntryUnavailableTitle : AuditWords.EntryTitle;
+
+  private string? Subtitle => _entry is { } entry ? AuditWords.EntrySubtitle(entry) : null;
+
+  protected override async Task OnParametersSetAsync()
   {
-    var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-    _isAdmin = authState.User.IsInRole(Wombat.Domain.Identity.WombatRoles.Administrator);
+    if (_readId != Id)
+    {
+      _readId = Id;
+      await LoadAsync();
+    }
+  }
 
+  private async Task LoadAsync()
+  {
+    _loading = true;
+    _loadError = null;
+    _read = false;
+    _entry = null;
     try
     {
-      _entry = await Sender.Send(new Wombat.Application.Features.Audit.Queries.GetAuditEntryById.GetAuditEntryByIdQuery(Id, authState.User));
+      var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+      _entry = await Sender.Send(new GetAuditEntryByIdQuery(Id, user));
+      _read = true;
     }
-    catch (Exception ex)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      _errorMessage = RefusalText.Of(ex);
+      // T329: never the exception's text on the page; the cause goes to the log.
+      Logger.LogError(exception, "Audit entry {AuditEntryId} could not be read.", Id);
+      _loadError = AuditWords.EntryLoadFailed;
     }
     finally
     {
-      _loaded = true;
+      _loading = false;
     }
   }
+
+  // S3: once a Try again has read, the h1 takes the focus.
+  private ValueTask FocusHeadingAsync() => PageFocus.FocusHeadingAsync(JS);
 }

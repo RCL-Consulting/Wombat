@@ -699,7 +699,7 @@ How to play).
 ```text
 Step 1.23 — KGK's own record
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
-Route: / → /admin/institutions/{Id:int} → /admin/institutions/new → /access-denied → /not-found
+Route: / → /admin/institutions/{Id:int} → /admin/institutions/new → /access-denied → /admin/institutions/{Id:int}
 Do: From Home, press Open Kgosi Kgari Teaching Hospital on the Your institution card. Read the record and change
   nothing. Then type `/admin/institutions/new`, and the Demo Institution's id at `/admin/institutions/{Id}`.
 Expect: KGK's record opens at `/admin/institutions/{InstitutionId}`, titled by its name: the heading and the tab read
@@ -714,8 +714,10 @@ Expect: KGK's record opens at `/admin/institutions/{InstitutionId}`, titled by i
   (`DeactivateInstitutionCommand`; DESIGN.md § Table system, T211).
   `/admin/institutions/new` is "You cannot open this page" ("Your role (Institutional admin) does not open this page."),
   not a Create institution form: creating an institution is the Administrator's alone (T376, S12; T291 item 8).
-  The Demo Institution's id sends her to Page not found, not "You cannot open this page". The product never confirms
-  that a record outside her institution exists (CLAUDE.md § InstitutionalAdmin scope-aware powers).
+  The Demo Institution's id stays at its address and shows "Institution unavailable", in the heading and the tab, with
+  "This institution does not exist, or you cannot open it." and Go to Home, under the trail Home › Institution
+  unavailable; never "You cannot open this page" (T400, Q17, R2-I20). The product never confirms that a record outside
+  her institution exists (CLAUDE.md § InstitutionalAdmin scope-aware powers): an unknown id reads the same.
 
 Step 2.12 — Mbatha reviews KGK's users
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
@@ -890,12 +892,15 @@ Expect: Roles and scope reads "**Pieter du Plessis holds no role: they left the 
 
 Step A.5.5 — Another institution's records, by id
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
-Route: /admin/institutions/{Id:int} → /not-found → /admin/users/{UserId}
+Route: /admin/institutions/{Id:int} → /admin/users/{UserId}
 Do: Open the Demo Institution's page by its id. Then open the page of the dev trainee `trainee@wombat.local` by that
   account's id.
-Expect: The institution shows Page not found, not "You cannot open this page". The user shows "User unavailable" ("The
-  user could not be found or is outside your scope."), headed and tabbed "User", under Home › Users › User, with Go to
-  Users and no Back to users (T376, P23). Neither page confirms that the record exists (CLAUDE.md: 404, not 403).
+Expect: The institution stays at its address and shows "Institution unavailable", in the heading and the tab, with
+  "This institution does not exist, or you cannot open it." and Go to Home, under the trail Home › Institution
+  unavailable; never "You cannot open this page" (T400, Q17, R2-I20). An unknown id reads the same. The user shows
+  "User unavailable" ("The user could not be found or is outside your scope."), headed and tabbed "User", under Home ›
+  Users › User, with Go to Users and no Back to users (T376, P23). Neither page confirms that the record exists
+  (CLAUDE.md: 404, not 403).
 
 Step A.6.3 — Prof Mbatha edits her own institution
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha

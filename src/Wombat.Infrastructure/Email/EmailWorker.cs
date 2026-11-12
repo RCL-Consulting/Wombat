@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Wombat.Application.Common.Email;
+using Wombat.Domain.Email;
 
 namespace Wombat.Infrastructure.Email;
 
@@ -28,6 +29,13 @@ namespace Wombat.Infrastructure.Email;
 /// Every line it writes about a mail names the mail by its reference and its tags, never by an address, and an exception
 /// about a mail is logged with the mail's addresses taken out of its text (<see cref="EmailLog" />, T282). The line that
 /// says a mail was sent is written here too, on the attempt that sent it.
+/// </para>
+/// <para>
+/// Every mail it finishes with is also recorded in <c>EmailOutcomes</c> (T400, flow 18, Q18, K3), whether or not it asks
+/// for a report: sent; dropped after its last attempt, with the server's refusal as redacted; or dropped with no refusal,
+/// abandoned as the host stops or after a failed attempt while it waited to retry. Home's Mail line reads those rows. The
+/// mail cut off in flight records nothing, as it reports nothing. A recording that fails is logged and never stops the
+/// next mail.
 /// </para>
 /// </remarks>
 public sealed class EmailWorker : BackgroundService
@@ -106,6 +114,7 @@ public sealed class EmailWorker : BackgroundService
         _logger.LogWarning(
             "Email {Reference} (tags: {Tags}) abandoned unsent: the app is shutting down.",
             mail.Reference, EmailLog.DescribeTags(mail.Message));
+        await RecordAsync(mail, EmailOutcome.Dropped(UtcNow, refusal: null));
         await ReportAsync(mail, EmailDeliveryOutcome.Dropped(0, UtcNow));
     }
 
@@ -147,6 +156,7 @@ public sealed class EmailWorker : BackgroundService
                 _logger.LogInformation(
                     "Email {Reference} (tags: {Tags}) sent on attempt {Attempt}.",
                     mail.Reference, EmailLog.DescribeTags(message), attempt);
+                await RecordAsync(mail, EmailOutcome.Sent(UtcNow));
                 return EmailDeliveryOutcome.Delivered(attempt, UtcNow);
             }
 
@@ -157,6 +167,8 @@ public sealed class EmailWorker : BackgroundService
                 _logger.LogError(failure,
                     "Email {Reference} (tags: {Tags}) failed after {MaxRetries} attempts. Message dropped.",
                     mail.Reference, EmailLog.DescribeTags(message), MaxRetries);
+                // The refusal as the log has it, with the mail's addresses taken out (T282); never the address itself (Q18).
+                await RecordAsync(mail, EmailOutcome.Dropped(UtcNow, failure.Message));
                 return EmailDeliveryOutcome.Dropped(attempt, UtcNow);
             }
 
@@ -176,6 +188,7 @@ public sealed class EmailWorker : BackgroundService
                 _logger.LogWarning(
                     "Email {Reference} (tags: {Tags}) abandoned after attempt {Attempt}: the app is shutting down.",
                     mail.Reference, EmailLog.DescribeTags(message), attempt);
+                await RecordAsync(mail, EmailOutcome.Dropped(UtcNow, refusal: null));
                 return EmailDeliveryOutcome.Dropped(attempt, UtcNow);
             }
         }
@@ -212,6 +225,42 @@ public sealed class EmailWorker : BackgroundService
                 mail.Reference, EmailLog.DescribeTags(message), outcome.Sent);
         }
     }
+
+    /// <summary>
+    /// Records what became of a mail in <c>EmailOutcomes</c>, for Home (T400, flow 18, Q18, K3), on a scope of its own.
+    /// Never throws: a recording that fails is logged, and the next mail is sent. A host with no recorder (none is
+    /// registered without a mail server) records nothing.
+    /// </summary>
+    /// <remarks>
+    /// Not cancelled by the host's stop, as a report is not: the outcome is already known, and it is recorded as the host
+    /// stops too. But bounded by <see cref="RecordTimeout" /> (the build review's N-8): with the database down, a recording
+    /// that waits for a connection would hold up the next live mail, and each mail abandoned at stop, until the host's
+    /// shutdown timeout. A recording cut off is logged like any other that fails.
+    /// </remarks>
+    private async Task RecordAsync(QueuedEmail mail, EmailOutcome outcome)
+    {
+        try
+        {
+            using var bounded = new CancellationTokenSource(RecordTimeout);
+            await using var scope = _scopeFactory.CreateAsyncScope();
+            var recorder = scope.ServiceProvider.GetService<EmailOutcomeRecorder>();
+            if (recorder is null)
+            {
+                return;
+            }
+
+            await recorder.RecordAsync(outcome, bounded.Token);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(EmailLog.Redact(ex, mail.Message),
+                "The outcome of email {Reference} (tags: {Tags}, kind: {Kind}) could not be recorded for Home.",
+                mail.Reference, EmailLog.DescribeTags(mail.Message), outcome.Kind);
+        }
+    }
+
+    /// <summary>How long one outcome's recording may wait for the database before it is given up and logged (N-8).</summary>
+    internal static readonly TimeSpan RecordTimeout = TimeSpan.FromSeconds(10);
 
     private DateTime UtcNow => _timeProvider.GetUtcNow().UtcDateTime;
 }

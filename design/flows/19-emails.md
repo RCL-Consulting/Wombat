@@ -764,7 +764,8 @@ Step A.2.4 — devadmin runs the weekly digest, and Mr Smit is skipped
 Role: Administrator — devadmin
 Route: /admin/jobs
 Do: Run weekly-coordinator-digest now, then read the application log.
-Expect: "Job 'weekly-coordinator-digest' dispatched."; the row's last run is now, and it reads Succeeded. The log holds
+Expect: "Ran weekly-coordinator-digest: Succeeded at ‹YYYY-MM-DD hh:mm› SAST." above the list, focused, once the run
+  has ended (T400, R3-J04); the row's last run is now, and it reads Succeeded. The log holds
   "WeeklyCoordinatorDigestJob: digests sent n; coordinators skipped: …", with at least one counted as "opted out of
   digest emails". No "Your weekly Wombat digest" mail greets Pieter.
 

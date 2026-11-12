@@ -53,16 +53,26 @@ Route: /account/login → /
 Do: Sign in with `devadmin@wombat.local` and the dev password that `DevUserSeeder` gives it.
 Expect: Home is headed "Home", with "Administrator · Semester N, YYYY" under it, naming the current semester, and its
   header offers no action. No switch is offered, in the sidebar or on Home, since devadmin holds one role. The dashboard
-  has two cards:
-  - System health, which shows the database connection as healthy;
-  - Users across institutions, which counts the seeded accounts (8, or 9 where the bootstrap Administrator exists).
+  has two cards (T400, R3-H02):
+  - System health, three lines in this order, each its name and its state as a word on a badge, with no coloured dot
+    and no task id: Database OK, "The database answers."; Mail Not configured, "Mail is written to the log, not sent."
+    and "To send mail, set Email__SmtpHost on the server and restart Wombat."; Scheduled jobs OK, "7 jobs last
+    succeeded. weekly-coordinator-digest has not run yet: its first run is ‹next Monday› 10:00 SAST." Scheduled jobs
+    is a button in the card's footer;
+  - Accounts, which counts every account but an erased one: the seeded accounts, 8, or 9 where the bootstrap
+    Administrator exists, over "Every account Wombat holds but an erased one." and "None is locked.", with Users a
+    button in the card's footer.
   There is no Maintenance card: Curriculum progress is linked from the Curricula page's header (T335).
   The sidebar reads "Acting as Administrator", with no switch, over his menu, grouped: Home; Platform: Scheduled jobs,
   Audit log, SSO mappings, Data rights requests; Organisations: Institutions, Colleges; People: Users, Invitations;
   Catalogue: EPAs, Curricula, Activity types, Entrustment scales; Reviews: Decisions due, Committee reviews, Decision
   panels; then My data rights under a rule (DESIGN.md § The NavMenu). Home is lit. The top bar names him "Demo
   Administrator", with Sign out beside it.
-Note: The sign-in page offers no institutional sign-in, because dev configures no SSO provider (appendix).
+Note: The sign-in page offers no institutional sign-in, because dev configures no SSO provider (appendix). The
+  scheduler runs each job never run whose time fell in the last day at its first check, within 30 seconds of the first
+  start, so by now seven jobs have run once; the weekly digest (Mondays at 10:00 SAST) has not, unless the replay
+  starts on a Monday after 10:00 SAST or a Tuesday before it, and then the line reads "All 8 jobs last succeeded."
+  The replay sets no mail server, so Mail reads Not configured throughout (Q18).
 Actual (2026-11-10, T398 replay, wombat_scenario_t398): As expected: sign-in landed on Home, tab "Home · Wombat",
   "Administrator · Semester 2, 2026", no header action, no switch; System health (Database connection) and Users
   across institutions 9; no Maintenance card. The sidebar reads "Acting as Administrator" over Home; Platform
@@ -70,8 +80,9 @@ Actual (2026-11-10, T398 replay, wombat_scenario_t398): As expected: sign-in lan
   (Users, Invitations); Catalogue (EPAs, Curricula, Activity types, Entrustment scales); Reviews (Decisions due,
   Committee reviews, Decision panels); then My data rights; Home lit; top bar "Demo Administrator", Sign out. System
   health still lists "Email queue (T012)" and "Last nightly job (T024)".
-Gap: [F-1.1a, T327] still: System health shows "Email queue (T012)" and "Last nightly job (T024)" with a hard-coded
-  warning dot that reads no data, and prints internal task ids to the operator. (known-task)
+Gap: F-1.1a, T327 closed by T400 (2026-11-11): System health's lines read their state in words, with no stub, no dot and
+  no task id. The T398 Actual above predates T400 (System health's stubs, Users across institutions); the next replay
+  re-reads the step.
 
 ### Step 1.2 — The CPSA is among the Colleges
 Role: Administrator — the platform operator
@@ -210,12 +221,17 @@ Do: Open Institutions and read the list. Then press Create institution and enter
   - Short code `KGK`;
   - Contact email `paeds-admin@kgk.wombat.local`.
   Save. Record KGK's id as `{InstitutionId}`.
-Expect: The list holds one row, the `Demo Institution` (`DEMO`), Active, offering Edit only. The create form asks for
-  Name, Short code and Contact email, and has no Status field. Save lands on KGK's own record, headed "Edit
-  institution", with the browser tab reading "Edit institution · Wombat" (T190). There, Active is ticked and
-  Deactivate is offered. Back on the list, KGK is a second row: Active, and created today. An empty Save reads "Type the
-  institution's name. The record was not saved." under Name and "Type a short code. The record was not saved." under
-  Short code.
+Expect: The list, subtitled "The institutions that hold Wombat's people and records.", holds one row, the `Demo
+  Institution` (`DEMO`), Active, offering Edit only. The create form, subtitled "A new institution is active from the
+  moment it is saved, so its people can be invited.", reads "* marks a field you must fill in." and asks for Name *
+  ("Up to 200 characters."), Short code * ("Up to 32 characters.") and Contact email ("Optional."); it has no Status
+  field. An empty Save reads "Type the institution's name. The record was not saved." under Name and "Type a short
+  code. The record was not saved." under Short code, each field marked and described by its refusal, and Name takes the
+  focus. Save lands on KGK's own record, headed "Kgosi Kgari Teaching Hospital", with the browser tab reading "Kgosi
+  Kgari Teaching Hospital · Wombat" and "KGK · Active" under the heading; "Kgosi Kgari Teaching Hospital created." above
+  the form takes the focus (T400, R3-I11). There, Status reads Active, "A new invitation can name it.", with
+  Deactivate… offered in a section of its own. Back on the list (the trail's Institutions), KGK is a second row: Active,
+  and created today, a day with no time.
 Note: This step used to be an SQL stand-in (T159). Played through the page, the save now writes KGK's audit row, which
   the stand-in never did. Since T376 the create form refuses in Wombat's words (InstitutionCreate.razor, the record's
   own refusals), so F-1.6b is expected closed.
@@ -225,8 +241,8 @@ Actual (2026-11-10, T398 replay, wombat_scenario_t398): As expected: one row, De
   landed on /admin/institutions/2, "Edit institution", tab "Edit institution · Wombat", Active ticked, Deactivate
   offered; the list then shows KGK Active, created 2026-11-10 17:17. {InstitutionId} = 2. The list's subtitle still
   reads "Maintain institution records and drill into their speciality structure."
-Gap: [F-1.6a, T326] still: the Institutions list's subtitle promises a speciality drill-down that has not existed
-  since T091 (each row offers Edit only). (known-task)
+Gap: F-1.6a, T326 closed by T400 (2026-11-11): the list's subtitle promises no drill-down. The T398 Actual above
+  predates T400 ("Edit institution", the Active box, a created time); the next replay re-reads the step.
 
 ### Step 1.7 — Invite Prof Mbatha as KGK's InstitutionalAdmin
 Role: Administrator — the platform operator
@@ -341,11 +357,12 @@ Gap: none
 Role: Administrator — the platform operator
 Route: /admin/invitations → /
 Do: Reload the invitations list, then go Home.
-Expect: Active invitations reads "No active invitations", because a used invitation leaves the list. The dashboard's
-  count of registered users is two higher than in Step 1.1.
+Expect: Active invitations reads "No active invitations", because a used invitation leaves the list. Home's Accounts
+  reads two higher than in Step 1.1: 11 where Step 1.1 read 9, Dr Kruger's and Prof Mbatha's accounts added (Steps 1.8,
+  1.10).
 Actual (2026-11-10, T398 replay, wombat_scenario_t398): As expected: the reloaded list reads "No active invitations";
   Home's Users across institutions reads 11 (9 in Step 1.1).
-Gap: none
+Gap: none. The T398 Actual above predates T400 (Users across institutions); the next replay re-reads the step.
 
 ## Phase 1.D — Dr Kruger checks the national catalogue
 
@@ -691,7 +708,7 @@ Gap: none
 
 ### Step 1.23 — KGK's own record
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
-Route: / → /admin/institutions/{Id:int} → /admin/institutions/new → /access-denied → /not-found
+Route: / → /admin/institutions/{Id:int} → /admin/institutions/new → /access-denied → /admin/institutions/{Id:int}
 Do: From Home, press Open Kgosi Kgari Teaching Hospital on the Your institution card. Read the record and change
   nothing. Then type `/admin/institutions/new`, and the Demo Institution's id at `/admin/institutions/{Id}`.
 Expect: KGK's record opens at `/admin/institutions/{InstitutionId}`, titled by its name: the heading and the tab read
@@ -706,10 +723,13 @@ Expect: KGK's record opens at `/admin/institutions/{InstitutionId}`, titled by i
   (`DeactivateInstitutionCommand`; DESIGN.md § Table system, T211).
   `/admin/institutions/new` is "You cannot open this page" ("Your role (Institutional admin) does not open this page."),
   not a Create institution form: creating an institution is the Administrator's alone (T376, S12; T291 item 8).
-  The Demo Institution's id sends her to Page not found, not "You cannot open this page". The product never confirms
-  that a record outside her institution exists (CLAUDE.md § InstitutionalAdmin scope-aware powers).
+  The Demo Institution's id stays at its address and shows "Institution unavailable", in the heading and the tab, with
+  "This institution does not exist, or you cannot open it." and Go to Home, under the trail Home › Institution
+  unavailable; never "You cannot open this page" (T400, Q17, R2-I20). The product never confirms that a record outside
+  her institution exists (CLAUDE.md § InstitutionalAdmin scope-aware powers): an unknown id reads the same.
 Note: Until T376 nothing in her nav or Home led to the record, which was headed "Edit institution", and `/new` drew a
-  Create institution form that `CreateInstitutionCommand` always refused her (F-1.23c). Correcting the contact email is
+  Create institution form that `CreateInstitutionCommand` always refused her (F-1.23c). Until T400 the Demo
+  Institution's id sent her to Page not found. Correcting the contact email is
   2 presses and 1 field from Home (Open Kgosi Kgari Teaching Hospital, the email, Save changes), at 1280 and at 390.
 Actual (2026-11-10, T398 replay, wombat_scenario_t398): As expected: from Home, Open Kgosi Kgari Teaching Hospital
   opened /admin/institutions/2: heading and tab "Kgosi Kgari Teaching Hospital", trail Home › Kgosi Kgari Teaching
@@ -720,7 +740,8 @@ Actual (2026-11-10, T398 replay, wombat_scenario_t398): As expected: from Home, 
   and Save changes are 44 px tall. Typed, /admin/institutions/new reads "You cannot open this page" / "Your role
   (Institutional admin) does not open this page." with Go to Home, no form; /admin/institutions/1 lands on /not-found,
   "Page not found", nothing lit.
-Gap: none
+Gap: none. The T398 Actual above predates T400 (the Demo Institution's id at Page not found); the next replay re-reads
+  the step.
 
 ## Phase 1.F — The College's instruments, and one KGK type from the builder
 

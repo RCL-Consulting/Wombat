@@ -1,211 +1,447 @@
 @page "/admin/audit"
 @attribute [Authorize(Policy = "AdministratorOrInstitutionalAdmin")]
+@using Wombat.Application.Common.Extensions
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+@inject TimeProvider Clock
+@inject IJSRuntime JS
+@inject ILogger<AuditList> Logger
 
 <PageTitle>Audit log · Wombat</PageTitle>
 
-<PageHeader Title="Audit log" Subtitle="Append-only record of every consequential action. Default view: last 24 hours.">
-  <Actions>
-    <button class="btn btn-outline" @onclick="ApplyFilters">
-      <Icon Name="search" />
-      Apply filters
-    </button>
-  </Actions>
-</PageHeader>
+@*
+  The audit log (T400, flow 18, lane C; boards R3-L01–L13, R2-L14, L15). Every consequential action the caller may read,
+  newest first, fifty a page.
 
-@* The list page's filter (DESIGN.md § Table system): a search-container of labelled search fields. Until T266 it was a
-   filter-bar, -row and -field, none of which app.css defines, so the fields stacked full width with no card round them. *@
-<div class="search-container shadow">
-  <div class="search-grid">
-    <div class="search-field">
-      <label for="audit-category">Category</label>
-      <select id="audit-category" class="form-select" @bind="_filterCategory">
-        <option value="">All</option>
-        @foreach (var cat in Enum.GetValues<AuditCategory>())
+  - The subtitle by role (T12): the institution's administrator's own institution by name; the Administrator's every
+    institution and those with none.
+  - The filters (Q8, T1, T3): in the boards' order and words, Category by label (K15), From and To on the South African
+    clock (K7), the Institution filter for the Administrator alone (T19, K15); then Show and, once a filter is applied,
+    Clear filters (T328: never in the header). Nothing filters as it is typed: Show goes to the page's own address with the
+    values, so the trail back from an entry returns to the same rows (T18, T277). Show waits for the first read (R2-L14).
+  - The window (T21): fixed when the page opens (the last 24 hours) or when Show is pressed, carried in the address and
+    said under the count, so a page turn reads between the same two moments.
+  - The count line takes the focus after Show and is no live region (N2); the list's h2 "Actions" after a page turn (N1,
+    T264); Category after Clear filters or "Clear the filters".
+  - The table (StackWide, in the 1150px stack, C1): When, Person (the institution under the name for the Administrator,
+    T19; the MSF respondent and a row with nobody signed in by kind, K8, T20), Category, Action, Result (a failure's
+    stored words under its badge, K10), and Detail named for its row with the zone (C7).
+  - PagerControls in its order at 50 (M2). Loading and a failed read in fixed words (T329), never the exception's text.
+*@
+<PageHeader Title="Audit log" Subtitle="@Subtitle" />
+
+<div class="people-page audit-page" aria-busy="@(_loading ? "true" : null)">
+  <form class="search-container people-filter" role="search" aria-label="@AuditWords.FilterName" novalidate
+        @onsubmit="ShowAsync" @onsubmit:preventDefault="true">
+    <div class="search-grid">
+      <div class="search-field">
+        <label for="@CategoryId">@AuditWords.CategoryLabel</label>
+        <select id="@CategoryId" class="form-select" @bind="_formCategory">
+          <option value="">@AuditWords.AllCategories</option>
+          @foreach (var category in AuditWords.Categories)
+          {
+            <option value="@category.Value">@category.Label</option>
+          }
+        </select>
+      </div>
+      <div class="search-field">
+        <label for="a-action">@AuditWords.ActionLabel</label>
+        <input id="a-action" type="text" class="form-control" autocomplete="off" spellcheck="false"
+               aria-describedby="a-action-help" @bind="_formAction" />
+        <p class="field-help" id="a-action-help">@AuditWords.ActionHelp</p>
+      </div>
+      <div class="search-field">
+        <label for="a-user">@AuditWords.PersonLabel</label>
+        <input id="a-user" type="text" class="form-control" autocomplete="off" spellcheck="false" @bind="_formPerson" />
+      </div>
+      <div class="search-field">
+        <label for="a-subject">@AuditWords.SubjectLabel</label>
+        <input id="a-subject" type="text" class="form-control" autocomplete="off" spellcheck="false" @bind="_formSubject" />
+      </div>
+      <div class="search-field">
+        <label for="a-from">@AuditWords.FromLabel</label>
+        @* Bound by hand: Blazor's datetime-local binding takes no string, and the value stays as typed, to the minute. *@
+        <input id="a-from" type="datetime-local" class="form-control" value="@_formFrom" @onchange="@(e => _formFrom = e.Value?.ToString())" />
+      </div>
+      <div class="search-field">
+        <label for="a-to">@AuditWords.ToLabel</label>
+        <input id="a-to" type="datetime-local" class="form-control" aria-describedby="a-to-help" value="@_formTo" @onchange="@(e => _formTo = e.Value?.ToString())" />
+        <p class="field-help" id="a-to-help">@AuditWords.ToHelp</p>
+      </div>
+      <div class="search-field">
+        <label for="a-result">@AuditWords.ResultLabel</label>
+        <select id="a-result" class="form-select" @bind="_formResult">
+          <option value="">@AuditWords.AllResults</option>
+          <option value="@AuditLogAddress.SuccessValue">@AuditWords.SuccessOnly</option>
+          <option value="@AuditLogAddress.FailureValue">@AuditWords.FailuresOnly</option>
+        </select>
+      </div>
+      @if (_isAdministrator)
+      {
+        <div class="search-field">
+          <label for="a-inst">@AuditWords.InstitutionLabel</label>
+          <select id="a-inst" class="form-select" @bind="_formInstitution">
+            <option value="">@AuditWords.AllInstitutions</option>
+            <option value="@AuditLogAddress.NoInstitutionValue">@AuditWords.NoInstitution</option>
+            @foreach (var institution in _institutions)
+            {
+              <option value="@institution.Id">@institution.Name</option>
+            }
+          </select>
+        </div>
+      }
+    </div>
+    <div class="filter-actions">
+      @* Show waits for the first read (R2-L14): aria-disabled, so it keeps its place and its focus, and a press sends nothing. *@
+      <button type="submit" class="btn btn-primary" aria-disabled="@(_loading ? "true" : null)">@AuditWords.Show</button>
+      @if (_applied.IsFiltered)
+      {
+        <button type="button" class="btn btn-outline" @onclick="ClearAsync">@AuditWords.ClearFilters</button>
+      }
+    </div>
+  </form>
+
+  <section class="list-section" aria-labelledby="@HeadingId">
+    <h2 id="@HeadingId" class="list-section-title" tabindex="-1">@AuditWords.ListHeading</h2>
+    <StatePanel @ref="_panel" IsLoading="_loading" LoadError="@_loadError" OnRetry="RetryAsync" FocusAfterRetry="FocusHeadingAsync">
+      <LoadingContent>
+        <p class="loading-line" role="status">@AuditWords.Loading</p>
+        <div class="detail-card" aria-hidden="true">
+          <div class="skeleton skel-title"></div>
+          <div class="skeleton skel-line"></div>
+          <div class="skeleton skel-line"></div>
+          <div class="skeleton skel-line"></div>
+          <div class="skeleton skel-line skel-short"></div>
+        </div>
+      </LoadingContent>
+      <ChildContent>
+        @if (_result is { } result)
         {
-          <option value="@cat">@cat</option>
+          @Rows(result)
         }
-      </select>
-    </div>
-    <div class="search-field">
-      <label for="audit-action">Action</label>
-      <input id="audit-action" class="form-control" type="text" placeholder="e.g. CreateInstitutionCommand" @bind="_filterAction" />
-    </div>
-    <div class="search-field">
-      <label for="audit-actor">Actor user ID</label>
-      <input id="audit-actor" class="form-control" type="text" @bind="_filterActorUserId" />
-    </div>
-    <div class="search-field">
-      <label for="audit-subject-type">Subject type</label>
-      <input id="audit-subject-type" class="form-control" type="text" placeholder="e.g. CommitteeReview" @bind="_filterSubjectType" />
-    </div>
-    <div class="search-field">
-      <label for="audit-from">From (UTC)</label>
-      <input id="audit-from" class="form-control" type="datetime-local" @bind="_filterFrom" />
-    </div>
-    <div class="search-field">
-      <label for="audit-to">To (UTC)</label>
-      <input id="audit-to" class="form-control" type="datetime-local" @bind="_filterTo" />
-    </div>
-    <div class="search-field">
-      <label for="audit-result">Result</label>
-      <select id="audit-result" class="form-select" @bind="_filterSuccess">
-        <option value="">All</option>
-        <option value="true">Success only</option>
-        <option value="false">Failures only</option>
-      </select>
-    </div>
-  </div>
+      </ChildContent>
+    </StatePanel>
+  </section>
 </div>
 
-<StatePanel IsLoading="@(_result is null && string.IsNullOrWhiteSpace(_errorMessage))" LoadError="@_errorMessage" IsEmpty="@(_result?.Items.Count == 0)" EmptyTitle="No entries" EmptyBody="No audit entries match the current filters.">
-  @if (_result is not null)
-  {
-    var rowNames = RowNames.Distinct(
-      _result.Items,
-      row => row.Id,
-      row => $"{row.Action} at {row.OccurredAt.ToString("yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture)}",
-      row => $" by {row.ActorDisplay ?? "system"}",
-      row => $", entry {row.Id}");
-    <DataTable TItem="AuditEntryDto" Items="_result.Items" Caption="Audit entries">
-      <HeaderRow>
-        <tr>
-          <th>When (UTC)</th>
-          <th>Category</th>
-          <th>Action</th>
-          <th>Actor</th>
-          <th>Subject</th>
-          <th>Result</th>
-          <th><span class="visually-hidden">Actions</span></th>
-        </tr>
-      </HeaderRow>
-      <Row Context="entry">
-        <tr>
-          <td><code>@entry.OccurredAt.ToString("yyyy-MM-dd HH:mm:ss")</code></td>
-          @* A category is not a state, so it is not a badge (DESIGN.md § Badges). *@
-          <td>@entry.Category</td>
-          <td>
-            <span class="text-sm">@entry.Action</span>
-          </td>
-          <td>
-            @if (entry.ActorDisplay is not null)
-            {
-              <span>@entry.ActorDisplay</span>
-              <div class="text-muted text-sm">@entry.ActorIpAddress</div>
-            }
-            else
-            {
-              <span class="text-muted">system</span>
-            }
-          </td>
-          <td>
-            @if (entry.SubjectType is not null)
-            {
-              <span>@entry.SubjectType</span>
-              @if (entry.SubjectId is not null)
-              {
-                <div class="text-muted text-sm">@entry.SubjectId</div>
-              }
-            }
-          </td>
-          <td>
-            <span class="badge @BadgeFor.AuditResult(entry.Success)">@(entry.Success ? "OK" : "FAILED")</span>
-          </td>
-          <td>
-            @* T239: named by its row, what was done and when, and by whom where two entries share both. *@
-            <a class="btn btn-outline btn-sm" href="/admin/audit/@entry.Id" aria-label="@($"Detail: {rowNames[entry.Id]}")">Detail</a>
-          </td>
-        </tr>
-      </Row>
-    </DataTable>
-
-    @* The pager's own classes (DESIGN.md § Pager). The page size is fixed here, so it is not PagerControls, which offers
-       one. *@
-    <div class="pager">
-      <span class="pager-info">
-        Showing @((_page - 1) * _pageSize + 1)–@(Math.Min(_page * _pageSize, _result.TotalCount)) of @_result.TotalCount
-      </span>
-      <div class="pager-actions">
-        <button class="btn btn-outline btn-sm" @onclick="PreviousPage" disabled="@(_page <= 1)">← Previous</button>
-        <span class="text-sm">Page @_page</span>
-        <button class="btn btn-outline btn-sm" @onclick="NextPage" disabled="@(_page * _pageSize >= _result.TotalCount)">Next →</button>
-      </div>
-    </div>
-  }
-</StatePanel>
-
 @code {
+  private const string HeadingId = "audit-actions";
+  private const string CountId = "audit-count";
+  private const string CategoryId = "a-cat";
+
+  private static string DetailId(Guid entryId) => $"detail-{entryId}";
+
+  private RenderFragment Rows(PagedAuditResult result) => __builder =>
+  {
+    @* N2: the count line takes the focus after Show; it is not a live region. *@
+    <p id="@CountId" tabindex="-1">@AuditWords.CountLine(result.TotalCount)</p>
+    @* A standing notice, not a live region. *@
+    <p class="muted text-sm">@AuditWords.WindowLine(result.From, result.To, _applied.Fixed, _applied.From is not null, _applied.To is not null)</p>
+    @if (result.Items.Count == 0)
+    {
+      @* K16: true of any filter, the window's included. *@
+      <div class="detail-card detail-card--empty">
+        <div class="state-panel-title">@AuditWords.NoMatchTitle</div>
+        <div class="state-panel-copy">@AuditWords.NoMatchBody</div>
+        @if (_applied.IsFiltered)
+        {
+          <div class="form-actions">
+            <button type="button" class="btn btn-outline" @onclick="ClearAsync">@AuditWords.ClearTheFilters</button>
+          </div>
+        }
+      </div>
+    }
+    else
+    {
+      var names = AuditWords.DetailNames(result.Items);
+      var back = AuditLinks.LogAt(_applied with { Page = result.Page, PageSize = result.PageSize });
+      <DataTable TItem="AuditLogRowDto" Items="result.Items" StackWide="true" Caption="@AuditWords.Caption">
+        <HeaderRow>
+          <tr role="row">
+            <th scope="col" role="columnheader">When</th>
+            <th scope="col" role="columnheader">Person</th>
+            <th scope="col" role="columnheader">Category</th>
+            <th scope="col" role="columnheader" class="col-wrap">Action</th>
+            <th scope="col" role="columnheader">Result</th>
+            <th scope="col" role="columnheader" class="col-fit--wide"><span class="visually-hidden">@AuditWords.Detail</span></th>
+          </tr>
+        </HeaderRow>
+        <Row Context="row">
+          <tr role="row" @key="row.Id">
+            @* A time breaks only between its day and its hour. *@
+            <td role="cell" data-label="When"><span class="nowrap">@AuditWords.WhenDay(row.OccurredAt)</span> <span class="nowrap">@AuditWords.WhenHour(row.OccurredAt)</span></td>
+            <td role="cell" data-label="Person">
+              @if (result.EveryInstitution)
+              {
+                <div class="person-cell">@AuditWords.Person(row.ActorKind, row.PersonName)<span>@(row.InstitutionName ?? AuditWords.NoInstitution)</span></div>
+              }
+              else
+              {
+                <div class="person-cell">@AuditWords.Person(row.ActorKind, row.PersonName)</div>
+              }
+            </td>
+            <td role="cell" data-label="Category">@AuditWords.Category(row.Category)</td>
+            <td role="cell" data-label="Action" class="col-wrap">@row.Action</td>
+            <td role="cell" data-label="Result">
+              <span class="badge @BadgeFor.AuditResult(row.Success)">@AuditWords.Result(row.Success)</span>
+              @if (!row.Success && !string.IsNullOrWhiteSpace(row.ErrorMessage))
+              {
+                <br /><span class="text-sm">@row.ErrorMessage</span>
+              }
+            </td>
+            <td role="cell" class="col-fit--wide">
+              <a id="@DetailId(row.Id)" class="btn btn-outline btn-sm" href="@AuditLinks.Entry(row.Id, back)"
+                 aria-label="@($"{AuditWords.Detail}: {names[row.Id]}")">@AuditWords.Detail</a>
+            </td>
+          </tr>
+        </Row>
+      </DataTable>
+    }
+    <PagerControls Page="result.Page" PageSize="result.PageSize" TotalCount="result.TotalCount"
+                   OnPageChanged="TurnPageAsync" OnPageSizeChanged="ChangePageSizeAsync" />
+  };
+
+  [SupplyParameterFromQuery(Name = AuditLogAddress.CategoryParameter)] public string? Category { get; set; }
+  [SupplyParameterFromQuery(Name = AuditLogAddress.ActionParameter)] public string? Action { get; set; }
+  [SupplyParameterFromQuery(Name = AuditLogAddress.PersonParameter)] public string? Person { get; set; }
+  [SupplyParameterFromQuery(Name = AuditLogAddress.SubjectParameter)] public string? Subject { get; set; }
+  [SupplyParameterFromQuery(Name = AuditLogAddress.FromParameter)] public string? From { get; set; }
+  [SupplyParameterFromQuery(Name = AuditLogAddress.ToParameter)] public string? To { get; set; }
+  [SupplyParameterFromQuery(Name = AuditLogAddress.ResultParameter)] public string? Result { get; set; }
+  [SupplyParameterFromQuery(Name = AuditLogAddress.InstitutionParameter)] public string? Institution { get; set; }
+  [SupplyParameterFromQuery(Name = AuditLogAddress.ShownParameter)] public string? Shown { get; set; }
+  [SupplyParameterFromQuery(Name = AuditLogAddress.OpenedParameter)] public string? Opened { get; set; }
+  [SupplyParameterFromQuery(Name = AuditLogAddress.PageParameter)] public string? PageNumber { get; set; }
+  [SupplyParameterFromQuery(Name = AuditLogAddress.SizeParameter)] public string? Size { get; set; }
+
+  /// <summary>The entry the reader came back from by its trail (R3-L13): its Detail takes the focus, when it is on the page.</summary>
+  [SupplyParameterFromQuery(Name = AuditLinks.EntryParameter)] public Guid? Left { get; set; }
+
+  private bool _isAdministrator;
+  private bool _authorityRead;
   private PagedAuditResult? _result;
-  private string? _errorMessage;
-  private int _page = 1;
-  private const int _pageSize = 50;
+  private IReadOnlyList<AuditInstitutionOptionDto> _institutions = [];
+  private string? _scopeName;
+  private bool _loading = true;
+  private bool _loadedOnce;
+  private string? _loadError;
+  private StatePanel? _panel;
+  private int _read;
 
-  private string _filterCategory = "";
-  private string _filterAction = "";
-  private string _filterActorUserId = "";
-  private string _filterSubjectType = "";
-  private DateTime? _filterFrom;
-  private DateTime? _filterTo;
-  private string _filterSuccess = "";
+  // What the address asked, as read (to tell a new address from a re-render), and what the page answers: the same, its
+  // window's moment fixed.
+  private AuditLogAddress? _asked;
+  private AuditLogAddress _applied = AuditLogAddress.None;
 
-  protected override async Task OnInitializedAsync()
+  // Where the focus goes once the next read is drawn: the count line after Show, the heading after a page turn, Category
+  // after a clear (N1, N2).
+  private string? _focusAfterRead;
+  private string? _focusOnArrival;
+
+  // The form's fields: what is being chosen, which changes nothing until Show.
+  private string _formCategory = string.Empty;
+  private string? _formAction;
+  private string? _formPerson;
+  private string? _formSubject;
+  private string? _formFrom;
+  private string? _formTo;
+  private string _formResult = string.Empty;
+  private string _formInstitution = string.Empty;
+
+  /// <summary>The subtitle by role (T12); for an institution's administrator, once their institution's name is read.</summary>
+  private string? Subtitle => _isAdministrator
+    ? AuditWords.EveryInstitutionSubtitle
+    : _scopeName is { } name ? AuditWords.InstitutionSubtitle(name) : null;
+
+  protected override async Task OnParametersSetAsync()
   {
-    await LoadAsync();
+    if (!_authorityRead)
+    {
+      var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+      _isAdministrator = user.IsAdministrator();
+      _authorityRead = true;
+    }
+
+    var asked = AuditLogAddress.Parse(Category, Action, Person, Subject, From, To, Result, Institution, Shown, Opened, PageNumber, Size);
+    if (!_isAdministrator)
+    {
+      // The Institution filter is the Administrator's alone (K15): for anyone else the address's is no filter.
+      asked = asked with { Institution = null };
+    }
+
+    if (_asked == asked && _loadedOnce)
+    {
+      return;
+    }
+
+    _asked = asked;
+
+    // The window is fixed once (T21, T277): the moment the address carries, or now, on arriving with none.
+    _applied = asked with { FixedAt = asked.FixedAt ?? Clock.GetUtcNow().UtcDateTime };
+    SetFields();
+
+    _focusAfterRead = _loadedOnce ? _focusOnArrival : Left is { } left ? DetailId(left) : null;
+    _focusOnArrival = null;
+    await LoadAsync(showLoading: !_loadedOnce);
+    _loadedOnce = true;
+
+    // Back from an entry whose row is not on this page (a row since gone): the focus stays where the page puts it.
+    if (Left is { } entry && _focusAfterRead == DetailId(entry) && _result?.Items.Any(row => row.Id == entry) != true)
+    {
+      _focusAfterRead = null;
+    }
   }
 
-  private async Task ApplyFilters()
+  /// <summary>The form's fields say what is applied.</summary>
+  private void SetFields()
   {
-    _page = 1;
-    await LoadAsync();
+    _formCategory = _applied.Category ?? string.Empty;
+    _formAction = _applied.Action;
+    _formPerson = _applied.Person;
+    _formSubject = _applied.Subject;
+    _formFrom = _applied.From;
+    _formTo = _applied.To;
+    _formResult = _applied.Result ?? string.Empty;
+    _formInstitution = _isAdministrator ? _applied.Institution ?? string.Empty : string.Empty;
   }
 
-  private async Task LoadAsync()
+  /// <summary>
+  /// Reads the page asked for between the window's two moments (T21): To as typed, else the moment the window was fixed;
+  /// From as typed, else the query's 24 hours before To. The first read, and Try again's, show the loading state; Show and
+  /// a page turn answer in place. A failure is logged and said in fixed words (T329).
+  /// </summary>
+  private async Task LoadAsync(bool showLoading)
   {
-    _result = null;
-    _errorMessage = null;
+    var read = ++_read;
+    if (showLoading)
+    {
+      _loading = true;
+    }
 
+    _loadError = null;
     try
     {
-      AuditCategory? category = Enum.TryParse<AuditCategory>(_filterCategory, out var cat) ? cat : null;
-      bool? successOnly = _filterSuccess switch
+      var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+      var from = AuditLogAddress.TypedTime(_applied.From) is { } typedFrom ? SastTime.FromSastInput(typedFrom) : (DateTime?)null;
+      var to = AuditLogAddress.TypedTime(_applied.To) is { } typedTo ? SastTime.FromSastInput(typedTo) : _applied.FixedAt;
+      var result = await Sender.Send(new ListAuditEntriesQuery(
+        Principal: user,
+        ActorUserId: _applied.Person,
+        Category: AuditWords.CategoryOf(_applied.Category),
+        Action: _applied.Action,
+        SubjectType: _applied.Subject,
+        From: from,
+        To: to,
+        SuccessOnly: AuditWords.SuccessOf(_applied.Result),
+        Page: _applied.Page,
+        PageSize: _applied.PageSize,
+        Institution: _isAdministrator ? AuditWords.InstitutionOf(_applied.Institution) : null));
+      if (read != _read)
       {
-        "true" => true,
-        "false" => false,
-        _ => null
-      };
+        return;
+      }
 
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      _result = await Sender.Send(new Wombat.Application.Features.Audit.Queries.ListAuditEntries.ListAuditEntriesQuery(
-        Principal: authState.User,
-        ActorUserId: string.IsNullOrWhiteSpace(_filterActorUserId) ? null : _filterActorUserId,
-        Category: category,
-        Action: string.IsNullOrWhiteSpace(_filterAction) ? null : _filterAction,
-        SubjectType: string.IsNullOrWhiteSpace(_filterSubjectType) ? null : _filterSubjectType,
-        From: _filterFrom.HasValue ? DateTime.SpecifyKind(_filterFrom.Value, DateTimeKind.Utc) : null,
-        To: _filterTo.HasValue ? DateTime.SpecifyKind(_filterTo.Value, DateTimeKind.Utc) : null,
-        SuccessOnly: successOnly,
-        Page: _page,
-        PageSize: _pageSize));
+      _result = result;
+      _scopeName = result.ScopeName;
+      if (result.EveryInstitution)
+      {
+        _institutions = result.Institutions;
+      }
     }
-    catch (Exception ex)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      _errorMessage = ex.Message;
-    }
-  }
+      if (read != _read)
+      {
+        return;
+      }
 
-  private async Task PreviousPage()
-  {
-    if (_page > 1)
+      // T329: never the exception's text on the page; the cause goes to the log.
+      Logger.LogError(exception, "The audit log could not be read.");
+      _result = null;
+      _loadError = AuditWords.LoadFailed;
+      _focusAfterRead = null;
+    }
+    finally
     {
-      _page--;
-      await LoadAsync();
+      if (read == _read)
+      {
+        _loading = false;
+      }
     }
   }
 
-  private async Task NextPage()
+  protected override async Task OnAfterRenderAsync(bool firstRender)
   {
-    _page++;
-    await LoadAsync();
+    if (_focusAfterRead is { } target && !_loading && _loadError is null && _result is not null)
+    {
+      _focusAfterRead = null;
+      await PageFocus.FocusByIdAsync(JS, target);
+    }
   }
+
+  /// <summary>
+  /// Show (Q8): the page's own address with the values chosen, from the first page, the window fixed now (T21). Waits for
+  /// the first read (R2-L14).
+  /// </summary>
+  private Task ShowAsync()
+  {
+    if (_loading)
+    {
+      return Task.CompletedTask;
+    }
+
+    var asked = AuditLogAddress.Parse(
+      _formCategory, _formAction, _formPerson, _formSubject, _formFrom, _formTo, _formResult,
+      _isAdministrator ? _formInstitution : null, shown: null, opened: null, page: null,
+      size: _applied.PageSize.ToString(System.Globalization.CultureInfo.InvariantCulture));
+    var target = AuditLinks.LogAt(asked with { FixedAt = Clock.GetUtcNow().UtcDateTime, Fixed = AuditWindowFixed.Shown });
+    return GoAsync(target, CountId);
+  }
+
+  /// <summary>Clear filters and "Clear the filters": every filter reset, a new window from now, the rows per page kept.</summary>
+  private Task ClearAsync()
+    => GoAsync(AuditLinks.LogAt(AuditLogAddress.None with { PageSize = _applied.PageSize }), CategoryId);
+
+  private Task TurnPageAsync(int page) => GoAsync(AuditLinks.LogAt(_applied with { Page = page }), HeadingId);
+
+  // A change of rows per page reads the first page at that size; the focus stays on the select (T350 build review, A1).
+  private Task ChangePageSizeAsync(int size) => GoAsync(AuditLinks.LogAt(_applied with { Page = 1, PageSize = size }), null);
+
+  /// <summary>
+  /// To <paramref name="target" />, and the focus to <paramref name="focus" /> once it is drawn. An address that is the
+  /// one shown already (a clear on a page that is already clear) reads again in place, since navigating to it would change
+  /// no parameter.
+  /// </summary>
+  private async Task GoAsync(string target, string? focus)
+  {
+    var here = "/" + Navigation.ToBaseRelativePath(Navigation.Uri);
+    if (string.Equals(here, target, StringComparison.Ordinal))
+    {
+      // As arriving at it again would: a new window from now.
+      _applied = _applied with { FixedAt = Clock.GetUtcNow().UtcDateTime };
+      SetFields();
+      _focusAfterRead = focus;
+      await LoadAsync(showLoading: false);
+      if (_loadError is not null)
+      {
+        _panel?.FocusFailureAfterRender();
+      }
+
+      return;
+    }
+
+    _focusOnArrival = focus;
+    Navigation.NavigateTo(target);
+  }
+
+  private async Task RetryAsync()
+  {
+    _loading = true;
+    StateHasChanged();
+    await LoadAsync(showLoading: true);
+  }
+
+  // After Try again read: the h1 (S3).
+  private ValueTask FocusHeadingAsync() => PageFocus.FocusHeadingAsync(JS);
 }

@@ -1086,22 +1086,25 @@ Gap: none
 ### Step 4.38 — Prof Mbatha reads the sitting in the audit log
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/audit → /admin/audit/{Id:guid}
-Do: Filter Action to RecordCommitteeDecisionCommand. Open one successful entry. Then filter to
-  RevokeEntrustmentDecisionCommand.
+Do: Type RecordCommitteeDecisionCommand in Action and press Show. Open one successful entry. Then type
+  RevokeEntrustmentDecisionCommand in Action and press Show.
 Expect:
   - **No failed entry:** Steps 4.23 and 4.24 are refused on the page before anything is sent (round 3 item 16, T324), so
-    no FAILED row is written; the handler's quorum and category refusals stay as the backstop (T361).
-  - **The successful entries:** five OK rows by Dr Zulu, one per review.
-  - **An entry's detail:** the Event card and the Actor card only. The Payload card is an Administrator's (Step 3.56),
-    so she reads no summary. The stored summary, checked with SQL, keeps ReviewId, Category and PresentUserIds in the
-    clear and holds Rationale, Conditions and UndecidedNote as "[REDACTED]" (T101, T361).
-  - **The revocation's entry:** its actor is Dr Mokoena. Its stored Reason is "[REDACTED]".
+    no Failed row is written; the handler's quorum and category refusals stay as the backstop (T361).
+  - **The successful entries:** "5 actions.", five Success rows by Thandi Zulu, one per review (T400, R3-L09).
+  - **An entry's detail:** What happened, Who and What it was done to only, with no Payload section. The Payload is an
+    Administrator's (Step 3.56), so Prof Mbatha reads no summary (R2-E04). The stored summary, checked with SQL,
+    keeps ReviewId, Category and PresentUserIds in the clear and holds Rationale, Conditions and UndecidedNote as
+    "[REDACTED]" (T101, T361).
+  - **The revocation's entry:** "1 action.", its person Refilwe Mokoena (R3-L10, R2-E05). Its stored Reason is
+    "[REDACTED]".
 Actual (2026-11-10, T398 replay, wombat_scenario_t398): Audit log, Action RecordCommitteeDecisionCommand: five rows,
   all OK, by zulu@kgk.wombat.local, none FAILED. An entry's detail shows Event and Actor only, no Payload. SQL: each
   SummaryJson keeps category, reviewId and presentUserIds (4, 3, 2, 3, 2 ids) and holds rationale, conditions and
   undecidedNote as "[REDACTED]". RevokeEntrustmentDecisionCommand: one OK row by mokoena@kgk.wombat.local, stored
   reason "[REDACTED]".
-Gap: none
+Gap: none. The T398 Actual above predates T400 (OK rows by email, the Event and Actor cards); the next replay re-reads
+  the step.
 
 ## Phase 4.G — The registrars read their outcomes
 
