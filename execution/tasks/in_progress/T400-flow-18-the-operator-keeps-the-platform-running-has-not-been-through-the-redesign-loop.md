@@ -185,3 +185,8 @@ T398 (flow 17), T394 (flow 16); T157, T302, T327; BRIEF § 4, § 6–8, § 11; I
   nothing in flight: an `UnauthorizedAccessException`'s words are kept in a failed audit row only when Wombat's own code
   threw it, as for `InvalidOperationException`; a framework one stores "The action failed.", its full text to the log.
   Next: the fix pass (one Opus agent on `t400`).
+- **2026-11-12, the fix pass** (one Opus agent, `9d072c56`…`542b6b8b` on `t400`; `fix-pass.md` row by row): M1, S1–S4
+  and 16 nits fixed; N3–N6, N13 fine as built, N9 (T234's rule), N10, N11 kept, N8's Run history half already clamped.
+  Retention now deletes set-based (two tests moved to `JobRunsPostgresTests`); the Home query and Run now check the
+  Administrator. Verbatim 425/0, completeness 332 none unnamed. DESIGN.md's banner lists flow 18 (`b598beaf`
+  on `t400`). **Squashed onto master `34b5077e`**: suites 907/4560/1039/52/4952/542, 0 warnings. Next: step 7, the replay.
